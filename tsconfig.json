@@ -1,0 +1,19 @@
+{
+  // Lens Studio project config.
+  // Lens Studio generates/maintains its own tsconfig.json when the project is saved here
+  // (File > Save As eyes-up/). If it overwrites this file, keep its version and only make
+  // sure "experimentalDecorators" stays true. (미확인: Lens Studio에서 확인)
+  // Node tests do NOT use this file; they use tsconfig.test.json.
+  "compilerOptions": {
+    "target": "ES2019",
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "lib": ["ES2019"],
+    "experimentalDecorators": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "skipLibCheck": true,
+    "types": []
+  },
+  "include": ["Assets/**/*.ts", "Support/**/*.d.ts"]
+}

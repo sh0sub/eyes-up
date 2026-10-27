@@ -10,7 +10,23 @@ Built for Learn AR with SPECS (deadline 2026-11-09 PST). New Lens built with CLA
 
 ## Status
 
-Planning done, implementation starting 2026-10-26. See the plan report for scope, user flows and mockups.
+Planning done. Script logic for the core loop is in `Assets/Scripts/`. The Lens Studio scene is not built yet.
+
+## Scripts and tests
+
+The pure logic (state machine, gaze, halo attention, nudge rules, cue card, stage-line timer, session
+stats, panel view models) does not depend on Lens Studio, and Node tests it. Only `EyesUpApp.ts`,
+`Podium.ts`, `SetupPanel.ts` and `SummaryPanel.ts` use Lens Studio APIs.
+
+```bash
+npm install
+npm test           # vitest: unit + integration (tests/integration simulates a full rehearsal)
+npm run typecheck  # tsc with a minimal Lens Studio shim (typings/), for Node-side checking only
+npm run lint
+npm run check      # all three
+```
+
+`tsconfig.json` is the Lens Studio-side config. `tsconfig.test.json` is the Node-side config.
 
 ## License
 

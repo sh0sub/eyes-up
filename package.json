@@ -1,0 +1,22 @@
+{
+  "name": "eyes-up-scripts",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Pure TypeScript logic for the Eyes Up Spectacles Lens, unit-tested in Node (Lens Studio is not needed for tests).",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.test.json --noEmit",
+    "lint": "eslint .",
+    "check": "npm run typecheck && npm run lint && npm run test"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "eslint": "^9.17.0",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.18.2",
+    "vitest": "^2.1.9"
+  }
+}
