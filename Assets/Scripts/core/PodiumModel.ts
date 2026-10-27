@@ -1,0 +1,35 @@
+/**
+ * Podium view model (plan M7): Prev / Next / Finish pinch buttons, section counter, elapsed time.
+ * Visible only while the head pitches down ~12° (wristwatch metaphor). Re-place is a small button
+ * on the left, hidden during Rehearsal (plan edge "어디서나 → Placing").
+ */
+import { Phase } from './AppStateMachine';
+import { Vec3Like, formatMSS, pitchDeg } from './math';
+
+export interface PodiumState {
+  visible: boolean;
+  sectionLabel: string;
+  elapsedLabel: string;
+  controlsEnabled: boolean;
+  replaceVisible: boolean;
+}
+
+export interface PodiumInput {
+  phase: Phase;
+  gazeForward: Vec3Like;
+  cardIndex: number;
+  cardTotal: number;
+  elapsedSeconds: number;
+  podiumPitchDeg: number;
+}
+
+export function podiumState(i: PodiumInput): PodiumState {
+  const onStage = i.phase === 'Placing' || i.phase === 'Rehearsal';
+  return {
+    visible: onStage && pitchDeg(i.gazeForward) <= -i.podiumPitchDeg,
+    sectionLabel: i.cardTotal > 0 ? `${i.cardIndex + 1} / ${i.cardTotal}` : '',
+    elapsedLabel: formatMSS(i.elapsedSeconds),
+    controlsEnabled: i.phase === 'Rehearsal',
+    replaceVisible: i.phase !== 'Rehearsal' && i.phase !== 'Launch',
+  };
+}
