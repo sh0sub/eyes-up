@@ -120,7 +120,7 @@ Live headless MCP: 6 done-criteria LEAF scenarios PASSED (2.6, 4.3, 11.8, 7.6, 7
 
 ## Polish round 6 (2026-11-01, judge-visible gaps)
 
-Live headless MCP: 8 LEAF scenarios PASSED (the 6 done criteria plus repeated_nudge and finish_pulses_at_time), no E/F lines. `npm run check`: 130/130 tests, typecheck and lint clean. Screenshots retaken: devpost/screenshots 01, 02, 03, 05, 06 and devpost/walkthrough 01, 02, 03, 05, 06. The demo video (.local/video) was not rebuilt: it still shows the earlier Setup, pill, nudge and Summary looks, so it now differs from the build and the screenshots.
+Live headless MCP: 8 LEAF scenarios PASSED (the 6 done criteria plus repeated_nudge and finish_pulses_at_time), no E/F lines. `npm run check`: 130/130 tests, typecheck and lint clean. Screenshots retaken: devpost/screenshots 01, 02, 03, 05, 06 and devpost/walkthrough 01, 02, 03, 05, 06. The demo video was rebuilt in round 7 (below).
 
 | id | artifact section | expected | status | evidence |
 |---|---|---|---|---|
@@ -129,3 +129,15 @@ Live headless MCP: 8 LEAF scenarios PASSED (the 6 done criteria plus repeated_nu
 | R5-S2b | win | opening pill readable at video size | match | EyesUpApp.ts PILL_SCALE 0.9 -> 1.3, PILL_Y 5 -> 10 (clears the halo). 02-audience-lit-halo.png |
 | R5b-S3a | 07 S3 | chevron and "left" clearly visible | match | EyesUpApp.ts: chevron 6 -> 10 cm, caption 90 -> 150, amber backing box, pulse floor 0.75 (NudgeController.chevronAlpha, unit test). 03-nudge-chevron.png |
 | R5b-S4a | 07 S4 | clean podium still | match | 05-podium.png recaptured with no LEAF log overlay and cropped above the stray stage-line bar |
+
+## Polish round 7 (2026-11-01, verifier follow-ups)
+
+Live headless MCP: 8 LEAF scenarios PASSED, no E/F lines. `npm run check`: 130/130 tests, typecheck and lint clean.
+
+| id | artifact section | expected | status | evidence |
+|---|---|---|---|---|
+| R7-S4 | 07 S4 | podium still has no stray bar | match | the bar was the StageLine floor strip entering the capture; 05-podium.png recaptured and cropped to 1600x745 above it (devpost/screenshots, walkthrough) |
+| R7-S3 | 07 S3 | nudge box and opening pill do not touch | match | EyesUpApp.ts CHEVRON_X_CM 21, CHEVRON_DROP_CM 6.5: backing top sits 21 px below the pill in 03-nudge-chevron.png |
+| R7-S5 | 07 S5 | Summary and Re-place buttons clear the picture frames | match | SUMMARY_ABOVE_EYES_CM 17 -> 20; 06-summary.png shows about 20 px of wall between the panel border and the frames |
+| R7-S2 | win | gallery shows the larger pill clear of the halo | match | .local/screenshots/01-halo.png regenerated from the new video (gallery moment 0.8 s into the halo segment) |
+| R7-S6 | 07 S6 | demo video matches the current build | match | .local/video/eyes-up-demo.mp4 (2:39, not committed) rebuilt from a fresh all-live real-camera capture (nudge, podium, cue, Summary all live; no stills); narration says 8 scenarios, 130 tests, 1:40 run with 16 % left. Previous file kept as eyes-up-demo-prev.mp4 |

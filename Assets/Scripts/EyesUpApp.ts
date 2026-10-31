@@ -42,6 +42,10 @@ const CHEVRON_ICON_Y = 6.5;
 const CHEVRON_BACK_W = 15;
 const CHEVRON_BACK_H = 19;
 const CHEVRON_BACK_Y = 4.2;
+/** Round 7: hint x offset (was 20) and drop so the backing clears the opening pill's corner in the nudge still. */
+const CHEVRON_X_CM = 21;
+/** Round 7: hint dropped this far so the backing's top edge sits below the pill's bottom edge. */
+const CHEVRON_DROP_CM = 6.5;
 const CHEVRON_TEXT = new vec4(1.0, 0.82, 0.35, 1);
 /** ≈ 1.5 cm caption at 100 cm (S3: "left" 1.5 cm). */
 const CHEVRON_CAPTION_SIZE = 150;
@@ -56,7 +60,7 @@ const SETUP_DISTANCE_CM = 110;
 const SETUP_BELOW_EYES_CM = -10;
 const SUMMARY_DISTANCE_CM = 150;
 /** Round 6: raised so the stat tiles and tip clear the room's wall art (additive display: art shows through any fill). */
-const SUMMARY_ABOVE_EYES_CM = 17;
+const SUMMARY_ABOVE_EYES_CM = 20;
 /** design: panels follow the head only while the preview/device pose settles, then stay put. */
 const PANEL_SETTLE_SECONDS = 1.0;
 
@@ -138,6 +142,8 @@ export class EyesUpApp extends BaseScriptComponent {
     this.buildCueCard();
     [this.edgeHintLeft, this.edgeHintRight].forEach((so, i) => {
       if (!so) return;
+      const hp = so.getTransform().getLocalPosition();
+      so.getTransform().setLocalPosition(new vec3((i === 0 ? -1 : 1) * CHEVRON_X_CM, hp.y - CHEVRON_DROP_CM, hp.z));
       const t = so.getComponent('Component.Text') as Text;
       if (t) {
         t.text = i === 0 ? 'left' : 'right';

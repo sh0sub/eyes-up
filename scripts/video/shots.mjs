@@ -51,8 +51,8 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Start',
     heading: 'An audience in your room',
-    // Frames of the 2026-11-01 demo_reel capture: Setup panel (segmented controls) → pinch Start → audience → card "The problem".
-    footage: [{ from: 84, to: 156 }],
+    // Live real-camera capture 2026-11-01 05:27: Setup panel → pinch Start → audience → card "The problem".
+    footage: [{ from: '05:28:05', to: '05:28:22' }],
     lines: [
       'You pick a length and a deck, here a five card pitch, and press Start with a pinch.',
       'Six audience members appear on the floor, two and a half meters ahead, in a half circle.',
@@ -69,8 +69,8 @@ export const SEGMENTS = [
     kicker: 'Gaze',
     heading: 'Whoever you look at lights up',
     speed: 1.3,
-    footage: [{ from: 158, to: 222 }],
-    gallery: 4,
+    footage: [{ from: '05:28:22', to: '05:28:36' }],
+    gallery: 0.8,
     lines: [
       'Whoever you look at lights up. Their halo fills in about a second, and slowly cools when you look away.',
       'It is a simple mirror of where your attention actually goes.',
@@ -82,7 +82,8 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Nudge',
     heading: 'Ignore a side, get a tap',
-    // Stills: the preview camera cannot turn in the scripted reel, so the left-edge chevron is not in frame.
+    // Live: the head turns to the right side, the left chevron appears and clears when the head turns back.
+    footage: [{ from: '05:28:38', to: '05:28:52' }],
     gallery: 2.2,
     lines: [
       'Stare at one side for eight seconds, and you hear a soft chime, and a pulsing amber chevron appears at the edge of your view.',
@@ -102,7 +103,8 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Controls',
     heading: 'A podium only when you look down',
-    // Stills: the scripted reel cannot look down, so the podium is shown from the capture gallery.
+    // Live: head pitched down shows the podium; pinch Next.
+    footage: [{ from: '05:29:07', to: '05:29:18' }],
     lines: [
       'Controls appear only when you look down, like a real podium.',
       'Your slide count, the time against your target, and a big Next button live there, and nowhere else.',
@@ -115,7 +117,8 @@ export const SEGMENTS = [
     kicker: 'Notes',
     heading: 'Notes only when you need them',
     // Pinch Next → card "Why glasses" → pill "Eyes stay up" → dwell → card again with its countdown line.
-    footage: [{ from: 236, to: 310 }],
+    footage: [{ from: '05:29:19', to: '05:29:40' }],
+    speed: 1.3,
     gallery: 6.5,
     lines: [
       'Lost your place? Look at the pill for one second.',
@@ -131,13 +134,13 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Finish',
     heading: 'Where your eyes went',
-    // Finish → Summary panel (0:42 run) held.
-    footage: [{ from: 372, to: 480 }],
+    // Finish → Summary panel (1:40 live run) held.
+    footage: [{ from: '05:29:57', to: '05:30:14' }],
     gallery: 10,
     lines: [
       'Finish, and the audience applauds. Then you see where your eyes went.',
       'A balance score, the split between left, center and right, and a timeline of your gaze, with every nudge marked.',
-      'This run: forty two seconds, only twenty percent on the left. The tip says it plainly: next time, look left more.',
+      'This run: one minute forty, only sixteen percent on the left. The tip says it plainly: next time, look left more.',
     ],
     stills: [{ file: `${S}/06-summary.png`, crop: BAND, zoom: { rect: [96, 586, 284, 230], label: 'Rehearsal summary' } }],
   },
@@ -148,8 +151,8 @@ export const SEGMENTS = [
     card: 'built',
     lines: [
       'Eyes Up was built in Lens Studio by an AI coding agent, through the Lens Studio MCP tools, following the CLAD skills.',
-      'Seven scripted LEAF scenarios check the done criteria in the Interactive Preview. All seven pass.',
-      'The core logic, gaze, halos, nudges and cue cards, is covered by one hundred twenty nine unit and integration tests in Node.',
+      'Eight scripted LEAF scenarios check the done criteria in the Interactive Preview. All eight pass.',
+      'The core logic, gaze, halos, nudges and cue cards, is covered by one hundred thirty unit and integration tests in Node.',
     ],
   },
   {
@@ -172,4 +175,5 @@ export const LEAF_ROWS = [
   ['dwell_expands_pill', '1.1 s gaze re-opens the card'],
   ['finish_shows_summary', 'zones sum to 100 %, time m:ss'],
   ['repeated_nudge', 'nudges keep coming while you neglect'],
+  ['finish_pulses_at_time', 'stage line pulses at the 60 s and 30 s marks'],
 ];

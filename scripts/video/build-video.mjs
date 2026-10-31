@@ -265,11 +265,11 @@ function cardHtml(seg, ci, cue) {
             <div style="font-size:20px;line-height:1.5;color:var(--muted);margin-top:8px">VirtualScene, ExecuteEditorCode, PreviewPanelTool, MovePreviewCamera, PreviewInteractTool, CapturePanelScreenshotTool, RunAndCollectLogsTool, run_leaf_scenario …</div></div>
           <div style="${box(1)}"><div style="font-size:26px;font-weight:800">CLAD skills followed</div>
             <div style="font-size:20px;line-height:1.5;color:var(--muted);margin-top:8px">specs-experience-builder, specs-build-ui, build-sfx, specs-audio, specs-leaf-write-scenarios, specs-leaf-run-in-preview, verify-preview</div></div>
-          <div style="${box(ci >= 2 ? 1 : 0.35)}"><div style="font-size:54px;font-weight:800;color:var(--primary-ink);line-height:1">129 / 129</div>
+          <div style="${box(ci >= 2 ? 1 : 0.35)}"><div style="font-size:54px;font-weight:800;color:var(--primary-ink);line-height:1">130 / 130</div>
             <div style="font-size:22px;color:var(--muted);margin-top:8px">Node unit + integration tests (vitest) for the core rehearsal logic</div></div>
         </div>
         <div style="${box(ci >= 1 ? 1 : 0.35)}">
-          <div style="font-size:26px;font-weight:800">LEAF scenarios · Interactive Preview · 7 / 7</div>
+          <div style="font-size:26px;font-weight:800">LEAF scenarios · Interactive Preview · 8 / 8</div>
           <table style="border-collapse:collapse;margin-top:10px;width:100%">${rows}</table>
           <div style="margin-top:14px;display:flex;align-items:center;gap:16px">
             <div style="width:400px;height:40px;border-radius:8px;background-color:#6b665f;background-image:url('${fileUrl('devpost/screenshots/02-audience-lit-halo.png')}');background-size:${475 * 1.4}px ${1400 * 1.4}px;background-position:${-6 * 1.4}px ${-430 * 1.4}px"></div>

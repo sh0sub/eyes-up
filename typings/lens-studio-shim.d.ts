@@ -69,6 +69,7 @@ declare enum VerticalOverflow {
 declare class Transform {
   getWorldPosition(): vec3;
   setWorldPosition(p: vec3): void;
+  getLocalPosition(): vec3;
   setLocalPosition(p: vec3): void;
   setWorldRotation(r: quat): void;
   setLocalRotation(r: quat): void;

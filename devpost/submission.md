@@ -34,10 +34,10 @@ A new Lens built with CLAD and the Lens Studio MCP skill pack, driven end to end
 Studio MCP tools. The scene uses UIKit panels and buttons, the audience, halo, nudge and cue card
 are TypeScript components. All logic (state machine, gaze zones, halo attention, nudge rules, cue
 card, stage-line timer, session stats, panel view models, deck import parser) is plain TypeScript
-with no Lens Studio dependency, so Node tests it: 129 unit and integration tests, typecheck and
-lint all pass. Seven LEAF scenarios pass in the Interactive Preview (start places the audience,
+with no Lens Studio dependency, so Node tests it: 130 unit and integration tests, typecheck and
+lint all pass. Eight LEAF scenarios pass in the Interactive Preview (start places the audience,
 gaze fills the halo, neglect triggers a nudge, card then pill, dwell expands the pill, finish shows
-the summary, repeated nudge).
+the summary, repeated nudge, stage-line pulses at 60 s and 30 s).
 
 ## What we learned
 
