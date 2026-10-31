@@ -108,6 +108,30 @@ describe('GazeTracker (#13, M3 #10)', () => {
     }
   });
 
+  it('pass 7 regression: a pill that reappears under the gaze is armed (latch cleared while hidden)', () => {
+    // Live failure: a dwell fired (latched), the card showed, and the pill came back right where the
+    // speaker was looking. The latch only re-armed on an off-pill frame *while a pill target was
+    // set*, so it never fired again until the gaze left the pill.
+    const { layout, tracker, gaze } = setup();
+    const pill = appPill(layout.cardAnchor);
+    tracker.setPillTarget(pill);
+    gaze.lookAt(pill.center);
+    let fired = 0;
+    runFor(1.1, (dt) => (fired += tracker.update(dt, gaze).dwellFired ? 1 : 0));
+    expect(fired).toBe(1);
+    // Card expanded for 4 s: no pill target; the gaze never leaves the pill area.
+    tracker.setPillTarget(null);
+    runFor(4, (dt) => tracker.update(dt, gaze));
+    // Pill back under the gaze: needs ~1 s of continuous gaze, then fires once (no loop while staring).
+    tracker.setPillTarget(pill);
+    runFor(0.9, (dt) => (fired += tracker.update(dt, gaze).dwellFired ? 1 : 0));
+    expect(fired).toBe(1);
+    runFor(0.2, (dt) => (fired += tracker.update(dt, gaze).dwellFired ? 1 : 0));
+    expect(fired).toBe(2);
+    runFor(3, (dt) => (fired += tracker.update(dt, gaze).dwellFired ? 1 : 0));
+    expect(fired).toBe(2);
+  });
+
   it('looking at the pill does not count as looking at the nearest audience member', () => {
     const { layout, tracker, gaze } = setup();
     gaze.lookAt(appPill(layout.cardAnchor).center);

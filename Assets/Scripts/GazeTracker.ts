@@ -9,7 +9,8 @@
  * `zoneAngleDeg`, otherwise null (looking at nothing / at the floor / at the podium).
  *
  * Pill dwell: while the pill is shown, looking at it for `dwellSeconds` (1 s) fires once;
- * it fires again only after the gaze has left the pill (so staring does not loop).
+ * it fires again only after the gaze has left the pill or the pill has been hidden and shown
+ * again (pass 7: a pill that reappears under the gaze is armed). Nudges do not affect it.
  * "Looking at it" is a hit on the pill's actual rectangle (core/PillHit.ts, pass 6), not a 7° cone
  * around the card anchor.
  */
@@ -47,20 +48,29 @@ export class GazeTracker {
     return this.targets.length;
   }
 
-  /** Enable pill dwell on the pill's world rectangle, or disable with null (card expanded / hidden). */
+  /**
+   * Enable pill dwell on the pill's world rectangle, or disable with null (card expanded / hidden).
+   * Called every frame while the pill shows (the rect follows the live transform).
+   *
+   * Pass 7: null clears the latch as well as the partial dwell, so every time the pill (re)appears
+   * the dwell is armed, even if the gaze is already on it (e.g. reading the card when it shrinks):
+   * `dwellSeconds` of continuous gaze from then on fires it. Before, the latch from the previous
+   * dwell survived the whole card phase (the off-pill re-arm only runs while a pill target is set),
+   * so a pill that came back under the gaze never fired.
+   */
   setPillTarget(rect: PillRect | null): void {
     // Explicit components: a native Lens vec3 has no own enumerable x/y/z (see GazeProvider.ts).
     const c = (p: Vec3Like): Vec3Like => ({ x: p.x, y: p.y, z: p.z });
     this.pillTarget = rect ? { ...rect, center: c(rect.center), right: c(rect.right), up: c(rect.up) } : null;
     if (!rect) {
       this.dwellAccum = 0;
+      this.dwellLatched = false;
     }
   }
 
   get pillDwellSeconds(): number {
     return this.dwellAccum;
   }
-
   /** The current dwell target (null while the pill is not shown). */
   get pillRect(): PillRect | null {
     return this.pillTarget;

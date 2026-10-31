@@ -287,6 +287,7 @@ export class EyesUpSession {
     const n = this._config.audienceCount;
     this._layout = computeStageLayout(this.gaze.origin, this.gaze.forward, n, this.t);
     this.tracker.setTargets(this._layout.eyeTargets);
+    this.tracker.setPillTarget(null); // pass 7: no stale pill rect or dwell latch across Re-place / Again
     this.attention.reset(n);
     this.card.load(getDeck(this._config.deckId));
     const cancelled = this.nudge.cancel();

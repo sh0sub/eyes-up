@@ -685,3 +685,106 @@ No look-away to a far member was needed in any run.
 - The pill's real-device gaze jitter is untested. 1.5° is a guess for Spectacles head gaze and may
   need tuning on device.
 - Everything listed under "Still open after pass 5".
+
+# Pass 7 (2026-10-31, headless)
+
+Same setup: Lens Studio 5.24.1, lens-studio MCP, "Preview 2" (Interactive), no human available. One
+bug, after the pass 6 pill-hit fix: in a live run the card shrank to the pill "Eyes stay up" after
+Next, and the operator aimed the camera at the pill centre for ~4 s, then a little lower for 3.5 s.
+The card never re-expanded. The amber left chevron (nudge) was showing at the same time.
+
+## Hypotheses checked
+
+| | Hypothesis | Verdict |
+|---|---|---|
+| a | An active nudge, or nudge state, blocks the dwell | **No.** Nothing in NudgeController touches GazeTracker. The dwell expanded live with the left chevron on (run 1a below) |
+| b | lookAt the pill's world position misses the new rect (wrong transform, scale or billboard axes) | **No.** Live debug print of `session.pillRect`: centre (0, 19.5, −250.5) = PillBg's runtime world position, up = (0, 1, 0), half-size 19.7 × 4.5 cm ("Eyes stay up" × 0.9). The editor-side CueCard point that scene-graphql returns, (0, 15, −250), is 4.5 cm below the centre and still inside the rect (+6.5 cm margin at 2.5 m) |
+| c | The dwell needs the gaze to leave first (re-arm), and the gaze was already on the pill | **Yes: root cause** |
+
+## Root cause
+
+`GazeTracker.dwellLatched` was set when a dwell fired. It was cleared only by an off-pill frame
+**while a pill target was set**. While the card is expanded the session calls
+`setPillTarget(null)`, which reset `dwellAccum` but not the latch. So:
+
+1. A dwell fires → latch on → card for 4 s (no pill target, so looking around doesn't re-arm).
+2. The card shrinks back to the pill. The pill sits inside the card's area, so a speaker who was
+   reading the card (or is already aiming at the pill) has the gaze on it.
+3. The pill comes back still latched. `onPill` stays true, so the latch never clears and the dwell
+   never fires again until the gaze leaves the pill rect. This holds whether or not a nudge chevron
+   is showing.
+
+`enterPlacing` (Re-place / Again) didn't clear it either, so a latch could also carry into the next
+session.
+
+Reproduced live before the fix with a temporary `DWELLDBG` print (twice a second: mode, latch,
+accumulated dwell, rect, gaze forward, nudge side). Steps: Start, look right (250, −10, −250) for 12.5 s, podium,
+Next, face the centre audience 4.8 s (pill), then `lookAt` the pill centre. The dwell fired after
+~1 s (latched=true). Kept the same gaze: the card shrank to the pill under it, and the log then
+showed `mode=pill latched=true acc=0.00` for 7 s+ with `nudge=left`, then `nudge=right`. No
+re-expand. The operator's run matches this: an earlier dwell had latched, and the pill came back
+under their gaze.
+
+## Fix
+
+- `GazeTracker.setPillTarget(null)` now clears the latch as well as the partial dwell. The pill is
+  armed every time it (re)appears, even with the gaze already on it, and needs `dwellSeconds`
+  (1 s) of continuous gaze from then on. While the pill stays up, the "one fire per look" rule is
+  unchanged (staring at a pill that's up doesn't loop). If the speaker keeps staring through the
+  4 s card, it re-expands 1 s after each shrink. That's intended: they are still looking at it.
+- `EyesUpSession.enterPlacing` calls `tracker.setPillTarget(null)`, so no stale rect or latch
+  carries across Re-place / Again.
+- Debug print removed (`grep DEBUG-PASS7|DWELLDBG` → none).
+
+## Tests (Node, core)
+
+- `GazeTracker.test.ts`, **new regression** "a pill that reappears under the gaze is armed": dwell
+  fires → pill target null for 4 s with the gaze unchanged → pill back. It doesn't fire at 0.9 s,
+  fires at 1.1 s, and doesn't fire again over 3 s more of staring.
+- `EyesUpSession.test.ts`, **new regression** "dwell works with a nudge showing and when the pill
+  reappears under the gaze": the live steps through the session (look right until the left
+  chevron, podium + Next, face the centre until the pill, wait for a nudge). Dwell on
+  `session.pillRect.center` with the chevron up: still a pill at 0.9 s, card at 1.1 s. Keep the
+  gaze until it shrinks, then the card is back after 1.1 s (`cardExpands` = 2).
+- Both new tests **fail without the fix** (latch reset removed temporarily: 2 failed) and pass with it.
+- `npm run check`: typecheck + lint + vitest **123/123** (was 121).
+
+## Live verification after the fix (real CameraGazeProvider, MovePreviewCamera, QueryRuntimeSceneTool)
+
+| Run | Steps | Result |
+|---|---|---|
+| 1, start pose | Start, look right 12 s, podium + Next, centre audience 4.8 s (pill), wait for the **left chevron**, `lookAt` pill centre (0, 19.5, −250.54) | **CardBg + CueCardBody enabled**. Then held the gaze: PillBg enabled / CardBg off (pill back under the gaze, **left chevron on**), 1.5 s later **CardBg + CueCardBody enabled** |
+| 2, start pose, "slightly lower" | Fresh refresh, same steps. Pill showing, look right until the **left chevron**, then `lookAt` (0, 15, −250) (the editor CueCard point, 4.5 cm below centre) | Card 1.1 s after the lookAt (log timestamps 49.36 → 50.46). Held: pill back under the gaze with the **right chevron on**, 1.5 s later **CardBg + CueCardBody enabled** |
+| 3, 1 m closer | Fresh refresh, Start, `setPosition` (0, 0, −100), look right until the left chevron, podium + Next, centre until the pill, look right until the **left chevron**, `lookAt` pill centre (pitch 7.38°), hold ~10 s, Finish | **CardBg + CueCardBody enabled**. Summary "Card expands · Nudges" = **5 · 8**: 1 from the first dwell plus 4 re-arms with the gaze held still (would have been 1 before the fix) |
+
+Note: the podium only enables its buttons while the gaze pitches down. Pinching `NextButton` while
+looking at the audience is rejected ("Interactable is disabled"), so every run looks at the podium
+first.
+
+## LEAF results (Interactive Preview, "Preview 2", after the final code change)
+
+| Scenario | Result |
+|---|---|
+| `start_places_audience` | ✅ succeeded |
+| `gaze_fills_halo` | ✅ succeeded |
+| `neglect_triggers_nudge` | ✅ succeeded |
+| `next_shows_card_then_pill` | ✅ succeeded |
+| `dwell_expands_pill` | ✅ succeeded |
+| `finish_shows_summary` | ✅ succeeded |
+| `repeated_nudge` | ✅ succeeded |
+| `finish_pulses_at_time` (extra) | ✅ succeeded |
+| `demo_reel` (extra) | ✅ PASSED at 71.4 s per the lens log (the MCP call timed out at ~60 s as before). "Why glasses" (dwell) at 43.5 s. Summary zone %: left 19 / center 47 / right 34 |
+
+## Build
+
+- `RecompileTypeScriptTool` succeeded. `RunAndCollectLogsTool` (refresh) shows no `E` lines (W only:
+  editor network auth).
+- Project saved (`model.project.save()`). Nothing committed. `.mcp.json` untouched.
+
+## Still open after pass 7
+
+- Staring at the card through its whole 4 s now re-expands it 1 s after each shrink (card ↔ pill
+  every ~5 s). The brief asks for this ("arm when the pill appears even if the gaze is already on
+  it"). If that is too eager on device, the knob is a longer dwell for a pill that reappears under
+  the gaze.
+- Everything listed under "Still open after pass 6".

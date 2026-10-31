@@ -75,6 +75,47 @@ describe('EyesUpSession / EyesUpApp core (M1 #3, #7)', () => {
     expect(s.cardTitle).toBe('The problem');
   });
 
+  it('pass 7 regression: dwell works with a nudge showing and when the pill reappears under the gaze', () => {
+    // Live repro: Start, look right ~12 s (left chevron), Next on the podium, face the audience
+    // until the pill, dwell on it; the card re-expands, then shrinks back under the gaze.
+    const { s, gaze, tick, lookAtMember, scene } = toRehearsal();
+    lookAtMember(5);
+    tick(9); // nudge fires at 8 s and shows for 3 s
+    expect(scene.edgeHint).toBe('left');
+    gaze.setForward(v3(0, -0.5, -0.86)); // podium
+    expect(s.next()).toBe(true);
+    lookAtMember(2);
+    tick(4.1);
+    expect(s.cardMode).toBe('pill');
+    expect(s.pillRect).not.toBeNull();
+    // Facing the centre leaves the sides neglected: wait (still facing the room) for the next chevron.
+    let guard = 0;
+    while (!s.activeNudge && guard++ < 60 * 20) tick(1 / 60);
+    expect(scene.edgeHint).not.toBeNull();
+    expect(s.cardMode).toBe('pill');
+
+    // Dwell #1 with the chevron visible: ~1 s on the pill re-expands the card.
+    gaze.lookAt(s.pillRect!.center);
+    tick(0.9);
+    expect(s.cardMode).toBe('pill');
+    expect(s.activeNudge).not.toBeNull();
+    expect(scene.edgeHint).not.toBeNull();
+    tick(0.2);
+    expect(s.cardMode).toBe('card');
+    expect(s.liveStats().cardExpands).toBe(1);
+
+    // Keep looking at the same spot: the card shrinks back to the pill under the gaze.
+    guard = 0;
+    while (s.cardMode !== 'pill' && guard++ < 60 * 10) tick(1 / 60);
+    expect(s.cardMode).toBe('pill');
+    // Armed on reappearance: ~1 s of continuous gaze re-expands it (before pass 7: latched forever).
+    tick(0.9);
+    expect(s.cardMode).toBe('pill');
+    tick(0.2);
+    expect(s.cardMode).toBe('card');
+    expect(s.liveStats().cardExpands).toBe(2);
+  });
+
   it('Rehearsal -> TimeUp at elapsed >= target; Finish still works from TimeUp; finishPrompt at +30 s', () => {
     const { s, tick, scene } = harness();
     s.launch();
