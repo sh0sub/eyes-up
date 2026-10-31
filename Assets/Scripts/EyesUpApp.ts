@@ -28,7 +28,17 @@ import { SummaryPanel } from './SummaryPanel';
 import { AudienceView, EyesUpSession, SessionViews } from './core/EyesUpSession';
 import { podiumState } from './core/PodiumModel';
 import { Vec3Like } from './core/math';
-import { ACCENT_CYAN, addSurface, child, faceTowards } from './EyesUpUI';
+import { ACCENT_CYAN, addIcon, addSurface, child, faceTowards } from './EyesUpUI';
+
+/**
+ * Pass 5 nudge chevron (artifact S3): a 6 × 6 cm amber double chevron ("‹‹" / "››", Material
+ * keyboard_double_arrow_*) above a "left" / "right" caption. The hint's scene Text (±20 cm, 100 cm
+ * ahead of the camera) becomes the caption; the icon is added at awake 4 cm above it.
+ */
+const CHEVRON_CM = 6;
+const CHEVRON_ICON_Y = 4.2;
+/** ≈ 1.5 cm caption at 100 cm (S3: "left" 1.5 cm). */
+const CHEVRON_CAPTION_SIZE = 90;
 
 /** Stage line colors (design): cool white while running, amber at 0 s. Never black. */
 const LINE_COLOR: [number, number, number] = [0.75, 0.85, 1.0];
@@ -109,15 +119,22 @@ export class EyesUpApp extends BaseScriptComponent {
   /** Seconds since the chevron appeared (1 Hz pulse) and each side's base text color. */
   private hintAge = 0;
   private hintTexts: [Text | null, Text | null] = [null, null];
+  private hintIcons: [Image | null, Image | null] = [null, null];
   private hintColors: [vec4, vec4] = [new vec4(1, 1, 1, 1), new vec4(1, 1, 1, 1)];
 
   onAwake(): void {
     this.collectAudience();
     this.buildCueCard();
     [this.edgeHintLeft, this.edgeHintRight].forEach((so, i) => {
-      const t = so ? (so.getComponent('Component.Text') as Text) : null;
+      if (!so) return;
+      const t = so.getComponent('Component.Text') as Text;
+      if (t) {
+        t.text = i === 0 ? 'left' : 'right';
+        t.size = CHEVRON_CAPTION_SIZE;
+        this.hintColors[i] = t.textFill.color;
+      }
       this.hintTexts[i] = t;
-      if (t) this.hintColors[i] = t.textFill.color;
+      this.hintIcons[i] = addIcon(so, i === 0 ? 'double_arrow_left' : 'double_arrow_right', CHEVRON_CM, new vec3(0, CHEVRON_ICON_Y, 0));
     });
     // Each halo gets its own material so attention colors are per member.
     this.halos.forEach((h) => {
@@ -268,7 +285,11 @@ export class EyesUpApp extends BaseScriptComponent {
       if (!so || !so.enabled) return;
       const t = this.hintTexts[i];
       const c = this.hintColors[i];
-      if (t) t.textFill.color = new vec4(c.x, c.y, c.z, c.w * (0.35 + 0.65 * p));
+      const a = 0.35 + 0.65 * p;
+      if (t) t.textFill.color = new vec4(c.x, c.y, c.z, c.w * a);
+      // Icon material is premultiplied: scale every channel to fade.
+      const img = this.hintIcons[i];
+      if (img) img.mainMaterial.mainPass.baseColor = new vec4(a, a, a, a);
       const s = 0.9 + 0.15 * p;
       so.getTransform().setLocalScale(new vec3(s, s, s));
     });

@@ -104,6 +104,7 @@ describe('SummaryModel (#28 SummaryPanel logic, M8 #20)', () => {
     cardExpands: 2,
     nudges: 3,
     balanceScore: 63,
+    timeline: { bucketSeconds: 0.5, zones: [], nudgeTimes: [] },
   };
   it('formats the artifact S5 example: "Nice work — 2:52", 22/58/20, "11 s · left · at 1:12"', () => {
     const s = summaryState(snap, 1, { targetSeconds: 180, deckName: 'Eyes Up pitch' });

@@ -497,3 +497,93 @@ The label is still **logic proven / feel unproven**.
   pitch deck now has 5 cards.
 - Demo recording, plus G3, G4, G5, G8, D10 and D2 as before.
 - Nothing committed.
+
+# Pass 5 (2026-10-31, headless)
+
+Same setup: Lens Studio 5.24.1 through the lens-studio MCP server ("Preview 2", Interactive), no
+human available. Goal: the gaps left after pass 4 against artifact S3 (nudge) and S5 (summary),
+plus the S4 Finish pulse. The label is still **logic proven / feel unproven**.
+
+## Summary
+
+| Item | Result |
+|---|---|
+| 1 Summary gaze timeline (S5 ③) | **Done.** `SessionStats` keeps a **0.5 s zone history** (each bucket = the zone looked at most in it, `null` = mostly nobody; frames spanning a boundary are split) and the **session time of each nudge**, exposed as `StatsSnapshot.timeline`. New pure `core/GazeTimeline.ts`: `downsampleZones` (majority vote, **≤ 60 columns**), `columnSegments` (merged runs as strip fractions), `axisTicks` (0:00, 10/15/30/60/120/300 s steps with ≤ 3 ticks, end time, drops ticks within 15 % of the end), `gazeTimeline` (segments + coral longest look-away `{zone,start,end,"12 s"}` + nudge positions). `SummaryPanel` draws it with plain quads between the zone bars and the stat boxes: L/C/R labels (amber when that zone is out of range), dim tracks, cyan segments, a coral-framed box with the seconds on the look-away row, an amber stem + dot + "nudge" per nudge, and the time axis. Rebuilt once per show. |
+| 1b Chip + check icon (S5) | **Done.** Mint "Session complete" chip (check_circle icon + text) 2.8 cm above the panel's top edge; a mint `check_circle` icon (IconSelector, `#8cffcc`) left of the title. Title and target line are now left-aligned, as in S5. |
+| 2 Nudge chevron (S3) | **Done.** Amber **double chevron** via IconSelector `keyboard_double_arrow_left/right` (`#ffb833`), **6 × 6 cm** at 100 cm, added at awake 4.2 cm above the hint's scene Text, which now holds just "left" / "right" at size 90 (≈ 1.5 cm, S3's caption size). The 1 Hz pulse still drives scale (0.90–1.05) on the hint, alpha on the caption, and now alpha on the icon (premultiplied: all channels scaled). |
+| 3 Podium Finish pulse (S4 / brief) | **Done.** `PodiumModel.finishPulse(elapsed, target)` = 0 before the target, then a 1 Hz cosine starting at 1, and only during Rehearsal (`PodiumState.finishPulse`). `Podium` scales the Finish button 1.00 ↔ 1.12 and tints its label white → amber. Checked at runtime by the new LEAF `finish_pulses_at_time`. |
+| 4 Demo reel + verification | `demo_reel` re-run (completed successfully). `devpost/demo-reel-timeline.md` rewritten for the 5-card deck from that run's log. 7/7 done-criteria LEAF pass. `npm run check` green, **115/115** (was 105). Recompile succeeded. No runtime errors. Screenshots 03 and 06 retaken. Project saved. Nothing committed. |
+
+## Decisions made without a human (pass 5)
+
+- **D27: Summary panel 50 × 40 → 50 × 47 cm.** The strip needs ~10 cm, and shrinking the other rows
+  would undo pass 3's legibility sizes. The panel is still well inside the vertical FOV at 1.5 m
+  (the chip's top edge sits about 28 cm above eye level).
+- **D28: history bucket 0.5 s, majority vote for downsampling.** A zone wins a tie against
+  "nobody", and zone ties go left → right (the same rule as the tip). Columns are equal-width
+  slices of the buckets. The last partial bucket is included, so the strip reaches the end time.
+- **D29: the coral box spans the whole look-away on its zone's row**, and it's at least 3 cm wide so
+  its "N s" label fits. It covers the segments it spans, which are empty on that row by definition.
+  It isn't drawn under 1 s.
+- **D30: chevron as an icon, not a "‹‹" glyph.** At 6 cm, Inter's "‹" is thin and its size in cm
+  depends on font metrics. The Material double-arrow icon is an exact 6 × 6 cm box (the glyph
+  fills about ⅔ of it) and matches S3's bold chevron. The scene Text is kept as the caption, so
+  `neglect_triggers_nudge` still reads "left" from `EdgeHintLeft`.
+- **D31: Finish pulse = scale + label tint** (no face recolor), because the face color is owned by
+  the hover/press handlers. It pulses from the moment elapsed ≥ target. Pass 2's `finishPrompt`
+  event at target + 30 s is unchanged.
+- **D32: capture helpers mute the LEAF overlay.** `muteLeafOverlay()` moved into
+  `EyesUpLeafHelpers`. `capture_nudge_hold` (30 s) and the new `capture_summary` (60 s) hide the
+  log strip so screenshots are clean.
+
+## LEAF results (Interactive Preview, "Preview 2", after the final code change)
+
+| Scenario | Result |
+|---|---|
+| `start_places_audience` | ✅ succeeded |
+| `gaze_fills_halo` | ✅ succeeded |
+| `neglect_triggers_nudge` | ✅ succeeded |
+| `next_shows_card_then_pill` | ✅ succeeded |
+| `dwell_expands_pill` | ✅ succeeded |
+| `finish_shows_summary` | ✅ succeeded |
+| `repeated_nudge` | ✅ succeeded |
+| `finish_pulses_at_time` (new, extra) | ✅ succeeded. Fast-forwards the session clock to target − 2 s (a test-only write to the private `_elapsed`), then checks Finish rests at scale 1.00 before the target and peaks at 1.08–1.13 after it |
+| `capture_summary` (new, capture helper) | ✅ succeeded. Right side ~9 s → left nudge → brief left look → center → right → Finish. Gave left 7 % / center 32 % / right 61 %, Balance 58 |
+| `capture_nudge_hold` | ✅ succeeded |
+| `demo_reel` | ✅ completed successfully (MCP call timed out at ~60 s as documented; the scenario ran to t = 71.1 s). Summary: 0:42, 19 / 47 / 34, Balance 79, coral "12 s" on L from 0:13, nudges 1 |
+
+Logs: `RunAndCollectLogsTool` after the final recompile shows no `E` lines from the lens. The W lines
+are the usual ones: editor network auth, depth format, and material batcher "batching retries
+exhausted" for text visuals. One `E TypeScript compilation failed … Cannot find name
+'FinishPulsesAtTime'` appeared from Lens Studio's auto-compile between two edits of `LeafIndex.ts`.
+The explicit recompile right after succeeded, and every run above came after it.
+
+## Tests
+
+`npm run check`: typecheck + lint + vitest **115/115**. New `tests/unit/GazeTimeline.test.ts` (10):
+zone history buckets (split frames, ties, partial bucket, nudge times, reset), downsampling (≤ 60,
+majority, zone-beats-nobody tie), segment merging, axis ticks (2:51 → 0:00 / 1:00 / 2:00 / 2:51),
+a 2:51 session with a 14 s left look-away and a nudge at 1:23, the < 1 s and no-time cases,
+`finishPulse` (rest → 1 at target → 0 at +0.5 s → 1 at +1 s) and `podiumState.finishPulse` only in
+Rehearsal. `PanelModels.test.ts`'s snapshot fixture gained the `timeline` field.
+
+## Screenshots retaken (2283 × 1590, "Preview 2")
+
+| File | Shows |
+|---|---|
+| `03-nudge-chevron.png` | Amber "‹‹" double chevron over "left" at the left edge, the pill "Screens pull eyes", the audience (staged hold, D14). No LEAF overlay |
+| `06-summary.png` | From `capture_summary`: "Session complete" chip, check icon + "Nice work — 0:22", Balance 58, **Left 7 % and Right 61 % amber**, timeline with a coral **"12 s"** box on L from 0:10, an amber nudge dot + "nudge" at ~0:08, axis 0:00 / 0:10 / 0:22, "12 s · left · at 0:10", "0 · 1", tip "Next time, look left more.", Again / Done |
+
+## Seen, not fixed
+
+- After `demo_reel` the Summary panel is placed slightly right of the preview's center, because it
+  is placed along the scripted gaze at the moment Summary opens. This placement isn't new in
+  pass 5, and the `capture_summary` framing is centered.
+- At the preview's resolution the strip's "C" row label is small. It's readable at full size, but
+  it's the smallest text on the panel after the axis.
+
+## Still open after pass 5
+
+- Balance-badge two-size typography (one Text role for number and caption).
+- Demo recording, plus G3, G4, G5, G8, D10 and D2 as before.
+- Nothing committed.

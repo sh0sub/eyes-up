@@ -56,8 +56,21 @@ const THEME_FONT = requireAsset('../Fonts/Inter.ttf') as Font;
 const IMAGE_MATERIAL = requireAsset('../Materials/ImageMaterial.mat') as Material;
 
 /** Material Symbols imported with IconSelector (defaults: Rounded, 600, white, 512 px). */
-export type IconName = 'play_arrow' | 'chevron_left' | 'chevron_right' | 'flag' | 'replay' | 'check';
+export type IconName =
+  | 'play_arrow'
+  | 'chevron_left'
+  | 'chevron_right'
+  | 'flag'
+  | 'replay'
+  | 'check'
+  | 'check_circle'
+  | 'double_arrow_left'
+  | 'double_arrow_right';
 const ICONS: Record<IconName, Texture> = {
+  // Pass 5: pre-tinted imports (mint check circle for S5, amber double chevrons for S3).
+  check_circle: requireAsset('../Icons/check_circle_hex8cffcc.png') as Texture,
+  double_arrow_left: requireAsset('../Icons/keyboard_double_arrow_left_hexffb833.png') as Texture,
+  double_arrow_right: requireAsset('../Icons/keyboard_double_arrow_right_hexffb833.png') as Texture,
   play_arrow: requireAsset('../Icons/play_arrow.png') as Texture,
   chevron_left: requireAsset('../Icons/chevron_left.png') as Texture,
   chevron_right: requireAsset('../Icons/chevron_right.png') as Texture,
@@ -148,7 +161,7 @@ function themeButton(button: Button, so: SceneObject, w: number, h: number, prim
   button.onTriggerUp.add(() => set(hover));
 }
 
-function addIcon(parent: SceneObject, icon: IconName, sizeCm: number, local: vec3): Image {
+export function addIcon(parent: SceneObject, icon: IconName, sizeCm: number, local: vec3): Image {
   const so = child(parent, 'Icon', local);
   so.getTransform().setLocalScale(new vec3(sizeCm, sizeCm, 1));
   const img = so.createComponent('Component.Image') as Image;
@@ -229,6 +242,42 @@ function makeText(so: SceneObject, value: string, role: TextRole, widthCm: numbe
   t.verticalOverflow = VerticalOverflow.Overflow;
   t.layoutRect = Rect.create(-widthCm / 2, widthCm / 2, -heightCm / 2, heightCm / 2);
   return t;
+}
+
+/** Pass 5: a free-positioned text (not a FlexItem) at `local`, for overlays such as timeline labels. */
+export function addText(
+  parent: SceneObject,
+  name: string,
+  value: string,
+  role: TextRole,
+  widthCm: number,
+  heightCm: number,
+  distanceCm: number,
+  color: vec4,
+  local: vec3,
+): Text {
+  return makeText(child(parent, name, local), value, role, widthCm, heightCm, distanceCm, color);
+}
+
+/** Pass 5: a free-positioned icon cell inside a flex row (FlexItem `cellW × cellH`, icon centered). */
+export function addIconCell(parent: SceneObject, name: string, icon: IconName, sizeCm: number, cellW: number, cellH: number): Image {
+  const so = child(parent, name);
+  const img = addIcon(so, icon, sizeCm, new vec3(0, 0, BUTTON_LABEL_Z));
+  const item = so.createComponent(FlexItem.getTypeName()) as FlexItem;
+  item.overrideWidth = cellW;
+  item.overrideHeight = cellH;
+  item.flexShrink = 0;
+  return img;
+}
+
+/** Pass 5: an empty FlexItem block `w × h` to draw into by hand (e.g. the Summary gaze timeline). */
+export function addBlock(parent: SceneObject, name: string, w: number, h: number): SceneObject {
+  const so = child(parent, name);
+  const item = so.createComponent(FlexItem.getTypeName()) as FlexItem;
+  item.overrideWidth = w;
+  item.overrideHeight = h;
+  item.flexShrink = 0;
+  return so;
 }
 
 /** One text row in a FlexLayout column (or one cell in a row). */

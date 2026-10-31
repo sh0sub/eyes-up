@@ -15,6 +15,19 @@ export interface PodiumState {
   timerLabel: string;
   controlsEnabled: boolean;
   replaceVisible: boolean;
+  /**
+   * Pass 5 (artifact S4 / brief): Finish pulses once the elapsed time reaches the target.
+   * 0 = no pulse; otherwise a 1 Hz 0..1 wave starting at 1 the moment the target is reached.
+   */
+  finishPulse: number;
+}
+
+/** Finish pulse rate (Hz), same rhythm as the nudge chevron. */
+export const FINISH_PULSE_HZ = 1;
+
+export function finishPulse(elapsedSeconds: number, targetSeconds?: number): number {
+  if (!targetSeconds || targetSeconds <= 0 || elapsedSeconds < targetSeconds) return 0;
+  return 0.5 + 0.5 * Math.cos(2 * Math.PI * FINISH_PULSE_HZ * (elapsedSeconds - targetSeconds));
 }
 
 export interface PodiumInput {
@@ -38,5 +51,6 @@ export function podiumState(i: PodiumInput): PodiumState {
       i.targetSeconds && i.targetSeconds > 0 ? `${formatMSS(i.elapsedSeconds)} / ${formatMSS(i.targetSeconds)}` : formatMSS(i.elapsedSeconds),
     controlsEnabled: i.phase === 'Rehearsal',
     replaceVisible: i.phase !== 'Rehearsal' && i.phase !== 'Launch',
+    finishPulse: i.phase === 'Rehearsal' ? finishPulse(i.elapsedSeconds, i.targetSeconds) : 0,
   };
 }

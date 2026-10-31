@@ -29,6 +29,9 @@ export class Podium extends BaseScriptComponent {
   private sectionText!: Text;
   private elapsedText!: Text;
   private replaceButton!: SceneObject;
+  private finishButton: SceneObject | null = null;
+  private finishLabel: Text | null = null;
+  private pulsing = false;
   private handlers: PodiumHandlers | null = null;
   private visible = false;
   private frames = 0;
@@ -52,11 +55,26 @@ export class Podium extends BaseScriptComponent {
       primary: true,
       labelRole: 'HeadlineXL',
     });
-    addButton(buttons, 'FinishButton', 'Finish', 6.4, 3.6, DIST, () => this.handlers?.finish(), {
+    const finish = addButton(buttons, 'FinishButton', 'Finish', 6.4, 3.6, DIST, () => this.handlers?.finish(), {
       icon: 'flag',
       amber: true,
       labelRole: 'Headline1',
     });
+    this.finishButton = finish.button.getSceneObject();
+    this.finishLabel = finish.label;
+  }
+
+  /**
+   * Pass 5 (artifact S4 / brief): once the talk length is reached, Finish pulses at 1 Hz — scale
+   * 1.00 ↔ 1.12 and the label between white and amber. `p` = 0 leaves it at rest.
+   */
+  private pulseFinish(p: number): void {
+    if (!this.finishButton) return;
+    if (p === 0 && !this.pulsing) return;
+    this.pulsing = p > 0;
+    const s = 1 + 0.12 * p;
+    this.finishButton.getTransform().setLocalScale(new vec3(s, s, 1));
+    if (this.finishLabel) this.finishLabel.textFill.color = new vec4(1, 1 - 0.25 * p, 1 - 0.7 * p, 1);
   }
 
   bind(handlers: PodiumHandlers): void {
@@ -81,5 +99,6 @@ export class Podium extends BaseScriptComponent {
     this.sectionText.text = state.sectionLabel;
     this.elapsedText.text = state.timerLabel;
     this.replaceButton.enabled = state.replaceVisible;
+    this.pulseFinish(state.finishPulse);
   }
 }

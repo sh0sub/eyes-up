@@ -2,8 +2,10 @@ import { scenariosIndex } from 'Leaf.lspkg/Scenarios/decorator/ScenarioIndexDeco
 import { ScenarioMetadata } from 'Leaf.lspkg/Scenarios/scenario/ScenarioMetadata';
 import { CaptureNudgeHold } from './CaptureNudgeHold';
 import { CapturePodium } from './CapturePodium';
+import { CaptureSummary } from './CaptureSummary';
 import { DemoReel } from './DemoReel';
 import { DwellExpandsPill } from './DwellExpandsPill';
+import { FinishPulsesAtTime } from './FinishPulsesAtTime';
 import { FinishShowsSummary } from './FinishShowsSummary';
 import { GazeFillsHalo } from './GazeFillsHalo';
 import { NeglectTriggersNudge } from './NeglectTriggersNudge';
@@ -26,6 +28,9 @@ export class LeafIndex extends BaseScriptComponent {
     // capture helper for devpost screenshot 03, not a done criterion
     { id: 'capture_nudge_hold', typename: CaptureNudgeHold.getTypeName() },
     { id: 'capture_podium', typename: CapturePodium.getTypeName() },
+    { id: 'capture_summary', typename: CaptureSummary.getTypeName() },
+    // pass 5: Finish pulse at time-up (S4), extra check beyond the 7 done criteria
+    { id: 'finish_pulses_at_time', typename: FinishPulsesAtTime.getTypeName() },
     // pass 3: ~75 s showcase for the demo video, not a done criterion
     { id: 'demo_reel', typename: DemoReel.getTypeName() },
   ];

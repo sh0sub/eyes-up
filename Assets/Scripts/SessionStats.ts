@@ -7,8 +7,22 @@
  *   the longest stretch over the session (and its zone) is reported ("Longest look-away: 11 seconds, left").
  * - Balance score 0..100: 100 = perfectly even thirds, 0 = all gaze on one zone
  *   (1 − total-variation distance from uniform, normalized). The formula is a design choice; the plan only names the metric.
+ * - Zone history (pass 5, artifact S5 ③ gaze timeline): one entry per 0.5 s bucket holding the zone
+ *   looked at longest in that bucket (null = mostly nobody), plus the session time of each nudge.
+ *   core/GazeTimeline.ts downsamples it to ≤ 60 columns for the Summary strip.
  */
 import { ZONES, ZONE_NAMES, Zone, ZoneName } from './core/Tunables';
+
+/** Seconds per zone-history bucket. */
+export const TIMELINE_BUCKET_SECONDS = 0.5;
+
+export interface ZoneHistory {
+  bucketSeconds: number;
+  /** One entry per bucket, oldest first; the last (partial) bucket is included when it has time. */
+  zones: Array<Zone | null>;
+  /** Session time (s) of each nudge start. */
+  nudgeTimes: number[];
+}
 
 export interface StatsSnapshot {
   durationSeconds: number;
@@ -20,6 +34,7 @@ export interface StatsSnapshot {
   cardExpands: number;
   nudges: number;
   balanceScore: number;
+  timeline: ZoneHistory;
 }
 
 export class SessionStats {
@@ -29,6 +44,11 @@ export class SessionStats {
   private longest = { seconds: 0, zone: 0 as Zone, startSeconds: 0 };
   private cards = 0;
   private nudgeCount = 0;
+  private history: Array<Zone | null> = [];
+  private nudgeTimes: number[] = [];
+  /** Time per [left, center, right, nobody] inside the open bucket, and how full it is. */
+  private bucket: [number, number, number, number] = [0, 0, 0, 0];
+  private bucketFill = 0;
 
   reset(): void {
     this.duration = 0;
@@ -37,6 +57,10 @@ export class SessionStats {
     this.longest = { seconds: 0, zone: 0, startSeconds: 0 };
     this.cards = 0;
     this.nudgeCount = 0;
+    this.history = [];
+    this.nudgeTimes = [];
+    this.bucket = [0, 0, 0, 0];
+    this.bucketFill = 0;
   }
 
   update(dt: number, gazeZone: Zone | null): void {
@@ -52,6 +76,24 @@ export class SessionStats {
         }
       }
     }
+    this.recordHistory(dt, gazeZone);
+  }
+
+  /** Splits `dt` across 0.5 s buckets; a bucket closes with the zone that got the most of it. */
+  private recordHistory(dt: number, gazeZone: Zone | null): void {
+    const slot = gazeZone === null ? 3 : gazeZone;
+    let rest = dt;
+    while (rest > 1e-9) {
+      const take = Math.min(rest, TIMELINE_BUCKET_SECONDS - this.bucketFill);
+      this.bucket[slot] += take;
+      this.bucketFill += take;
+      rest -= take;
+      if (this.bucketFill >= TIMELINE_BUCKET_SECONDS - 1e-9) {
+        this.history.push(bucketZone(this.bucket));
+        this.bucket = [0, 0, 0, 0];
+        this.bucketFill = 0;
+      }
+    }
   }
 
   recordCardExpand(): void {
@@ -60,6 +102,7 @@ export class SessionStats {
 
   recordNudge(): void {
     this.nudgeCount++;
+    this.nudgeTimes.push(this.duration);
   }
 
   get nudges(): number {
@@ -80,8 +123,20 @@ export class SessionStats {
       cardExpands: this.cards,
       nudges: this.nudgeCount,
       balanceScore: balanceScore(this.zoneTime),
+      timeline: {
+        bucketSeconds: TIMELINE_BUCKET_SECONDS,
+        zones: this.bucketFill > 1e-9 ? [...this.history, bucketZone(this.bucket)] : [...this.history],
+        nudgeTimes: [...this.nudgeTimes],
+      },
     };
   }
+}
+
+/** The zone with the most time in a bucket; null when "nobody" got strictly more than each zone. Ties go left → right. */
+function bucketZone(b: readonly [number, number, number, number]): Zone | null {
+  let best = 0;
+  for (let z = 1; z < 3; z++) if (b[z] > b[best]) best = z;
+  return b[3] > b[best] ? null : (best as Zone);
 }
 
 /** Largest-remainder rounding so the three integers always sum to 100. */

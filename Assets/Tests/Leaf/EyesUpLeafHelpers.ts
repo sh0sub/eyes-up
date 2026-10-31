@@ -5,6 +5,7 @@
  */
 import { DefaultLeafInteractor } from 'Leaf.lspkg/Interactors/interactor/DefaultLeafInteractor';
 import { findInteractableByName } from 'Leaf.lspkg/Interactors/InteractableUtils';
+import { UpdateDispatcher } from 'Leaf.lspkg/Utils/common/UpdateDispatcher';
 import { findSceneObjectByName, sleep, waitUntil } from 'Leaf.lspkg/Utils/common/Utils';
 import { EyesUpApp } from '../../Scripts/EyesUpApp';
 import { ScriptedGazeProvider } from '../../Scripts/GazeProvider';
@@ -69,6 +70,22 @@ export async function lookDownAtPodium(rig: Rig): Promise<void> {
     return !!b && b.isEnabledInHierarchy;
   }, 3000);
   await sleep(200);
+}
+
+/**
+ * Capture helpers only: hide the LEAF on-screen log strip (`LeafDebugUICamera`) every frame until
+ * `holdSeconds` after the returned `release()` is called, so a screenshot taken after the scenario
+ * returns is clean.
+ */
+export function muteLeafOverlay(holdSeconds = 60): () => void {
+  const dispatcher = UpdateDispatcher.getInstance();
+  const hide = () => {
+    const overlay = findSceneObjectByName('LeafDebugUICamera');
+    if (overlay && overlay.enabled) overlay.enabled = false;
+  };
+  const unsubscribe = dispatcher.onUpdate.add(hide);
+  hide();
+  return () => dispatcher.createDelayedEvent(() => unsubscribe(), holdSeconds);
 }
 
 export function textOf(name: string): string {
