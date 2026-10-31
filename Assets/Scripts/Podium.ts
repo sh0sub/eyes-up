@@ -5,7 +5,7 @@
  * Builds its own UIKit UI (EyesUpUI.ts). Buttons are UIKit `Button`s (each owns a SIK Interactable
  * created at initialize, so LEAF finds them by SceneObject name: PrevButton, NextButton,
  * FinishButton, ReplaceButton). Triggers use the Element-level `onTriggerUp`, per specs-build-ui.
- * Logic lives in core/PodiumModel.ts (unit-tested). Buttons are 3.4 cm tall at 55 cm (brief: ≥ 3 cm).
+ * Logic lives in core/PodiumModel.ts (unit-tested). Buttons are 3.6 cm tall at 55 cm (Re-place 3.2; brief: ≥ 3 cm).
  */
 import { PodiumState } from './core/PodiumModel';
 import { Panel, TEXT_ACCENT, addButton, faceTowards, flexRow, makePanel, textRow } from './EyesUpUI';
@@ -17,7 +17,8 @@ export interface PodiumHandlers {
   replace(): void;
 }
 
-const W = 30;
+/** Pass 3 (demo legibility): 30 → 34 cm wide so the larger labels fit; buttons 7.2 × 3.6 cm (≥ 3 cm). */
+const W = 34;
 const H = 11;
 const DIST = 55;
 
@@ -34,14 +35,21 @@ export class Podium extends BaseScriptComponent {
   onAwake(): void {
     this.panel = makePanel(this.getSceneObject(), W, H, 1.0, 0.8);
     const c = this.panel.content;
-    const info = flexRow(c, 'PodiumInfo', W - 2, 2.6, 2);
-    this.sectionText = textRow(info, 'SectionText', '1 / 6', 'Headline2', 10, 2.4, DIST, TEXT_ACCENT);
-    this.elapsedText = textRow(info, 'ElapsedText', '0:00', 'Headline2', 10, 2.4, DIST);
-    const buttons = flexRow(c, 'PodiumButtons', W - 2, 3.6, 1.0);
-    this.replaceButton = addButton(buttons, 'ReplaceButton', 'Re-place', 5.6, 3.0, DIST, () => this.handlers?.replace()).button.getSceneObject();
-    addButton(buttons, 'PrevButton', 'Prev', 6.4, 3.4, DIST, () => this.handlers?.prev(), { icon: 'chevron_left' });
-    addButton(buttons, 'NextButton', 'Next', 6.4, 3.4, DIST, () => this.handlers?.next(), { icon: 'chevron_right' });
-    addButton(buttons, 'FinishButton', 'Finish', 6.4, 3.4, DIST, () => this.handlers?.finish(), { icon: 'flag', primary: true });
+    // Pass 3: info Headline2 → Title2, button labels Button (39) → HeadlineXL (62) / Headline1 (54).
+    const info = flexRow(c, 'PodiumInfo', W - 2, 3.2, 2);
+    this.sectionText = textRow(info, 'SectionText', '1 / 6', 'Title2', 11, 3.0, DIST, TEXT_ACCENT);
+    this.elapsedText = textRow(info, 'ElapsedText', '0:00', 'Title2', 11, 3.0, DIST);
+    const buttons = flexRow(c, 'PodiumButtons', W - 2, 3.8, 1.0);
+    this.replaceButton = addButton(buttons, 'ReplaceButton', 'Re-place', 6.0, 3.2, DIST, () => this.handlers?.replace(), {
+      labelRole: 'Headline1',
+    }).button.getSceneObject();
+    addButton(buttons, 'PrevButton', 'Prev', 7.2, 3.6, DIST, () => this.handlers?.prev(), { icon: 'chevron_left', labelRole: 'HeadlineXL' });
+    addButton(buttons, 'NextButton', 'Next', 7.2, 3.6, DIST, () => this.handlers?.next(), { icon: 'chevron_right', labelRole: 'HeadlineXL' });
+    addButton(buttons, 'FinishButton', 'Finish', 7.2, 3.6, DIST, () => this.handlers?.finish(), {
+      icon: 'flag',
+      primary: true,
+      labelRole: 'HeadlineXL',
+    });
   }
 
   bind(handlers: PodiumHandlers): void {

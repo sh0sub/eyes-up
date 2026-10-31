@@ -41,25 +41,27 @@ export class SummaryPanel extends BaseScriptComponent {
   private wantVisible = false;
 
   onAwake(): void {
-    this.panel = makePanel(this.getSceneObject(), W, H, 2.0, 0.6);
+    // Pass 3 (demo legibility): every row one or two roles larger; row gap 0.6 → 0.5 to fit 50 × 40 cm.
+    this.panel = makePanel(this.getSceneObject(), W, H, 2.0, 0.5);
     const c = this.panel.content;
-    textRow(c, 'SummaryTitle', this.title, 'Headline1', W - 4, 3.6, DIST);
-    this.timeText = textRow(c, 'TimeText', '0:00', 'HeadlineXL', W - 4, 4.0, DIST, TEXT_ACCENT);
+    textRow(c, 'SummaryTitle', this.title, 'Title2', W - 4, 5.0, DIST);
+    this.timeText = textRow(c, 'TimeText', '0:00', 'Title1', W - 4, 5.4, DIST, TEXT_ACCENT);
     for (const name of ['Left', 'Center', 'Right']) {
       const row = flexRow(c, `Zone${name}`, W - 6, 2.8, 1.2);
-      this.zoneTexts.push(textRow(row, `Zone${name}Text`, `${name.toLowerCase()} 100%`, 'Body', 12, 2.4, DIST));
+      this.zoneTexts.push(textRow(row, `Zone${name}Text`, `${name.toLowerCase()} 100%`, 'Headline2', 13, 2.8, DIST));
       const barCell = flexRow(row, `Zone${name}BarCell`, BAR_W, 2.4, 0);
       const pivot = child(barCell, `Zone${name}Bar`, new vec3(-BAR_W / 2, 0, 0.1));
       const bar = child(pivot, 'Fill', new vec3(BAR_W / 2, 0, 0));
       addSurface(bar, BAR_W, BAR_H, 0, BAR_FILL, null); // bright cyan fill, readable on additive
       this.zoneBars.push(pivot);
     }
-    this.longestText = textRow(c, 'LongestText', 'Longest look-away: 0 s, left', 'Body', W - 6, 2.4, DIST, TEXT_SECONDARY);
-    this.cardsText = textRow(c, 'CardsText', 'Card expands: 0', 'Body', W - 6, 2.4, DIST, TEXT_SECONDARY);
-    this.balanceText = textRow(c, 'BalanceText', 'Balance: 100 / 100', 'Subheadline', W - 6, 2.4, DIST);
+    this.longestText = textRow(c, 'LongestText', 'Longest look-away: 0 s, left', 'Subheadline', W - 6, 2.6, DIST, TEXT_SECONDARY);
+    this.cardsText = textRow(c, 'CardsText', 'Card expands: 0', 'Subheadline', W - 6, 2.6, DIST, TEXT_SECONDARY);
+    this.balanceText = textRow(c, 'BalanceText', 'Balance: 100 / 100', 'Headline2', W - 6, 2.8, DIST);
     const buttons = flexRow(c, 'SummaryButtons', W - 6, 4.6, 3);
-    addButton(buttons, 'AgainButton', 'Again', 12, 4.2, DIST, () => this.onAgain?.(), { icon: 'replay', primary: true });
-    addButton(buttons, 'DoneButton', 'Done', 12, 4.2, DIST, () => this.onDone?.(), { icon: 'check' });
+    const big = { labelRole: 'Headline2' as const };
+    addButton(buttons, 'AgainButton', 'Again', 12, 4.2, DIST, () => this.onAgain?.(), { icon: 'replay', primary: true, ...big });
+    addButton(buttons, 'DoneButton', 'Done', 12, 4.2, DIST, () => this.onDone?.(), { icon: 'check', ...big });
     // Hidden state is applied in UpdateEvent, after every UIKit element ran OnStart (G3).
     this.createEvent('UpdateEvent').bind(() => {
       if (this.panel.root.enabled !== this.wantVisible) this.panel.root.enabled = this.wantVisible;

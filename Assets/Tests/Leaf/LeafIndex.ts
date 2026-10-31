@@ -2,6 +2,7 @@ import { scenariosIndex } from 'Leaf.lspkg/Scenarios/decorator/ScenarioIndexDeco
 import { ScenarioMetadata } from 'Leaf.lspkg/Scenarios/scenario/ScenarioMetadata';
 import { CaptureNudgeHold } from './CaptureNudgeHold';
 import { CapturePodium } from './CapturePodium';
+import { DemoReel } from './DemoReel';
 import { DwellExpandsPill } from './DwellExpandsPill';
 import { FinishShowsSummary } from './FinishShowsSummary';
 import { GazeFillsHalo } from './GazeFillsHalo';
@@ -25,5 +26,7 @@ export class LeafIndex extends BaseScriptComponent {
     // capture helper for devpost screenshot 03, not a done criterion
     { id: 'capture_nudge_hold', typename: CaptureNudgeHold.getTypeName() },
     { id: 'capture_podium', typename: CapturePodium.getTypeName() },
+    // pass 3: ~75 s showcase for the demo video, not a done criterion
+    { id: 'demo_reel', typename: DemoReel.getTypeName() },
   ];
 }

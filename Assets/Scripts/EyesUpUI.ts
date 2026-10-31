@@ -59,9 +59,13 @@ const ICONS: Record<IconName, Texture> = {
 };
 
 // ---- theme (design pass 2: never black; the additive display shows roughly color × alpha) ----
-/** Panel surface: translucent blue-grey with a light hairline frame. */
-const SURFACE_FILL = new vec4(0.2, 0.27, 0.37, 0.8);
-const SURFACE_BORDER = new vec4(0.6, 0.78, 0.95, 0.55);
+/**
+ * Panel surface: blue-grey with a light hairline frame. Pass 3 (demo legibility): alpha 0.80 → 0.95
+ * and a slightly deeper tone, so the room behind reads less through the panel while white text
+ * keeps its contrast. On the additive display nothing is fully opaque.
+ */
+const SURFACE_FILL = new vec4(0.17, 0.23, 0.33, 0.95);
+const SURFACE_BORDER = new vec4(0.6, 0.78, 0.95, 0.7);
 /** Button faces: brighter blue-grey than the surface, with a light frame. */
 const BUTTON_FACE = new vec4(0.3, 0.42, 0.58, 0.95);
 const BUTTON_FACE_HOVER = new vec4(0.4, 0.56, 0.76, 1);
@@ -254,6 +258,8 @@ export interface ButtonOptions {
   icon?: IconName;
   /** Primary action styling (cyan-teal face). */
   primary?: boolean;
+  /** Type-scale role of the label (default 'Button'). Pass 3 uses larger roles for demo legibility. */
+  labelRole?: TextRole;
 }
 
 /**
@@ -275,14 +281,15 @@ export function addButton(
   const button = so.createComponent(Button.getTypeName()) as Button;
   button.size = new vec3(widthCm, heightCm, 1);
   themeButton(button, so, widthCm, heightCm, opts.primary === true);
+  const role = opts.labelRole ?? 'Button';
   let labelX = 0;
   let labelW = widthCm - 0.5;
   if (opts.icon) {
     const iconSize = Math.min(heightCm * 0.6, 2.4);
     const gap = 0.3;
-    // Estimated label width (Inter at the Button role ≈ 0.42 cm per glyph at 110 cm) so the
+    // Estimated label width (Inter at size 39 ≈ 0.42 cm per glyph at 110 cm) so the
     // icon + label group is centered on the face.
-    const glyph = (roleSize('Button', distanceCm) / 39) * 0.42;
+    const glyph = (roleSize(role, distanceCm) / 39) * 0.42;
     const textW = Math.min(widthCm - iconSize - 1.2, label.length * glyph);
     const groupW = iconSize + gap + textW;
     addIcon(so, opts.icon, iconSize, new vec3(-groupW / 2 + iconSize / 2, 0, BUTTON_LABEL_Z));
@@ -290,7 +297,7 @@ export function addButton(
     labelW = textW + 0.4;
   }
   const labelSo = child(so, 'Label', new vec3(labelX, 0, BUTTON_LABEL_Z));
-  const text = makeText(labelSo, label, 'Button', labelW, heightCm, distanceCm, TEXT_PRIMARY);
+  const text = makeText(labelSo, label, role, labelW, heightCm, distanceCm, TEXT_PRIMARY);
   const item = so.createComponent(FlexItem.getTypeName()) as FlexItem;
   item.overrideWidth = widthCm;
   item.overrideHeight = heightCm;

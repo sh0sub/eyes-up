@@ -77,6 +77,7 @@ export class EyesUpApp extends BaseScriptComponent {
   private cameraGaze!: CameraGazeProvider;
   private scripted: ScriptedGazeProvider | null = null;
   private panelAge = 0;
+  private views!: SessionViews;
 
   onAwake(): void {
     this.collectAudience();
@@ -90,6 +91,7 @@ export class EyesUpApp extends BaseScriptComponent {
     this.gaze = new SwitchableGazeProvider(this.cameraGaze);
     if (this.useScriptedGaze) this.useScriptedGazeNow();
 
+    this.views = this.makeViews();
     this.session = new EyesUpSession(
       this.gaze,
       {
@@ -102,7 +104,7 @@ export class EyesUpApp extends BaseScriptComponent {
         dwellSeconds: this.dwellSeconds,
         podiumPitchDeg: this.podiumPitchDeg,
       },
-      this.makeViews(),
+      this.views,
     );
 
     this.session.onEvent((e) => {
@@ -243,6 +245,13 @@ export class EyesUpApp extends BaseScriptComponent {
     const onStage = phase === 'Placing' || phase === 'Rehearsal' || phase === 'Finishing';
     this.stageLine.enabled = onStage;
     if (!onStage) this.cueCard.enabled = false;
+    if (phase === 'Summary') {
+      // Pass 3: the Summary panel is translucent (and the display additive), so lit halos behind it
+      // showed through. While Summary is open the halos fade out and the silhouettes are hidden;
+      // Again re-places and fades them back in (EyesUpSession.enterPlacing).
+      this.views.audience?.setFade(0);
+      this.audience.forEach((a) => (a.enabled = false));
+    }
     const layout = this.session.layout;
     if (layout && phase === 'Placing') {
       this.podium.placeAt(layout.podiumPosition.x, layout.podiumPosition.y, layout.podiumPosition.z, this.headPosition());

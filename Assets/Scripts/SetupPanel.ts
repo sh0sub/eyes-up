@@ -32,16 +32,28 @@ export class SetupPanel extends BaseScriptComponent {
   private wantVisible = true;
 
   onAwake(): void {
-    this.panel = makePanel(this.getSceneObject(), W, H, 2, 1.0);
+    // Pass 3 (demo legibility): title Headline1 → Title2, subtitle Caption → Headline2,
+    // button labels Button (39) → Headline1 (54); row gap 1.0 → 0.9 so it still fits 40 × 30 cm.
+    this.panel = makePanel(this.getSceneObject(), W, H, 2, 0.9);
     const c = this.panel.content;
-    textRow(c, 'SetupTitle', this.title, 'Headline1', W - 4, 3.2, DIST);
-    textRow(c, 'SetupSubtitle', this.subtitle, 'Caption', W - 4, 2.0, DIST, TEXT_SECONDARY);
-    this.lengthText = addButton(c, 'LengthButton', '', 30, 3.6, DIST, () => this.cycleLength()).label;
-    this.audienceText = addButton(c, 'AudienceButton', '', 30, 3.6, DIST, () => this.cycleAudience()).label;
-    this.deckText = addButton(c, 'DeckButton', '', 30, 3.6, DIST, () => {
-      this.model.toggleDeck();
-      this.refresh();
-    }).label;
+    textRow(c, 'SetupTitle', this.title, 'Title2', W - 4, 4.0, DIST);
+    textRow(c, 'SetupSubtitle', this.subtitle, 'Headline2', W - 4, 2.2, DIST, TEXT_SECONDARY);
+    const big = { labelRole: 'Headline1' as const };
+    this.lengthText = addButton(c, 'LengthButton', '', 30, 3.6, DIST, () => this.cycleLength(), big).label;
+    this.audienceText = addButton(c, 'AudienceButton', '', 30, 3.6, DIST, () => this.cycleAudience(), big).label;
+    this.deckText = addButton(
+      c,
+      'DeckButton',
+      '',
+      30,
+      3.6,
+      DIST,
+      () => {
+        this.model.toggleDeck();
+        this.refresh();
+      },
+      big,
+    ).label;
     addButton(
       c,
       'StartButton',
@@ -53,7 +65,7 @@ export class SetupPanel extends BaseScriptComponent {
         if (this.exitTime >= 0) return;
         this.exitTime = 0; // 0.3 s shrink, then hand the config to EyesUpApp
       },
-      { icon: 'play_arrow', primary: true },
+      { icon: 'play_arrow', primary: true, labelRole: 'Headline1' },
     );
     // Visibility is applied in UpdateEvent (after every UIKit element has run OnStart): disabling
     // a UIKit host before its OnStart stops it from ever initializing (specs-build-ui G3).

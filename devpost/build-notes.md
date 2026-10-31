@@ -338,3 +338,91 @@ skills/specs-leaf-run-in-preview (run scenarios one at a time in preview, captur
   remove the quads if UIKit draws.
 - D2's LEAF patch is still in place.
 - Nothing committed.
+
+---
+
+# Pass 3 (2026-10-31, headless)
+
+Same setup: Lens Studio 5.24.1 through the lens-studio MCP server, no human available. The label is
+still **logic proven / feel unproven**.
+
+## Summary
+
+| Task | Result |
+|---|---|
+| 1 Health | **Not a current bug.** `TypeScript compilation failed … Cannot create component for class GazeFillsHalo` at `Assets/Tests/Leaf/EyesUpScenarios.ts:42` is in the log at 21:19 (pass 1), when all scenarios shared one file. Lens Studio allows one `@component` per file. That file is gone (scenarios are split one per file), nothing references it, a forced `RecompileTypeScriptTool` **succeeded**, and `RunAndCollectLogsTool` refresh shows no Lens errors, only editor network, LEAF-plugin and depth-format warnings. |
+| 2 Legibility polish | Larger type on all three panels, podium labels most of all. Panel fill alpha 0.80 → 0.95. Audience and halos hidden while Summary is open. Details below. |
+| 3 Demo reel | New LEAF scenario **`demo_reel`** (`Assets/Tests/Leaf/DemoReel.ts`, registered in `LeafIndex`), 71 s. Timeline: `devpost/demo-reel-timeline.md`, taken from the run's own log lines. |
+| 4 Preview size | **Done.** Through `Editor.Dock.IDockManager.write()/read()`: the top-level horizontal splitter went 177/427/202/201 → 0/0/0/1007. The other columns collapse to a few px and stay docked (LEAF panel included). Preview went from ~201×590 pt (1392×4096 px capture, portrait) to ~1015×706 pt (**2283×1590 px**, landscape). The layout reload recreated the panel as **"Preview 2"** (same SPECS 27 / Interactive / Sunlit Room config). To restore, drag the splitters back or reset the layout. |
+| 5 Recording | **Failed: frozen window image.** `record-window.sh 25113 85 …` ran and wrote **882 frames** (~10.4 fps), and the lens ran the full reel in that window. But every frame (checked 0, 60, 500, 880) is the **same stale image**: the old layout (narrow "Preview 1"), with Logger lines from 21:19. The window server isn't refreshing window 25113 (likely off-screen, another Space or minimized, or a stale id). I couldn't list window ids (`osascript` CGWindowList needs an approval this run can't get). **No frame shows Setup in the current layout.** Fix: bring the Lens Studio window on-screen in the current Space, confirm the id, and re-run the recorder plus `demo_reel`. It's deterministic. |
+| 6 Verification | 7/7 done-criteria LEAF scenarios pass. `npm run check` green (**97/97**). Project saved (`model.project.save()`). Nothing committed. |
+
+## Design-note changes (before → after)
+
+| Note | Before | After |
+|---|---|---|
+| Podium labels small next to icons (pass-2 note) | labels `Button` (39), info `Headline2`, buttons 6.4×3.4 cm, panel 30 cm wide | Prev/Next/Finish labels `HeadlineXL` (62), Re-place `Headline1`, "1 / 6" and timer `Title2`. Buttons **7.2×3.6 cm** (Re-place 6.0×3.2) at 55 cm, all ≥ 3 cm. Podium **34 cm** wide so they fit |
+| Setup text small | title `Headline1`, subtitle `Caption`, labels `Button` | title `Title2`, subtitle `Headline2`, all four button labels `Headline1`. Row gap 1.0 → 0.9 to stay inside 40×30 cm |
+| Summary text small | title `Headline1`, time `HeadlineXL`, zone/stat rows `Body` | title `Title2`, time `Title1`, zone labels and balance `Headline2`, stat lines `Subheadline`, button labels `Headline2`. Row gap 0.6 → 0.5 to stay inside 50×40 cm |
+| Panel too see-through | fill `rgba(0.20,0.27,0.37,0.80)`, frame α 0.55 | fill `rgba(0.17,0.23,0.33,0.95)`, frame α 0.70 |
+| Lit halos showed through the Summary (pass-2 note) | audience stays as it was at Finish | on entering Summary, halos fade to 0 and silhouettes are hidden. Again re-places and fades them in (`EyesUpSession.enterPlacing`), so it fits the brief's "Summary only after Finish". Checked in a capture after `finish_shows_summary`: nothing behind the panel |
+
+Seen, not fixed: the Spectacles preview composites the lens **additively**. The poster behind the
+Setup panel still shows through at α 0.95, so alpha can't make a panel opaque on this display. Only
+brightness changes how much the room washes out. A brighter fill would cost text contrast, so the
+change stays modest. The Summary's secondary lines (`TEXT_SECONDARY`, α 0.7) are the dimmest text
+left.
+
+## Decisions made without a human (pass 3)
+
+- **D15: demo reel as a LEAF scenario, not an EyesUpApp tunable.** It reuses the LEAF rig (scripted
+  gaze plus real Button pinches), keeps demo code out of the lens, and can be replayed from MCP. It
+  doesn't change any tunable, so every event happens at its real timing. To fit ~75 s, the sweep
+  covers center → right. The never-watched left zone's 8 s neglect clock runs from the rehearsal
+  start, so the "long stare at the right" ends with the left nudge at +8 s. The gaze then moves left
+  **before** the 3 s hint timeout, so the chevron clears by look (`nudge ends (looked)`), not by
+  timeout. The first dry run got this wrong and was retimed. Later glances cover every zone, so no
+  stray nudge interrupts the card section. The dry run had a right nudge at 40 s; the final run has none.
+- **D16: demo-only gaze reticle.** LEAF can't move the preview camera, so without a marker the
+  viewer can't see where the simulated head looks. `DemoReel.ts` adds a small amber diamond at the
+  gaze target. It is scenario-local and doesn't exist in the lens.
+- **D17: LEAF overlay hidden during demo_reel.** `Logger.logLevel = ERROR` during the run, plus a
+  per-frame `LeafDebugUICamera.enabled = false` that lasts until 15 s after the run. Pass
+  `__leaf__log_level: ERROR` and `__leaf__diagnostic_report_duration_ms: 0` as well. The final
+  `PASSED` line still reaches the plugin. Not checked visually, because the recording failed (task 5).
+- **D18: `ButtonOptions.labelRole`** (EyesUpUI) lets a panel pick a larger type role for a button
+  label. The icon + label centering uses the same role.
+- **D19: Preview enlarged by rewriting the dock layout** instead of opening a second preview.
+  `PreviewPanelTool.openPreview` adds a pane but can't size it, and a detached window would be a
+  different window id from the one the recorder captures.
+
+## LEAF results (Interactive Preview, "Preview 2", run one at a time after the final change)
+
+| Scenario | Result |
+|---|---|
+| `start_places_audience` | ✅ succeeded |
+| `gaze_fills_halo` | ✅ succeeded |
+| `neglect_triggers_nudge` | ✅ succeeded |
+| `next_shows_card_then_pill` | ✅ succeeded |
+| `dwell_expands_pill` | ✅ succeeded |
+| `finish_shows_summary` | ✅ succeeded (overlay: PASSED, 8.6 s) |
+| `repeated_nudge` | ✅ succeeded |
+| `demo_reel` (not a criterion) | ✅ completed, 71.2 s. The MCP call times out at ~60 s, but the lens log shows `✅ Scenario demo_reel completed successfully` |
+
+`npm run check`: typecheck + lint + vitest **97/97**. No Node-tested code changed: the pass-3 edits
+are in the Lens adapters (EyesUpUI, Podium, SetupPanel, SummaryPanel, EyesUpApp) and LEAF-only files.
+
+## MCP tools used (pass 3)
+
+RecompileTypeScriptTool, RunAndCollectLogsTool (refresh + tail), CapturePanelScreenshotTool,
+ListAllPanels, ExecuteEditorCode (IDockManager write/read, project save), PreviewPanelTool
+(listPreviews/getConfig), list_leaf_scenarios, run_leaf_scenario. No raw HTTP. The `.mcp.json` token
+was not read or written.
+
+## Still open after pass 3
+
+- **Demo recording**: re-record after fixing the window id/visibility (task 5).
+- G3, G4, G5, G8, D10 and D2 as listed after pass 2.
+- The demo reel's reticle and overlay muting are demo scaffolding. Mention in the video that gaze
+  is simulated.
+- Nothing committed.
