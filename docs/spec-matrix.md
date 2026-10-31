@@ -117,3 +117,15 @@ Live headless MCP: 6 done-criteria LEAF scenarios PASSED (2.6, 4.3, 11.8, 7.6, 7
 | R5b-S5c | 07 S5 | tiles opaque enough | gap (low) | 06-summary.png tiles still translucent over picture-frame art (unchanged from R5-S5b) |
 | R5b-ASR | 05 Stretch | ASR filler counter | blocked | stretch, needs Snap login, not implemented |
 | R5b-sub | 01 Submission | public repo, YouTube URL in submission.md, device test | blocked | submission.md lines 65-66 still await the YouTube URL (entrant login); no Spectacles |
+
+## Polish round 6 (2026-11-01, judge-visible gaps)
+
+Live headless MCP: 8 LEAF scenarios PASSED (the 6 done criteria plus repeated_nudge and finish_pulses_at_time), no E/F lines. `npm run check`: 130/130 tests, typecheck and lint clean. Screenshots retaken: devpost/screenshots 01, 02, 03, 05, 06 and devpost/walkthrough 01, 02, 03, 05, 06. The demo video (.local/video) was not rebuilt: it still shows the earlier Setup, pill, nudge and Summary looks, so it now differs from the build and the screenshots.
+
+| id | artifact section | expected | status | evidence |
+|---|---|---|---|---|
+| R6-S1b | 07 S1 | title aligned with row labels, rows clear of wall art | match | SetupPanel.ts: title and subtitle left-aligned; EyesUpApp.ts: Setup panel now 10 cm above eye level (was 10 cm below). 01-setup-panel.png |
+| R5b-S5c / R5-S5b | 07 S5 | stat tiles opaque, tip readable | match | EyesUpUI.ts BOX_SOLID / BOX_AMBER_SOLID / TEXT_TIP (brighter fills, pale tip text); Summary raised 17 cm so tiles and tip no longer sit over the picture frames (the display is additive, so only brightness and position help). 06-summary.png |
+| R5-S2b | win | opening pill readable at video size | match | EyesUpApp.ts PILL_SCALE 0.9 -> 1.3, PILL_Y 5 -> 10 (clears the halo). 02-audience-lit-halo.png |
+| R5b-S3a | 07 S3 | chevron and "left" clearly visible | match | EyesUpApp.ts: chevron 6 -> 10 cm, caption 90 -> 150, amber backing box, pulse floor 0.75 (NudgeController.chevronAlpha, unit test). 03-nudge-chevron.png |
+| R5b-S4a | 07 S4 | clean podium still | match | 05-podium.png recaptured with no LEAF log overlay and cropped above the stray stage-line bar |

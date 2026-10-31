@@ -17,9 +17,10 @@ import { StatsSnapshot } from './SessionStats';
 import { SummaryContext, summaryState, BAR_FILL_SECONDS } from './core/SummaryModel';
 import { gazeTimeline } from './core/GazeTimeline';
 import {
-  BOX_AMBER,
   BOX_MINT,
-  BOX_NEUTRAL,
+  BOX_AMBER_SOLID,
+  BOX_SOLID,
+  TEXT_TIP,
   Panel,
   TEXT_AMBER,
   TEXT_MINT,
@@ -121,9 +122,9 @@ export class SummaryPanel extends BaseScriptComponent {
     this.timelineBlock = addBlock(c, 'GazeTimeline', TL_W, TL_H);
     // Stat boxes (artifact S5 ④).
     const stats = flexRow(c, 'SummaryStats', W - 6, 6.4, 1.2);
-    this.longestText = addBox(stats, 'LongestText', 'Longest look-away\n0 s', 'Headline2', 21.4, 6.4, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
-    this.cardsText = addBox(stats, 'CardsText', 'Cards · Nudges\n0 · 0', 'Headline2', 21.4, 6.4, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
-    this.tipText = addBox(c, 'TipText', '', 'Headline2', W - 6, 3.2, DIST, TEXT_AMBER, BOX_AMBER);
+    this.longestText = addBox(stats, 'LongestText', 'Longest look-away\n0 s', 'Headline2', 21.4, 6.4, DIST, TEXT_PRIMARY, BOX_SOLID);
+    this.cardsText = addBox(stats, 'CardsText', 'Cards · Nudges\n0 · 0', 'Headline2', 21.4, 6.4, DIST, TEXT_PRIMARY, BOX_SOLID);
+    this.tipText = addBox(c, 'TipText', '', 'Headline2', W - 6, 3.2, DIST, TEXT_TIP, BOX_AMBER_SOLID);
     const buttons = flexRow(c, 'SummaryButtons', W - 6, 4.4, 2);
     const big = { labelRole: 'Headline2' as const };
     addButton(buttons, 'AgainButton', 'Again', 12, 4.2, DIST, () => this.onAgain?.(), { icon: 'replay', ...big });

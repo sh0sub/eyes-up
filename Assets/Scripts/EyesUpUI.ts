@@ -44,6 +44,11 @@ export const TEXT_AMBER = new vec4(1.0, 0.75, 0.3, 1);
 export const TEXT_MINT = new vec4(0.55, 1.0, 0.8, 1);
 /** Pass 4: box tones (fill, frame) for badges, pills, stat boxes and the tip line. */
 export const BOX_NEUTRAL: [vec4, vec4] = [new vec4(0.22, 0.29, 0.4, 0.95), new vec4(0.6, 0.78, 0.95, 0.55)];
+/** Round 6: opaque, brighter stat tiles and tip, so wall art does not bleed through their text on the additive display. */
+export const BOX_SOLID: [vec4, vec4] = [new vec4(0.34, 0.44, 0.58, 1), new vec4(0.75, 0.88, 1.0, 0.9)];
+export const BOX_AMBER_SOLID: [vec4, vec4] = [new vec4(0.55, 0.42, 0.14, 1), new vec4(1.0, 0.82, 0.4, 1)];
+/** Tip text on BOX_AMBER_SOLID: pale warm white. */
+export const TEXT_TIP = new vec4(1.0, 0.95, 0.8, 1);
 export const BOX_MINT: [vec4, vec4] = [new vec4(0.12, 0.36, 0.3, 0.95), new vec4(0.5, 1.0, 0.8, 0.9)];
 export const BOX_AMBER: [vec4, vec4] = [new vec4(0.34, 0.26, 0.1, 0.95), new vec4(1.0, 0.78, 0.35, 0.85)];
 /** Cyan accent for countdown lines and bars. */

@@ -53,9 +53,9 @@ export class SetupPanel extends BaseScriptComponent {
     const c = this.panel.content;
     // Pass 4 (artifact S1): title with a "SETUP" pill on the right.
     const titleRow = flexRow(c, 'SetupTitleRow', W - 4, 4.0, 1);
-    textRow(titleRow, 'SetupTitle', this.title, 'Title2', W - 15, 4.0, DIST);
+    textRow(titleRow, 'SetupTitle', this.title, 'Title2', W - 15, 4.0, DIST).horizontalAlignment = HorizontalAlignment.Left;
     addBox(titleRow, 'SetupPill', SETUP_PILL, 'Subheadline', 9, 2.6, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
-    textRow(c, 'SetupSubtitle', this.subtitle, 'Headline2', W - 4, 2.2, DIST, TEXT_LABEL);
+    textRow(c, 'SetupSubtitle', this.subtitle, 'Headline2', W - 4, 2.2, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
     // Pass 6 (artifact S1): segmented 3/5/10 and 3/6/9 controls (selected = cyan), deck list, mint Start.
     const seg = { labelRole: 'Headline1' as const };
     this.lengthSeg = this.segmentRow(c, 'Length', 'Talk length', LENGTH_OPTIONS, 'min', (v) => this.model.setLengthSlider(optionToSlider(LENGTH_OPTIONS, v)), seg);

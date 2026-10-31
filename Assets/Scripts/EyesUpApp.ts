@@ -19,7 +19,7 @@
 import { HaloVisual } from './AttentionMeter';
 import { CueCardView } from './CueCardController';
 import { getDeck } from './DeckData';
-import { chevronPulse } from './NudgeController';
+import { chevronAlpha, chevronPulse } from './NudgeController';
 import { CameraGazeProvider, ScriptedGazeProvider, SwitchableGazeProvider } from './GazeProvider';
 import { Podium } from './Podium';
 import { SetupPanel } from './SetupPanel';
@@ -29,17 +29,22 @@ import { AudienceView, EyesUpSession, SessionViews } from './core/EyesUpSession'
 import { PillRect } from './core/PillHit';
 import { podiumState } from './core/PodiumModel';
 import { Vec3Like } from './core/math';
-import { ACCENT_CYAN, addIcon, addSurface, child, faceTowards } from './EyesUpUI';
+import { ACCENT_CYAN, BOX_AMBER, addIcon, addSurface, child, faceTowards } from './EyesUpUI';
 
 /**
  * Pass 5 nudge chevron (artifact S3): a 6 × 6 cm amber double chevron ("‹‹" / "››", Material
  * keyboard_double_arrow_*) above a "left" / "right" caption. The hint's scene Text (±20 cm, 100 cm
  * ahead of the camera) becomes the caption; the icon is added at awake 4 cm above it.
  */
-const CHEVRON_CM = 6;
-const CHEVRON_ICON_Y = 4.2;
+const CHEVRON_CM = 10;
+const CHEVRON_ICON_Y = 6.5;
+/** Round 6: solid backing behind icon + caption (the additive display washes out thin amber on a bright wall). */
+const CHEVRON_BACK_W = 15;
+const CHEVRON_BACK_H = 19;
+const CHEVRON_BACK_Y = 4.2;
+const CHEVRON_TEXT = new vec4(1.0, 0.82, 0.35, 1);
 /** ≈ 1.5 cm caption at 100 cm (S3: "left" 1.5 cm). */
-const CHEVRON_CAPTION_SIZE = 90;
+const CHEVRON_CAPTION_SIZE = 150;
 
 /** Stage line colors (design): cool white while running, amber at 0 s. Never black. */
 const LINE_COLOR: [number, number, number] = [0.75, 0.85, 1.0];
@@ -47,8 +52,11 @@ const LINE_AMBER: [number, number, number] = [1.0, 0.72, 0.2];
 
 /** Panel placement (brief "Where things live"). */
 const SETUP_DISTANCE_CM = 110;
-const SETUP_BELOW_EYES_CM = 10;
+/** Round 6: negative = above eye level; the panel clears the room's wall art in Preview and on device. */
+const SETUP_BELOW_EYES_CM = -10;
 const SUMMARY_DISTANCE_CM = 150;
+/** Round 6: raised so the stat tiles and tip clear the room's wall art (additive display: art shows through any fill). */
+const SUMMARY_ABOVE_EYES_CM = 17;
 /** design: panels follow the head only while the preview/device pose settles, then stay put. */
 const PANEL_SETTLE_SECONDS = 1.0;
 
@@ -67,9 +75,9 @@ const CARD_COUNTDOWN_Y = 1.4;
 const CARD_COUNTDOWN_W = 58;
 const CARD_TITLE_SIZE = 240;
 const CARD_BODY_SIZE = 140;
-const PILL_SCALE = 0.9;
+const PILL_SCALE = 1.3;
 const PILL_H = 10;
-const PILL_Y = 5;
+const PILL_Y = 10;
 /** Measured in Preview: ≈ 0.0124 cm per size unit per glyph for Inter titles (size 200 → 2.5 cm). */
 const PILL_GLYPH_CM = 0.0124 * CARD_TITLE_SIZE;
 const CARD_FILL = new vec4(0.17, 0.23, 0.33, 0.9);
@@ -134,10 +142,14 @@ export class EyesUpApp extends BaseScriptComponent {
       if (t) {
         t.text = i === 0 ? 'left' : 'right';
         t.size = CHEVRON_CAPTION_SIZE;
-        this.hintColors[i] = t.textFill.color;
+        t.textFill.color = CHEVRON_TEXT;
+        t.setRenderOrder(12);
+        this.hintColors[i] = CHEVRON_TEXT;
       }
       this.hintTexts[i] = t;
-      this.hintIcons[i] = addIcon(so, i === 0 ? 'double_arrow_left' : 'double_arrow_right', CHEVRON_CM, new vec3(0, CHEVRON_ICON_Y, 0));
+      addSurface(child(so, 'ChevronBack', new vec3(0, CHEVRON_BACK_Y, -0.3)), CHEVRON_BACK_W, CHEVRON_BACK_H, 0, BOX_AMBER[0], BOX_AMBER[1]);
+      const icon = addIcon(so, i === 0 ? 'double_arrow_left' : 'double_arrow_right', CHEVRON_CM, new vec3(0, CHEVRON_ICON_Y, 0));
+      this.hintIcons[i] = icon;
     });
     // Each halo gets its own material so attention colors are per member.
     this.halos.forEach((h) => {
@@ -289,7 +301,7 @@ export class EyesUpApp extends BaseScriptComponent {
       if (!so || !so.enabled) return;
       const t = this.hintTexts[i];
       const c = this.hintColors[i];
-      const a = 0.35 + 0.65 * p;
+      const a = chevronAlpha(p);
       if (t) t.textFill.color = new vec4(c.x, c.y, c.z, c.w * a);
       // Icon material is premultiplied: scale every channel to fade.
       const img = this.hintIcons[i];
@@ -367,7 +379,7 @@ export class EyesUpApp extends BaseScriptComponent {
     }
     if (phase === 'Summary') {
       const so = this.summaryPanel.getSceneObject();
-      so.getTransform().setWorldPosition(this.aheadOfHead(SUMMARY_DISTANCE_CM, 0));
+      so.getTransform().setWorldPosition(this.aheadOfHead(SUMMARY_DISTANCE_CM, SUMMARY_ABOVE_EYES_CM));
       faceTowards(so, this.headPosition(), true);
     }
   }

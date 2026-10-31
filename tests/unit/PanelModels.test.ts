@@ -10,7 +10,7 @@ import {
 } from '../../Assets/Scripts/core/SetupModel';
 import { podiumState } from '../../Assets/Scripts/core/PodiumModel';
 import { summaryState, summaryTip, zoneOutOfRange } from '../../Assets/Scripts/core/SummaryModel';
-import { chevronPulse } from '../../Assets/Scripts/NudgeController';
+import { CHEVRON_MIN_ALPHA, chevronAlpha, chevronPulse } from '../../Assets/Scripts/NudgeController';
 import { StatsSnapshot } from '../../Assets/Scripts/SessionStats';
 import { v3 } from '../../Assets/Scripts/core/math';
 import { DEFAULT_TUNABLES } from '../../Assets/Scripts/core/Tunables';
@@ -92,6 +92,16 @@ describe('chevronPulse (artifact S3: 1 Hz while visible)', () => {
     expect(chevronPulse(0.5)).toBeCloseTo(0, 9);
     expect(chevronPulse(1)).toBeCloseTo(1, 9);
     expect(chevronPulse(-1)).toBe(1);
+  });
+});
+
+describe('chevronAlpha (round 6: nudge cue stays visible)', () => {
+  it('never drops below the floor and reaches 1 at the peak', () => {
+    expect(CHEVRON_MIN_ALPHA).toBeGreaterThanOrEqual(0.7);
+    expect(chevronAlpha(0)).toBe(CHEVRON_MIN_ALPHA);
+    expect(chevronAlpha(1)).toBe(1);
+    expect(chevronAlpha(-3)).toBe(CHEVRON_MIN_ALPHA);
+    expect(chevronAlpha(9)).toBe(1);
   });
 });
 

@@ -149,6 +149,14 @@ export class NudgeController {
 /** Artifact S3: the chevron pulses at 1 Hz while visible. */
 export const CHEVRON_PULSE_HZ = 1;
 
+/** Round 6: the chevron never fades below this alpha, so the core nudge cue stays readable at the dip. */
+export const CHEVRON_MIN_ALPHA = 0.75;
+
+/** Chevron alpha for a pulse level 0..1: CHEVRON_MIN_ALPHA at the dip, 1 at the peak. */
+export function chevronAlpha(pulse: number): number {
+  return CHEVRON_MIN_ALPHA + (1 - CHEVRON_MIN_ALPHA) * Math.max(0, Math.min(1, pulse));
+}
+
 /**
  * Chevron pulse level 0..1, `t` seconds after the chevron appeared. Starts at 1 (full), dips to 0 at
  * half a period and is back at 1 every full period (cosine, so there is no pop when it appears).
