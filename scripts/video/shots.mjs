@@ -51,14 +51,12 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Start',
     heading: 'An audience in your room',
-    // Setup → pinch Start → audience fades in. Frames 190–217 are a one-call camera glitch (cut).
-    footage: [
-      { from: '22:29:49', to: 189 },
-      { from: 218, to: '22:30:08' },
-    ],
+    // Setup panel → pinch Start (23:45:30) → audience → first card "The problem" → pill (23:45:36).
+    footage: [{ from: '23:45:19', to: '23:45:36' }],
     lines: [
-      'You pick a length, and press Start with a pinch.',
-      'Six audience members appear on the floor, two and a half meters ahead, in a half circle, with your first point above them.',
+      'You pick a length and a deck, here a five card pitch, and press Start with a pinch.',
+      'Six audience members appear on the floor, two and a half meters ahead, in a half circle.',
+      'Your first point floats above them for four seconds, then shrinks to a three word pill.',
     ],
     stills: [
       { file: `${S}/01-setup-panel.png`, crop: BAND },
@@ -70,12 +68,9 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Gaze',
     heading: 'Whoever you look at lights up',
-    speed: 1.25,
-    footage: [
-      { from: '22:30:58', to: '22:31:08' },
-      { from: '22:31:49', to: '22:31:58' },
-    ],
-    gallery: 3.2,
+    speed: 1.3,
+    footage: [{ from: '23:45:37', to: '23:45:52' }],
+    gallery: 4,
     lines: [
       'Whoever you look at lights up. Their halo fills in about a second, and slowly cools when you look away.',
       'It is a simple mirror of where your attention actually goes.',
@@ -87,13 +82,14 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Nudge',
     heading: 'Ignore a side, get a tap',
-    // Held right from 22:30:33; the "< left" hint shows 22:30:36–39, 44–47, 52–55 (every 8 s, 3 s each).
+    // Held right from 23:45:53; the double chevron "« left" shows 23:45:55–58, 46:03–06, 46:11–12,
+    // then the head turns left (23:46:15) and the left halos fill.
     speed: 1.5,
-    footage: [{ from: '22:30:34', to: '22:31:00' }],
-    marks: [{ rect: [226, 280, 56, 50], label: 'chevron appears here' }],
-    gallery: 2.4,
+    footage: [{ from: '23:45:53', to: '23:46:21' }],
+    marks: [{ rect: [222, 250, 62, 72], label: 'chevron pulses here' }],
+    gallery: 2.2,
     lines: [
-      'Stare at one side for eight seconds, and you hear a soft chime, and a small amber chevron appears at the edge of your view.',
+      'Stare at one side for eight seconds, and you hear a soft chime, and a pulsing amber chevron appears at the edge of your view.',
       'No pop-up in your face. Keep ignoring that side and it taps you again, until you look over.',
     ],
     stills: [
@@ -110,10 +106,11 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Controls',
     heading: 'A podium only when you look down',
-    footage: [{ from: '22:31:12', to: '22:31:22' }],
+    // 1 / 5, elapsed / target timer, pinch Next at 23:46:33 → 2 / 5.
+    footage: [{ from: '23:46:29', to: '23:46:39' }],
     lines: [
       'Controls appear only when you look down, like a real podium.',
-      'Previous, next, finish, and the timer live there, and nowhere else.',
+      'Your slide count, the time against your target, and a big Next button live there, and nowhere else.',
     ],
     stills: [{ file: `${S}/05-podium.png`, crop: [0, 380, 475, 700], zoom: { rect: [40, 690, 400, 155], label: 'Podium: Prev, Next, Finish, timer' } }],
   },
@@ -121,16 +118,16 @@ export const SEGMENTS = [
     id: '07-cue',
     type: 'media',
     kicker: 'Notes',
-    heading: 'Your next point, then out of the way',
-    // Next → "Why glasses" card; later the pill "Eyes stay up" re-expands after a 1 s look (22:31:35→36).
+    heading: 'Notes only when you need them',
+    // Pill "Eyes stay up" → 1 s dwell (23:46:54) → card "Why glasses" with countdown line → pill (23:46:59).
     footage: [
-      { from: '22:31:22', to: '22:31:28' },
-      { from: '22:31:34', to: '22:31:43' },
+      { from: '23:46:40', to: '23:46:43' },
+      { from: '23:46:52', to: '23:47:00' },
     ],
-    gallery: 3.0,
+    gallery: 6.5,
     lines: [
-      'Your next point floats just above the audience for four seconds, then shrinks to a three word pill.',
-      'Glance at the pill for one second, and the full card comes back.',
+      'Lost your place? Look at the pill for one second.',
+      'The full card comes back, with a thin line counting down, then it gets out of the way again.',
     ],
     stills: [
       { file: `${S}/04-cue-card.png`, crop: BAND, zoom: { rect: [140, 596, 230, 104], label: 'Cue card above the audience' } },
@@ -142,12 +139,16 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Finish',
     heading: 'Where your eyes went',
-    footage: [{ from: '22:32:06', to: '22:32:24' }],
-    gallery: 11,
+    // Podium → Finish (23:47:20) → applause; 23:47:22–25 (camera on the floor) cut; Summary held to 23:47:45.
+    footage: [
+      { from: '23:47:19', to: '23:47:21' },
+      { from: '23:47:26', to: '23:47:45' },
+    ],
+    gallery: 10,
     lines: [
-      'When you finish, the audience applauds, and you get a summary.',
-      'How long you spoke, how your gaze split between left, center and right, and your longest look away.',
-      'This run: two minutes eleven, with the left side at twenty two percent.',
+      'Finish, and the audience applauds. Then you see where your eyes went.',
+      'A balance score, the split between left, center and right, and a timeline of your gaze, with every nudge marked.',
+      'This run: one minute forty nine, only fifteen percent on the left. The tip says it plainly: next time, look left more.',
     ],
     stills: [{ file: `${S}/06-summary.png`, crop: BAND, zoom: { rect: [96, 586, 284, 230], label: 'Rehearsal summary' } }],
   },
@@ -159,7 +160,7 @@ export const SEGMENTS = [
     lines: [
       'Eyes Up was built in Lens Studio by an AI coding agent, through the Lens Studio MCP tools, following the CLAD skills.',
       'Seven scripted LEAF scenarios check the done criteria in the Interactive Preview. All seven pass.',
-      'The core logic, gaze, halos, nudges and cue cards, is covered by ninety seven unit tests in Node.',
+      'The core logic, gaze, halos, nudges and cue cards, is covered by one hundred twenty three unit and integration tests in Node.',
     ],
   },
   {

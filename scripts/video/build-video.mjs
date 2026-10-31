@@ -159,9 +159,9 @@ html,body{margin:0;width:${W}px;height:${H}px;overflow:hidden;background:transpa
 .hole{position:absolute;left:${MB.x}px;top:${MB.y}px;width:${MB.w}px;height:${MB.h}px;border-radius:16px;box-shadow:0 0 0 3000px var(--canvas)}
 .box{position:absolute;left:${MB.x}px;top:${MB.y}px;width:${MB.w}px;height:${MB.h}px;border-radius:16px;overflow:hidden;background:var(--media)}
 .img{position:absolute;background-repeat:no-repeat}
-.chip{position:absolute;left:${MB.x + 20}px;top:${MB.y + 20}px;background:rgba(21,26,38,.82);color:#fff;border-radius:9px;padding:10px 16px;font-size:20px;font-weight:600;letter-spacing:.01em;z-index:5}
+.chip{position:absolute;left:${MB.x}px;top:${MB.y - 50}px;background:#20232d;color:#fff;border-radius:9px;padding:8px 14px;font-size:19px;font-weight:600;letter-spacing:.01em;z-index:5}
 .chip b{color:#9fb6ff;font-weight:700;margin-right:8px}
-.note{position:absolute;left:${MB.x + 20}px;bottom:${H - MB.y - MB.h + 20}px;background:rgba(21,26,38,.82);color:#e6e9f2;border-radius:9px;padding:9px 14px;font-size:19px;z-index:5}
+.note{position:absolute;left:${MB.x}px;top:${MB.y + MB.h + 14}px;color:var(--muted);font-size:19px;z-index:5}
 .mark{position:absolute;border:3px solid var(--amber);border-radius:6px;box-shadow:0 0 0 2px rgba(0,0,0,.35)}
 .inset{position:absolute;border:3px solid var(--amber);border-radius:12px;overflow:hidden;background:#000;box-shadow:0 12px 40px rgba(0,0,0,.45)}
 .inset-label{position:absolute;color:#fff;font-size:22px;font-weight:700}
@@ -210,7 +210,7 @@ function mediaHtml(seg, si, ci, cue) {
   if (seg.live) {
     const sc = MB.w / CROP.w;
     const marks = (seg.marks ?? [])
-      .map(({ rect: [x, y, w, h], label }) => `<div class="mark" style="border-style:dashed;left:${MB.x + x * sc}px;top:${MB.y + y * sc}px;width:${w * sc}px;height:${h * sc}px"></div><div class="inset-label" style="left:${MB.x + x * sc}px;top:${MB.y + (y + h) * sc + 8}px;text-shadow:0 1px 3px rgba(0,0,0,.8)">${esc(label)}</div>`)
+      .map(({ rect: [x, y, w, h], label }) => `<div class="mark" style="border-style:dashed;left:${MB.x + x * sc}px;top:${MB.y + y * sc}px;width:${w * sc}px;height:${h * sc}px"></div><div class="inset-label" style="left:${MB.x + x * sc}px;top:${MB.y + y * sc - 36}px;text-shadow:0 1px 3px rgba(0,0,0,.8)">${esc(label)}</div>`)
       .join('');
     media = `<div class="hole"></div>${marks}<div class="chip"><b>LIVE</b>Lens Studio Interactive Preview · no device${seg.live.speed > 1.01 ? ` · ×${seg.live.speed.toFixed(2).replace(/0$/, '')} speed` : ''}</div><div class="note">Head turns and pinches driven through Lens Studio preview tools</div>`;
   } else {
@@ -265,8 +265,8 @@ function cardHtml(seg, ci, cue) {
             <div style="font-size:20px;line-height:1.5;color:var(--muted);margin-top:8px">VirtualScene, ExecuteEditorCode, PreviewPanelTool, MovePreviewCamera, PreviewInteractTool, CapturePanelScreenshotTool, RunAndCollectLogsTool, run_leaf_scenario …</div></div>
           <div style="${box(1)}"><div style="font-size:26px;font-weight:800">CLAD skills followed</div>
             <div style="font-size:20px;line-height:1.5;color:var(--muted);margin-top:8px">specs-experience-builder, specs-build-ui, build-sfx, specs-audio, specs-leaf-write-scenarios, specs-leaf-run-in-preview, verify-preview</div></div>
-          <div style="${box(ci >= 2 ? 1 : 0.35)}"><div style="font-size:54px;font-weight:800;color:var(--primary-ink);line-height:1">97 / 97</div>
-            <div style="font-size:22px;color:var(--muted);margin-top:8px">Node unit + integration tests (vitest) for gaze, halos, nudges, cue cards, timer, summary</div></div>
+          <div style="${box(ci >= 2 ? 1 : 0.35)}"><div style="font-size:54px;font-weight:800;color:var(--primary-ink);line-height:1">123 / 123</div>
+            <div style="font-size:22px;color:var(--muted);margin-top:8px">Node unit + integration tests (vitest) for the core rehearsal logic</div></div>
         </div>
         <div style="${box(ci >= 1 ? 1 : 0.35)}">
           <div style="font-size:26px;font-weight:800">LEAF scenarios · Interactive Preview · 7 / 7</div>
