@@ -51,8 +51,8 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Start',
     heading: 'An audience in your room',
-    // Setup panel → pinch Start (23:45:30) → audience → first card "The problem" → pill (23:45:36).
-    footage: [{ from: '23:45:19', to: '23:45:36' }],
+    // Frames of the 2026-11-01 demo_reel capture: Setup panel (segmented controls) → pinch Start → audience → card "The problem".
+    footage: [{ from: 84, to: 156 }],
     lines: [
       'You pick a length and a deck, here a five card pitch, and press Start with a pinch.',
       'Six audience members appear on the floor, two and a half meters ahead, in a half circle.',
@@ -69,7 +69,7 @@ export const SEGMENTS = [
     kicker: 'Gaze',
     heading: 'Whoever you look at lights up',
     speed: 1.3,
-    footage: [{ from: '23:45:37', to: '23:45:52' }],
+    footage: [{ from: 158, to: 222 }],
     gallery: 4,
     lines: [
       'Whoever you look at lights up. Their halo fills in about a second, and slowly cools when you look away.',
@@ -82,11 +82,7 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Nudge',
     heading: 'Ignore a side, get a tap',
-    // Held right from 23:45:53; the double chevron "« left" shows 23:45:55–58, 46:03–06, 46:11–12,
-    // then the head turns left (23:46:15) and the left halos fill.
-    speed: 1.5,
-    footage: [{ from: '23:45:53', to: '23:46:21' }],
-    marks: [{ rect: [222, 250, 62, 72], label: 'chevron pulses here' }],
+    // Stills: the preview camera cannot turn in the scripted reel, so the left-edge chevron is not in frame.
     gallery: 2.2,
     lines: [
       'Stare at one side for eight seconds, and you hear a soft chime, and a pulsing amber chevron appears at the edge of your view.',
@@ -106,24 +102,20 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Controls',
     heading: 'A podium only when you look down',
-    // 1 / 5, elapsed / target timer, pinch Next at 23:46:33 → 2 / 5.
-    footage: [{ from: '23:46:29', to: '23:46:39' }],
+    // Stills: the scripted reel cannot look down, so the podium is shown from the capture gallery.
     lines: [
       'Controls appear only when you look down, like a real podium.',
       'Your slide count, the time against your target, and a big Next button live there, and nowhere else.',
     ],
-    stills: [{ file: `${S}/05-podium.png`, crop: [0, 380, 475, 700], zoom: { rect: [40, 690, 400, 155], label: 'Podium: Prev, Next, Finish, timer' } }],
+    stills: [{ file: `${S}/05-podium.png`, zoom: { rect: [480, 780, 1330, 430], label: 'Podium: Prev, Next, Finish, timer' } }],
   },
   {
     id: '07-cue',
     type: 'media',
     kicker: 'Notes',
     heading: 'Notes only when you need them',
-    // Pill "Eyes stay up" → 1 s dwell (23:46:54) → card "Why glasses" with countdown line → pill (23:46:59).
-    footage: [
-      { from: '23:46:40', to: '23:46:43' },
-      { from: '23:46:52', to: '23:47:00' },
-    ],
+    // Pinch Next → card "Why glasses" → pill "Eyes stay up" → dwell → card again with its countdown line.
+    footage: [{ from: 236, to: 310 }],
     gallery: 6.5,
     lines: [
       'Lost your place? Look at the pill for one second.',
@@ -139,16 +131,13 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Finish',
     heading: 'Where your eyes went',
-    // Podium → Finish (23:47:20) → applause; 23:47:22–25 (camera on the floor) cut; Summary held to 23:47:45.
-    footage: [
-      { from: '23:47:19', to: '23:47:21' },
-      { from: '23:47:26', to: '23:47:45' },
-    ],
+    // Finish → Summary panel (0:42 run) held.
+    footage: [{ from: 372, to: 480 }],
     gallery: 10,
     lines: [
       'Finish, and the audience applauds. Then you see where your eyes went.',
       'A balance score, the split between left, center and right, and a timeline of your gaze, with every nudge marked.',
-      'This run: one minute forty nine, only fifteen percent on the left. The tip says it plainly: next time, look left more.',
+      'This run: forty two seconds, only twenty percent on the left. The tip says it plainly: next time, look left more.',
     ],
     stills: [{ file: `${S}/06-summary.png`, crop: BAND, zoom: { rect: [96, 586, 284, 230], label: 'Rehearsal summary' } }],
   },
@@ -160,7 +149,7 @@ export const SEGMENTS = [
     lines: [
       'Eyes Up was built in Lens Studio by an AI coding agent, through the Lens Studio MCP tools, following the CLAD skills.',
       'Seven scripted LEAF scenarios check the done criteria in the Interactive Preview. All seven pass.',
-      'The core logic, gaze, halos, nudges and cue cards, is covered by one hundred twenty three unit and integration tests in Node.',
+      'The core logic, gaze, halos, nudges and cue cards, is covered by one hundred twenty nine unit and integration tests in Node.',
     ],
   },
   {

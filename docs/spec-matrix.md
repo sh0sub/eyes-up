@@ -23,10 +23,36 @@ Audit round 1, 2026-11-01. Evidence: live Lens Studio 5.24.1 preview via MCP (sc
 | S3 | 07 S3 Nudge | Amber double chevron + "left" caption at left edge | match | devpost 02/05, README |
 | S4 | 07 S4 Podium + card | Card 50x18 with title and 2 bullets, countdown line; podium with Prev/Next/Finish | match | live-podium.png; card has title only in live-audience frame (bullets fade after pill) |
 | S5 | 07 S5 Summary | Title, Balance badge, bars, timeline, 2 stat tiles, tip, Again/Done, Session complete chip | match | live-summary.png has all |
-| S6 | 07 S6 Video keyframe | Lens Studio window with hierarchy, preview, inspector, logger | partial | demo video file built locally (`.local/video/eyes-up-demo.mp4`, not committed) from `scripts/video`; its Setup footage predates the segmented panel. Re-recording needs the Lens Studio window on screen (earlier run captured a frozen window) |
+| S6 | 07 S6 Video keyframe | Lens Studio window with hierarchy, preview, inspector, logger | match | demo video rebuilt 2026-11-01 (`.local/video/eyes-up-demo.mp4`, 2:35, not committed) from a fresh live demo_reel capture of the current build: segmented Setup panel, cyan halos, cue card/pill/dwell and the 0:42 Summary are live footage; nudge and podium use labelled stills (the scripted reel cannot turn the camera). Narration/test count (129) updated. Evidence: scripts/video/shots.mjs, scratchpad converge/eyes-up/fix-r2 |
 | R1 | 01 Submission | Public repo | blocked | cannot verify remote visibility offline |
 | R2 | 01 Submission | Under 3 min YouTube video | blocked | video assembled locally by `scripts/video/build-video.mjs`; the public YouTube upload needs the entrant's YouTube account login, so no URL yet. README and devpost/submission.md say so |
 | R3 | 01 Submission | Text: what, who, what you learned | match (round 1) | `devpost/submission.md` has what it does, who it is for, how it was built, what we learned, honest not-done list |
 | R4 | 01 Skill pack | devpost/design-brief.md approved | match | status approved |
 | R5 | 01 | Real device test | blocked | no Spectacles |
 | R6 | tests | npm run check | match | 129/129 pass, typecheck and lint clean, 6 LEAF scenarios PASSED live after round 1 |
+
+## Audit round 2 (2026-11-01, full conformance)
+
+Verified live: `npm run check` 129/129 pass, typecheck and lint clean; 6 LEAF done-criteria scenarios PASSED live via headless MCP session (12 scenarios registered). Screenshots reviewed: devpost/screenshots/01-setup-panel.png, 06-summary.png.
+
+| id | artifact section | expected | status | evidence |
+|---|---|---|---|---|
+| R2-T | tests | check, typecheck, lint, LEAF 6 | match | run this round |
+| R2-S5a | 07 S5 Summary | two stat tiles readable (longest look-away, card expands) | gap (low) | 06-summary.png: tiles are small, "Card expands - Nudges 0 - 0" label cramped, tip bar tight against tiles |
+| R2-S1a | 07 S1 Setup | readable labels on panel | gap (low) | 01-setup-panel.png: row labels (Talk length, Audience, Deck) low contrast over busy wall art |
+| R2-D1 | 08 devpost/ tree | leaf-results.md, walkthrough/, learnings.md | gap (low) | LEAF results live inside build-notes.md, screenshots in devpost/screenshots; learnings.md (4 habits, 3 strengths, logic/feel table) missing as a file |
+| R2-R2 | 01 Submission | public YouTube under 3 min | blocked | needs entrant YouTube login |
+| R2-R1 | 01 Submission | public repo | blocked | remote visibility unverifiable offline (origin is github.com/sh0sub/eyes-up) |
+| R2-R5 | 01 | real device | blocked | no Spectacles |
+
+## Audit round 2b (confirmation pass, 2026-11-01)
+
+Live headless MCP drive: Setup, Start pinch, audience view, Next pinch, card and pill. `npm run check` 129/129 pass.
+
+| id | artifact section | expected | status | evidence |
+|---|---|---|---|---|
+| C2-flow | 06 flow A/B | Setup -> Start -> stage -> Next -> card 4 s -> pill -> dwell re-expand | match | live: card "How it works" with 2 bullets and countdown bar, pill "Halo, chime, arrow", cyan halo on watched member |
+| C2-podium | 07 S4 | podium hidden until head pitches down, Next largest | match | live: NextButton disabled until pitch >= 15 deg (by plan); devpost/screenshots/05-podium.png shows Prev, big cyan Next, amber Finish, 1 / 5, 0:05 / 3:00 |
+| C2-logs | tests | no runtime errors | match | no E/F lines; only SceneMaterialBatcher "batching retries exhausted" warnings for text visuals, depth-format warning, editor network auth warnings |
+| C2-warn | win | clean logger in demo footage | gap (low) | batcher warnings on 10 text visuals; cosmetic, not visible in the video unless the Logger panel is shown |
+| C2-vid | 07 S6 / 01 | video matches current build | match (upload blocked) | video rebuilt from current-build footage (see S6), 154.9 s under 3 min; public YouTube upload still blocked (needs entrant YouTube login) |
