@@ -7,6 +7,7 @@ export default tseslint.config(
     // LEAF package), Workspaces/. tempAssetGen/ holds the CLAD build-sfx generator (CommonJS).
     ignores: [
       'node_modules/**',
+      '.local/**',
       'coverage/**',
       'Support/**',
       'Cache/**',
