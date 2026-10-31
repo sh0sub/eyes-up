@@ -1,14 +1,16 @@
 /**
  * SetupPanel.ts — Lens component for the Setup panel (plan S1: 40×30 cm, 1.1 m ahead, eye level −10 cm).
- * Talk length (3/5/10 min), audience (3/6/9), deck toggle (2 samples), Start rehearsal.
+ * Talk length (3/5/10 min) and audience (3/6/9) as segmented buttons, deck list (2 samples), Start rehearsal.
  * Logic: core/SetupModel.ts (unit-tested).
  *
  * The panel builds its own UIKit UI (BackPlate + FlexLayout + Buttons, see EyesUpUI.ts).
- * Build decision: length and audience are pinch-to-cycle Buttons instead of UIKit Sliders — the
- * brief asks for "a few big targets" and pinch-only input, and a 3-stop slider is a small drag
- * target. `onLengthSlider` / `onAudienceSlider` stay as the slider-style API (0..1 → snapped option).
+ * Build decision: UIKit Sliders are a small drag target, so the artifact's S1 controls are pinch-only
+ * segmented Buttons (selected = cyan). `onLengthSlider` / `onAudienceSlider` stay as the slider-style API
+ * (0..1 → snapped option).
  * Placement (1.1 m ahead, 10 cm below the eyes, facing the head) is done by EyesUpApp on Setup.
  */
+import { DECKS, IMPORTED_DECK_ID, getImportedDeck, setImportedDeck } from './DeckData';
+import { parseDeckText } from './core/DeckImport';
 import {
   AUDIENCE_OPTIONS,
   LENGTH_OPTIONS,
@@ -33,9 +35,10 @@ export class SetupPanel extends BaseScriptComponent {
 
   readonly model = new SetupModel();
   private panel!: Panel;
-  private lengthText!: Text;
-  private audienceText!: Text;
-  private deckText!: Text;
+  private lengthSeg: Array<{ value: number; setSelected: (on: boolean) => void }> = [];
+  private audienceSeg: Array<{ value: number; setSelected: (on: boolean) => void }> = [];
+  private deckButtons: Array<{ id: string; setSelected: (on: boolean) => void }> = [];
+  private importLabel!: Text;
   private onStart: ((config: SessionConfig) => void) | null = null;
   private exitTime = -1;
   private wantVisible = true;
@@ -43,29 +46,40 @@ export class SetupPanel extends BaseScriptComponent {
   onAwake(): void {
     // Pass 3 (demo legibility): title Headline1 → Title2, subtitle Caption → Headline2,
     // button labels Button (39) → Headline1 (54); row gap 1.0 → 0.9 so it still fits 40 × 30 cm.
-    this.panel = makePanel(this.getSceneObject(), W, H, 2, 0.9);
+    this.panel = makePanel(this.getSceneObject(), W, H, 1.4, 0.8);
     const c = this.panel.content;
     // Pass 4 (artifact S1): title with a "SETUP" pill on the right.
     const titleRow = flexRow(c, 'SetupTitleRow', W - 4, 4.0, 1);
     textRow(titleRow, 'SetupTitle', this.title, 'Title2', W - 15, 4.0, DIST);
     addBox(titleRow, 'SetupPill', SETUP_PILL, 'Subheadline', 9, 2.6, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
     textRow(c, 'SetupSubtitle', this.subtitle, 'Headline2', W - 4, 2.2, DIST, TEXT_SECONDARY);
-    const big = { labelRole: 'Headline1' as const };
-    this.lengthText = addButton(c, 'LengthButton', '', 30, 3.6, DIST, () => this.cycleLength(), big).label;
-    this.audienceText = addButton(c, 'AudienceButton', '', 30, 3.6, DIST, () => this.cycleAudience(), big).label;
-    this.deckText = addButton(
-      c,
-      'DeckButton',
-      '',
-      30,
-      3.6,
-      DIST,
-      () => {
-        this.model.toggleDeck();
-        this.refresh();
-      },
-      big,
-    ).label;
+    // Pass 6 (artifact S1): segmented 3/5/10 and 3/6/9 controls (selected = cyan), deck list, mint Start.
+    const seg = { labelRole: 'Headline1' as const };
+    this.lengthSeg = this.segmentRow(c, 'Length', 'Talk length', LENGTH_OPTIONS, 'min', (v) => this.model.setLengthSlider(optionToSlider(LENGTH_OPTIONS, v)), seg);
+    this.audienceSeg = this.segmentRow(c, 'Audience', 'Audience', AUDIENCE_OPTIONS, 'people', (v) => this.model.setAudienceSlider(optionToSlider(AUDIENCE_OPTIONS, v)), seg);
+    const deckRow = flexRow(c, 'DeckRow', W - 4, 4.4, 1);
+    textRow(deckRow, 'DeckLabel', 'Deck', 'Headline2', 5, 4.4, DIST, TEXT_SECONDARY);
+    this.deckButtons = DECKS.map((d) => {
+      const id = d.id;
+      const btn = addButton(
+        deckRow,
+        `Deck_${id}`,
+        `${d.name}\n${d.sections.length} cards`,
+        11,
+        4.4,
+        DIST,
+        () => {
+          this.model.selectDeck(id);
+          this.refresh();
+        },
+        { labelRole: 'Subheadline' },
+      );
+      return { id, setSelected: btn.setSelected };
+    });
+    // Artifact F14 (stretch): type a talk outline on the AR keyboard (core/DeckImport.ts format).
+    const imp = addButton(deckRow, 'ImportDeckButton', 'Import\ntext', 6, 4.4, DIST, () => this.importDeck(), { labelRole: 'Subheadline' });
+    this.importLabel = imp.label;
+    this.deckButtons.push({ id: IMPORTED_DECK_ID, setSelected: imp.setSelected });
     // Start + the artifact caption side by side (keeps the panel inside 40 × 30 cm).
     const startRow = flexRow(c, 'StartRow', W - 4, 4.4, 1);
     addButton(
@@ -79,7 +93,7 @@ export class SetupPanel extends BaseScriptComponent {
         if (this.exitTime >= 0) return;
         this.exitTime = 0; // 0.3 s shrink, then hand the config to EyesUpApp
       },
-      { icon: 'play_arrow', primary: true, labelRole: 'Headline1' },
+      { icon: 'play_arrow', mint: true, labelRole: 'Headline1' },
     );
     // The panel's Text never wraps (Overflow), so the caption breaks after "ahead".
     textRow(startRow, 'SetupCaption', SETUP_CAPTION.replace(' of ', '\nof '), 'Subheadline', 15, 4.4, DIST, TEXT_SECONDARY);
@@ -115,16 +129,71 @@ export class SetupPanel extends BaseScriptComponent {
     }
   }
 
-  private cycleLength(): void {
-    const opts = LENGTH_OPTIONS as readonly number[];
-    const next = opts[(opts.indexOf(this.model.config.lengthMinutes) + 1) % opts.length];
-    this.onLengthSlider(optionToSlider(opts, next));
+  /** A label + 3 segmented buttons (5.5 x 3.5 cm) + unit hint; pinching a segment selects it. */
+  private segmentRow(
+    parent: SceneObject,
+    name: string,
+    label: string,
+    options: readonly number[],
+    unit: string,
+    pick: (value: number) => void,
+    btn: { labelRole: 'Headline1' },
+  ): Array<{ value: number; setSelected: (on: boolean) => void }> {
+    const row = flexRow(parent, `${name}Row`, W - 4, 3.6, 1);
+    textRow(row, `${name}Label`, label, 'Headline2', 9, 3.6, DIST, TEXT_SECONDARY);
+    const segs = options.map((value) => {
+      const b = addButton(
+        row,
+        `${name}_${value}`,
+        String(value),
+        5.5,
+        3.5,
+        DIST,
+        () => {
+          pick(value);
+          this.refresh();
+        },
+        btn,
+      );
+      return { value, setSelected: b.setSelected };
+    });
+    textRow(row, `${name}Unit`, unit, 'Subheadline', 5.5, 3.6, DIST, TEXT_SECONDARY);
+    return segs;
   }
 
-  private cycleAudience(): void {
-    const opts = AUDIENCE_OPTIONS as readonly number[];
-    const next = opts[(opts.indexOf(this.model.config.audienceCount) + 1) % opts.length];
-    this.onAudienceSlider(optionToSlider(opts, next));
+  /** Open the AR keyboard; Return imports the typed outline as the "Imported deck" (device only: no keyboard in Preview). */
+  private importDeck(): void {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- Lens Studio module load
+      require('LensStudio:TextInputModule');
+      const options = new TextInputSystem.KeyboardOptions();
+      options.enablePreview = true;
+      options.keyboardType = TextInputSystem.KeyboardType.Text;
+      options.returnKeyType = TextInputSystem.ReturnKeyType.Done;
+      options.initialText = 'Hook: ask a question; show the demo | Ask: fund the pilot';
+      let typed = options.initialText;
+      options.onTextChanged = (text: string) => {
+        typed = text;
+      };
+      options.onReturnKeyPressed = () => {
+        global.textInputSystem.dismissKeyboard();
+        this.applyImport(typed);
+      };
+      options.onError = (_code: number, description: string) => print(`[SetupPanel] keyboard error: ${description}`);
+      global.textInputSystem.requestKeyboard(options);
+    } catch (e) {
+      print(`[SetupPanel] AR keyboard unavailable: ${e}`);
+    }
+  }
+
+  /** Parse an outline and select it as the deck. Also the entry point for tests / LEAF. */
+  applyImport(text: string): boolean {
+    const sections = parseDeckText(text);
+    if (sections.length === 0) return false;
+    setImportedDeck(sections);
+    this.model.selectDeck(IMPORTED_DECK_ID);
+    this.refresh();
+    return true;
   }
 
   private tickExit(dt: number): void {
@@ -139,9 +208,11 @@ export class SetupPanel extends BaseScriptComponent {
   }
 
   private refresh(): void {
-    const l = this.model.labels;
-    this.lengthText.text = `Length: ${l.length}`;
-    this.audienceText.text = `Audience: ${l.audience}`;
-    this.deckText.text = `Deck: ${l.deck} · ${l.deckCards}`;
+    const cfg = this.model.config;
+    this.lengthSeg.forEach((o) => o.setSelected(o.value === cfg.lengthMinutes));
+    this.audienceSeg.forEach((o) => o.setSelected(o.value === cfg.audienceCount));
+    this.deckButtons.forEach((o) => o.setSelected(o.id === cfg.deckId));
+    const imported = getImportedDeck();
+    this.importLabel.text = imported ? `Imported\n${imported.sections.length} cards` : 'Import\ntext';
   }
 }

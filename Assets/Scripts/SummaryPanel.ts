@@ -81,6 +81,7 @@ export class SummaryPanel extends BaseScriptComponent {
 
   private onAgain: (() => void) | null = null;
   private onDone: (() => void) | null = null;
+  private onReplace: (() => void) | null = null;
   private snapshot: StatsSnapshot | null = null;
   private ctx: SummaryContext | undefined;
   private shown = 0;
@@ -127,6 +128,9 @@ export class SummaryPanel extends BaseScriptComponent {
     const big = { labelRole: 'Headline2' as const };
     addButton(buttons, 'AgainButton', 'Again', 12, 4.2, DIST, () => this.onAgain?.(), { icon: 'replay', ...big });
     addButton(buttons, 'DoneButton', 'Done', 12, 4.2, DIST, () => this.onDone?.(), { icon: 'check', primary: true, ...big });
+    // Pass 6 (artifact F2): small Re-place, reachable here once the rehearsal is over (the podium
+    // hides it during Rehearsal). Seats the stage again where you now face and restarts the talk.
+    addButton(buttons, 'SummaryReplaceButton', 'Re-place', 10, 3.6, DIST, () => this.onReplace?.(), { labelRole: 'Subheadline' });
     // Hidden state is applied in UpdateEvent, after every UIKit element ran OnStart (G3).
     this.createEvent('UpdateEvent').bind(() => {
       if (this.panel.root.enabled !== this.wantVisible) this.panel.root.enabled = this.wantVisible;
@@ -134,9 +138,10 @@ export class SummaryPanel extends BaseScriptComponent {
     });
   }
 
-  bind(onAgain: () => void, onDone: () => void): void {
+  bind(onAgain: () => void, onDone: () => void, onReplace?: () => void): void {
     this.onAgain = onAgain;
     this.onDone = onDone;
+    this.onReplace = onReplace ?? null;
   }
 
   get isShowing(): boolean {

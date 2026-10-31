@@ -137,13 +137,13 @@ export class DemoReel extends Scenario {
 
     // ---- Setup (≈ 12 s on screen) ----
     await sleep(3500);
-    reticle.look(worldPos('LengthButton'));
+    reticle.look(worldPos('Length_3'));
     this.mark('gaze reads the Setup panel: Length');
     await sleep(1700);
-    reticle.look(worldPos('AudienceButton'));
+    reticle.look(worldPos('Audience_6'));
     this.mark('gaze: Audience');
     await sleep(1700);
-    reticle.look(worldPos('DeckButton'));
+    reticle.look(worldPos('Deck_eyes-up-pitch'));
     this.mark('gaze: Deck');
     await sleep(1700);
     reticle.look(worldPos('StartButton'));

@@ -196,6 +196,7 @@ export class EyesUpApp extends BaseScriptComponent {
       this.summaryPanel.bind(
         () => this.session.again(),
         () => this.session.done(),
+        () => this.session.replace(),
       );
       this.hideStage();
       this.session.launch(); // Launch -> Setup on lens start

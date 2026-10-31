@@ -22,9 +22,13 @@ export interface HaloView {
   applyHalo(index: number, visual: HaloVisual): void;
 }
 
-/** design: cool dim glass -> bright cyan-white. Not black, per Spectacles UI guidance. */
-export const HALO_DIM: readonly [number, number, number] = [0.35, 0.45, 0.6];
-export const HALO_BRIGHT: readonly [number, number, number] = [0.85, 0.97, 1.0];
+/**
+ * design: cool dim glass -> saturated cyan (artifact S2: "watched member glows cyan"). Pass 6: the
+ * old cyan-white (0.85, 0.97, 1.0) washed out to a pale disc on the additive display, so the lit
+ * end keeps red low. Not black, per Spectacles UI guidance.
+ */
+export const HALO_DIM: readonly [number, number, number] = [0.3, 0.4, 0.58];
+export const HALO_BRIGHT: readonly [number, number, number] = [0.18, 0.86, 1.0];
 export const HALO_MIN_ALPHA = 0.15;
 export const HALO_MAX_SCALE = 1.05;
 

@@ -77,8 +77,21 @@ export const DECKS: readonly Deck[] = [
 
 export const DEFAULT_DECK_ID = 'eyes-up-pitch';
 
+/** Pass 6 (artifact F14, stretch): the one deck typed in on Setup. Not part of DECKS (the two samples). */
+export const IMPORTED_DECK_ID = 'imported';
+let importedDeck: Deck | null = null;
+
+export function setImportedDeck(sections: DeckSection[]): Deck {
+  importedDeck = { id: IMPORTED_DECK_ID, name: 'Imported deck', sections };
+  return importedDeck;
+}
+
+export function getImportedDeck(): Deck | null {
+  return importedDeck;
+}
+
 export function getDeck(id: string): Deck {
-  const deck = DECKS.find((d) => d.id === id);
+  const deck = id === IMPORTED_DECK_ID && importedDeck ? importedDeck : DECKS.find((d) => d.id === id);
   if (!deck) throw new Error(`Unknown deck id: ${id}`);
   return deck;
 }

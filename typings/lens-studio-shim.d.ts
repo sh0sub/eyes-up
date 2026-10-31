@@ -97,7 +97,27 @@ declare class SceneObject {
 declare class ScriptScene {
   createSceneObject(name: string): SceneObject;
 }
-declare const global: { scene: ScriptScene };
+declare namespace TextInputSystem {
+  enum KeyboardType {
+    Text,
+  }
+  enum ReturnKeyType {
+    Done,
+  }
+  class KeyboardOptions {
+    enablePreview: boolean;
+    keyboardType: KeyboardType;
+    returnKeyType: ReturnKeyType;
+    initialText: string;
+    onTextChanged: (text: string, range: vec2) => void;
+    onReturnKeyPressed: () => void;
+    onError: (error: number, description: string) => void;
+  }
+}
+declare const global: {
+  scene: ScriptScene;
+  textInputSystem: { requestKeyboard(options: TextInputSystem.KeyboardOptions): void; dismissKeyboard(): void };
+};
 
 declare class Component {
   enabled: boolean;
@@ -109,6 +129,7 @@ declare class Asset {
   name: string;
 }
 declare function requireAsset(path: string): Asset;
+declare function require(path: string): unknown;
 declare class Texture extends Asset {}
 declare class Font extends Asset {}
 declare class Pass {

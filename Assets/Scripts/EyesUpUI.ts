@@ -147,18 +147,37 @@ export function addSurface(parent: SceneObject, w: number, h: number, z: number,
   return quad(parent, 'Fill', frame ? w - 2 * FRAME_CM : w, frame ? h - 2 * FRAME_CM : h, z + 0.02, fill);
 }
 
-function themeButton(button: Button, so: SceneObject, w: number, h: number, primary: boolean, amber: boolean): void {
-  const [face, hover, press, border] = primary
-    ? [PRIMARY_FACE, PRIMARY_FACE_HOVER, PRIMARY_FACE_PRESS, PRIMARY_BORDER]
-    : amber
-      ? [AMBER_FACE, AMBER_FACE_HOVER, AMBER_FACE_PRESS, AMBER_BORDER]
-      : [BUTTON_FACE, BUTTON_FACE_HOVER, BUTTON_FACE_PRESS, BUTTON_BORDER];
-  const fill = addSurface(so, w, h, 0.02, face, border);
-  const set = (c: vec4) => (fill.mainPass.baseColor = c);
+/** Pass 6 (artifact S1): mint Start button (mint text, mint frame) and the cyan "selected" segment. */
+const MINT_FACE = new vec4(0.12, 0.36, 0.3, 0.95);
+const MINT_FACE_HOVER = new vec4(0.17, 0.5, 0.41, 1);
+const MINT_FACE_PRESS = new vec4(0.24, 0.64, 0.52, 1);
+const MINT_BORDER = new vec4(0.5, 1.0, 0.8, 0.95);
+
+type FaceSet = [vec4, vec4, vec4, vec4];
+const FACES: Record<'normal' | 'primary' | 'amber' | 'mint', FaceSet> = {
+  normal: [BUTTON_FACE, BUTTON_FACE_HOVER, BUTTON_FACE_PRESS, BUTTON_BORDER],
+  primary: [PRIMARY_FACE, PRIMARY_FACE_HOVER, PRIMARY_FACE_PRESS, PRIMARY_BORDER],
+  amber: [AMBER_FACE, AMBER_FACE_HOVER, AMBER_FACE_PRESS, AMBER_BORDER],
+  mint: [MINT_FACE, MINT_FACE_HOVER, MINT_FACE_PRESS, MINT_BORDER],
+};
+
+/** Themes a button's face; returns `setSelected` (cyan face + frame, artifact S1 segments). */
+function themeButton(button: Button, so: SceneObject, w: number, h: number, kind: keyof typeof FACES): (selected: boolean) => void {
+  let [face, hover, press] = FACES[kind];
+  const border = FACES[kind][3];
+  const surface = addSurface(so, w, h, 0.02, face, border);
+  // addSurface adds the 'Frame' quad first, then the 'Fill' quad.
+  const frame = so.getChild(0).getComponent('Component.RenderMeshVisual') as RenderMeshVisual;
+  const set = (c: vec4) => (surface.mainPass.baseColor = c);
   button.onHoverEnter.add(() => set(hover));
   button.onHoverExit.add(() => set(face));
   button.onTriggerDown.add(() => set(press));
   button.onTriggerUp.add(() => set(hover));
+  return (selected: boolean) => {
+    [face, hover, press] = FACES[selected ? 'primary' : kind];
+    set(face);
+    frame.mainPass.baseColor = selected ? PRIMARY_BORDER : border;
+  };
 }
 
 export function addIcon(parent: SceneObject, icon: IconName, sizeCm: number, local: vec3): Image {
@@ -326,6 +345,8 @@ export interface ButtonOptions {
   labelRole?: TextRole;
   /** Amber-framed face (Finish, artifact S4). Ignored when `primary` is set. */
   amber?: boolean;
+  /** Mint face and mint label (Start rehearsal, artifact S1). Ignored when `primary` is set. */
+  mint?: boolean;
 }
 
 /**
@@ -368,11 +389,11 @@ export function addButton(
   distanceCm: number,
   onClick: () => void,
   opts: ButtonOptions = {},
-): { button: Button; label: Text } {
+): { button: Button; label: Text; setSelected: (selected: boolean) => void } {
   const so = child(parent, name);
   const button = so.createComponent(Button.getTypeName()) as Button;
   button.size = new vec3(widthCm, heightCm, 1);
-  themeButton(button, so, widthCm, heightCm, opts.primary === true, opts.amber === true);
+  const setSelected = themeButton(button, so, widthCm, heightCm, opts.primary ? 'primary' : opts.mint ? 'mint' : opts.amber ? 'amber' : 'normal');
   const role = opts.labelRole ?? 'Button';
   let labelX = 0;
   let labelW = widthCm - 0.5;
@@ -389,13 +410,13 @@ export function addButton(
     labelW = textW + 0.4;
   }
   const labelSo = child(so, 'Label', new vec3(labelX, 0, BUTTON_LABEL_Z));
-  const text = makeText(labelSo, label, role, labelW, heightCm, distanceCm, TEXT_PRIMARY);
+  const text = makeText(labelSo, label, role, labelW, heightCm, distanceCm, opts.mint && !opts.primary ? TEXT_MINT : TEXT_PRIMARY);
   const item = so.createComponent(FlexItem.getTypeName()) as FlexItem;
   item.overrideWidth = widthCm;
   item.overrideHeight = heightCm;
   item.flexShrink = 0;
   button.onTriggerUp.add(() => onClick());
-  return { button, label: text };
+  return { button, label: text, setSelected };
 }
 
 /** Rotate `so` so its front (+Z, the UI face) points at `target` (optionally yaw-only). */

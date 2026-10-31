@@ -788,3 +788,16 @@ first.
   it"). If that is too eager on device, the knob is a longer dwell for a pill that reappears under
   the gaze.
 - Everything listed under "Still open after pass 6".
+
+## Pass 6 (audit round 1: match the planning artifact)
+
+- **S1 Setup:** the cycle buttons are now segmented controls (`Length_3/5/10`, `Audience_3/6/9`,
+  `Deck_<id>`; selected = cyan face and frame) and a mint Start button. `addButton` returns
+  `setSelected`, and a `mint` option was added in `EyesUpUI.ts`. DemoReel gaze targets were renamed.
+- **F2 Re-place:** the podium button is hidden by design during Rehearsal, so the Summary panel got
+  a small `SummaryReplaceButton` (re-seats the stage where you now face, restarts the talk).
+- **W1 Halo:** lit color is saturated cyan `(0.18, 0.86, 1.0)` instead of cyan-white, so it no
+  longer washes out. Verified in a preview capture (`devpost/screenshots/08-halo-cyan.png`).
+- **F14 Deck import:** `core/DeckImport.ts` parses a typed outline; the Setup "Import text" button
+  opens the AR keyboard (`TextInputSystem`, device only, not shown in preview).
+- **R3:** `devpost/submission.md`. Tests: 129 pass; all six LEAF scenarios re-run PASSED.

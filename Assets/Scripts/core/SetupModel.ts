@@ -2,7 +2,7 @@
  * Setup panel state (plan S1): talk length slider 3/5/10 min, audience 3/6/9, sample deck (2), Start.
  * Defaults: 3 min / 6 people / "Eyes Up pitch". SetupPanel.ts binds UIKit widgets to this.
  */
-import { DECKS } from '../DeckData';
+import { DECKS, IMPORTED_DECK_ID, getDeck, getImportedDeck } from '../DeckData';
 import { DEFAULT_CONFIG, SessionConfig } from './EyesUpSession';
 import { clamp01 } from './math';
 
@@ -43,7 +43,8 @@ export class SetupModel {
   }
 
   selectDeck(id: string): void {
-    if (!DECKS.some((d) => d.id === id)) throw new Error(`Unknown deck id: ${id}`);
+    const known = DECKS.some((d) => d.id === id) || (id === IMPORTED_DECK_ID && getImportedDeck() !== null);
+    if (!known) throw new Error(`Unknown deck id: ${id}`);
     this.cfg.deckId = id;
   }
 
@@ -54,12 +55,20 @@ export class SetupModel {
     return this.cfg.deckId;
   }
 
+  private get deck() {
+    try {
+      return getDeck(this.cfg.deckId);
+    } catch {
+      return DECKS[0];
+    }
+  }
+
   get deckName(): string {
-    return (DECKS.find((d) => d.id === this.cfg.deckId) ?? DECKS[0]).name;
+    return this.deck.name;
   }
 
   get deckCardCount(): number {
-    return (DECKS.find((d) => d.id === this.cfg.deckId) ?? DECKS[0]).sections.length;
+    return this.deck.sections.length;
   }
 
   get labels(): { length: string; audience: string; deck: string; deckCards: string } {

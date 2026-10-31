@@ -173,6 +173,20 @@ describe('EyesUpSession / EyesUpApp core (M1 #3, #7)', () => {
     expect(s.phase).toBe('Rehearsal');
   });
 
+  it('Re-place from the Summary panel (artifact F2) re-seats the stage and restarts the talk', () => {
+    const { s, gaze, tick } = toRehearsal();
+    s.finish();
+    tick(1.6);
+    expect(s.phase).toBe('Summary');
+    gaze.setForward(v3(-1, 0, 0));
+    expect(s.replace()).toBe(true);
+    expect(s.phase).toBe('Placing');
+    expect(s.summary).toBeNull();
+    expect(s.layout!.stageCenter.x).toBeCloseTo(-250, 6);
+    tick(0.6);
+    expect(s.phase).toBe('Rehearsal');
+  });
+
   it('ignores illegal pinches and validates config', () => {
     const { s } = harness();
     expect(s.start()).toBe(false);

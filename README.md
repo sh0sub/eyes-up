@@ -15,8 +15,12 @@ Built for Learn AR with SPECS (deadline 2026-11-09 PST). New Lens built with CLA
   `neglect_triggers_nudge`, `next_shows_card_then_pill`, `dwell_expands_pill`, `finish_shows_summary`,
   `repeated_nudge`. Node checks: `npm run check` (typecheck, lint, vitest).
 - **Preview-only.** Not run on a Spectacles device yet. Gaze is head rotation, simulated by LEAF in tests.
-- **Demo video pending.** The `demo_reel` LEAF scenario is ready (`devpost/demo-reel-timeline.md`), but
-  the screen recording hasn't been made yet.
+- **Demo video:** `scripts/video/build-video.mjs` builds a sub-3-minute narrated video from the
+  `demo_reel` LEAF scenario (`devpost/demo-reel-timeline.md`). The YouTube upload needs the
+  entrant's account, so the public link is not added yet.
+- Setup: segmented 3/5/10 min and 3/6/9 audience buttons (selected = cyan), deck list, optional
+  "Import text" deck typed on the AR keyboard. The summary has Again / Done / Re-place.
+- Devpost text: `devpost/submission.md`.
 - Build log and design decisions: `devpost/build-notes.md`. Screenshots: `devpost/screenshots/`.
 
 ## Scripts and tests

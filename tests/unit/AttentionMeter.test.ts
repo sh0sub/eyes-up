@@ -51,6 +51,16 @@ describe('AttentionMeter (#14, M4 #11)', () => {
     expect(haloVisualFor(2)).toEqual(hi);
   });
 
+  it('halo lit color is saturated cyan, not a pale white disc (artifact S2)', () => {
+    const [r, g, b] = haloVisualFor(1).color;
+    expect(r).toBeLessThan(0.3);
+    expect(g).toBeGreaterThan(0.8);
+    expect(b).toBeGreaterThan(0.95);
+    // bright end is clearly more saturated than the dim end
+    const dim = haloVisualFor(0).color;
+    expect(g - r).toBeGreaterThan(dim[1] - dim[0]);
+  });
+
   it('applyTo pushes one visual per member to the view adapter', () => {
     const m = new AttentionMeter(DEFAULT_TUNABLES);
     m.reset(3);
