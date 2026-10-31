@@ -73,3 +73,17 @@ Live headless MCP drive: scene hierarchy matches plan (SetupPanel, Audience_1..9
 | R3-win-learnings | 03 win | process and learnings narrative for judges | match | devpost/learnings.md: 4 habits mapping, 3 strengths, logic proven / feel unproven table |
 | R3-S1-contrast | 07 S1 | row labels and caption legible | match | new TEXT_LABEL (alpha 0.95 vs 0.7) for Talk length / Audience / Deck / unit / subtitle; caption Subheadline -> Headline2. Live capture fix-r3/setup.png, devpost/screenshots/01-setup-panel.png |
 | R3-R1/R2/R5 | 01 | public repo, YouTube, device | blocked | unchanged (needs YouTube login / Spectacles) |
+
+## Audit round 4 (2026-11-01, independent full conformance)
+
+Live headless MCP: scene roots present (EyesUp, SpectaclesInteractionKit, LEAF), 6 done-criteria LEAF scenarios PASSED (start_places_audience, gaze_fills_halo, neglect_triggers_nudge, next_shows_card_then_pill, dwell_expands_pill, finish_shows_summary), no E/F log lines. `npm run check`: typecheck and lint clean, 129/129 tests pass. Screenshots reviewed: devpost/screenshots/01-setup-panel.png, 06-summary.png.
+
+| id | artifact section | expected | status | evidence |
+|---|---|---|---|---|
+| R4-T | tests | check, typecheck, lint, LEAF 6 | match | 129/129, 6 PASSED live |
+| R4-F-finish | 06 flow C | "Finish?" prompt at target + 30 s | match | EyesUpApp.ts:172, Tunables.ts:49 (reuses cue-card title, documented G8) |
+| R4-S5a | 07 S5 | Summary buttons legible | match | SummaryPanel.ts: Re-place now 12 x 4.2 cm, Headline2 (same as Again/Done), gap 2; live capture fix-r4/summary.png, devpost/screenshots/06-summary.png |
+| R4-S5b | 07 S5 | stat tiles clean | match | SummaryPanel.ts: both tiles 21.4 cm wide (equal, fill the 44 cm row), label Headline1 -> Headline2 so text clears borders; fix-r4/summary.png |
+| R4-S1a | 07 S1 | Setup rows aligned | match | SetupPanel.ts: shared 8 cm left-aligned label column, all three rows 36 cm wide (deck buttons 9.5/9.5/6, unit cell fills the rest); fix-r4/setup.png, devpost/screenshots/01-setup-panel.png |
+| R4-win-warn | win | clean demo | blocked/out of scope (low) | Editor-internal: SceneMaterialBatcher retries and "Failed to load compile data" come from Lens Studio, not project scripts; after recompile + preview restart the log shows no E/F and only 2 editor W lines (network auth, depth format). Not visible in the demo video (Logger panel not shown) |
+| R4-R1/R2/R5 | 01 | public repo, YouTube, device | blocked | needs YouTube login / Spectacles |

@@ -121,16 +121,16 @@ export class SummaryPanel extends BaseScriptComponent {
     this.timelineBlock = addBlock(c, 'GazeTimeline', TL_W, TL_H);
     // Stat boxes (artifact S5 ④).
     const stats = flexRow(c, 'SummaryStats', W - 6, 6.4, 1.2);
-    this.longestText = addBox(stats, 'LongestText', 'Longest look-away\n0 s', 'Headline1', 23.4, 6.4, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
-    this.cardsText = addBox(stats, 'CardsText', 'Cards · Nudges\n0 · 0', 'Headline1', 19.4, 6.4, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
+    this.longestText = addBox(stats, 'LongestText', 'Longest look-away\n0 s', 'Headline2', 21.4, 6.4, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
+    this.cardsText = addBox(stats, 'CardsText', 'Cards · Nudges\n0 · 0', 'Headline2', 21.4, 6.4, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
     this.tipText = addBox(c, 'TipText', '', 'Headline2', W - 6, 3.2, DIST, TEXT_AMBER, BOX_AMBER);
-    const buttons = flexRow(c, 'SummaryButtons', W - 6, 4.4, 3);
+    const buttons = flexRow(c, 'SummaryButtons', W - 6, 4.4, 2);
     const big = { labelRole: 'Headline2' as const };
     addButton(buttons, 'AgainButton', 'Again', 12, 4.2, DIST, () => this.onAgain?.(), { icon: 'replay', ...big });
     addButton(buttons, 'DoneButton', 'Done', 12, 4.2, DIST, () => this.onDone?.(), { icon: 'check', primary: true, ...big });
-    // Pass 6 (artifact F2): small Re-place, reachable here once the rehearsal is over (the podium
+    // Pass 6 (artifact F2): Re-place (same size and type role as Again / Done), reachable here once the rehearsal is over (the podium
     // hides it during Rehearsal). Seats the stage again where you now face and restarts the talk.
-    addButton(buttons, 'SummaryReplaceButton', 'Re-place', 10, 3.6, DIST, () => this.onReplace?.(), { labelRole: 'Subheadline' });
+    addButton(buttons, 'SummaryReplaceButton', 'Re-place', 12, 4.2, DIST, () => this.onReplace?.(), big);
     // Hidden state is applied in UpdateEvent, after every UIKit element ran OnStart (G3).
     this.createEvent('UpdateEvent').bind(() => {
       if (this.panel.root.enabled !== this.wantVisible) this.panel.root.enabled = this.wantVisible;

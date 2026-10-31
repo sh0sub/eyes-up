@@ -27,6 +27,9 @@ import { BOX_NEUTRAL, Panel, TEXT_LABEL, TEXT_PRIMARY, addBox, addButton, flexRo
 const W = 40;
 const H = 30;
 const DIST = 110;
+/** R4: one label column (left-aligned) and one row width so Talk length / Audience / Deck line up. */
+const LABEL_W = 8;
+const ROW_W = W - 4;
 
 @component
 export class SetupPanel extends BaseScriptComponent {
@@ -58,14 +61,14 @@ export class SetupPanel extends BaseScriptComponent {
     this.lengthSeg = this.segmentRow(c, 'Length', 'Talk length', LENGTH_OPTIONS, 'min', (v) => this.model.setLengthSlider(optionToSlider(LENGTH_OPTIONS, v)), seg);
     this.audienceSeg = this.segmentRow(c, 'Audience', 'Audience', AUDIENCE_OPTIONS, 'people', (v) => this.model.setAudienceSlider(optionToSlider(AUDIENCE_OPTIONS, v)), seg);
     const deckRow = flexRow(c, 'DeckRow', W - 4, 4.4, 1);
-    textRow(deckRow, 'DeckLabel', 'Deck', 'Headline2', 5, 4.4, DIST, TEXT_LABEL);
+    textRow(deckRow, 'DeckLabel', 'Deck', 'Headline2', LABEL_W, 4.4, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
     this.deckButtons = DECKS.map((d) => {
       const id = d.id;
       const btn = addButton(
         deckRow,
         `Deck_${id}`,
         `${d.name}\n${d.sections.length} cards`,
-        11,
+        9.5,
         4.4,
         DIST,
         () => {
@@ -140,7 +143,7 @@ export class SetupPanel extends BaseScriptComponent {
     btn: { labelRole: 'Headline1' },
   ): Array<{ value: number; setSelected: (on: boolean) => void }> {
     const row = flexRow(parent, `${name}Row`, W - 4, 3.6, 1);
-    textRow(row, `${name}Label`, label, 'Headline2', 9, 3.6, DIST, TEXT_LABEL);
+    textRow(row, `${name}Label`, label, 'Headline2', LABEL_W, 3.6, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
     const segs = options.map((value) => {
       const b = addButton(
         row,
@@ -157,7 +160,7 @@ export class SetupPanel extends BaseScriptComponent {
       );
       return { value, setSelected: b.setSelected };
     });
-    textRow(row, `${name}Unit`, unit, 'Subheadline', 5.5, 3.6, DIST, TEXT_LABEL);
+    textRow(row, `${name}Unit`, unit, 'Subheadline', ROW_W - LABEL_W - 3 * 5.5 - 4, 3.6, DIST, TEXT_LABEL);
     return segs;
   }
 
