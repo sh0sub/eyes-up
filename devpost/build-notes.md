@@ -426,3 +426,74 @@ was not read or written.
 - The demo reel's reticle and overlay muting are demo scaffolding. Mention in the video that gaze
   is simulated.
 - Nothing committed.
+
+# Pass 4 (2026-10-31, headless)
+
+Same setup: Lens Studio 5.24.1 through the lens-studio MCP server, no human available. Goal: close
+the gaps against the planning artifact's mockups (S1 Setup, S3 nudge, S4 podium + card, S5 summary).
+The label is still **logic proven / feel unproven**.
+
+## Summary
+
+| Item | Result |
+|---|---|
+| 1 Summary (S5) | **Done.** Title "Nice work — m:ss" plus a "target m:ss · deck" line. Mint **Balance badge** (number over "Balance"). Zone rows: name · bar on a dim track · %. Name and % turn **amber outside 15 % < share < 35 %** (S5's rule "35% 미만·15% 초과"). Two stat boxes: "Longest look-away / 11 s · left · at 1:12" (new `StatsSnapshot.longestLookAway.startSeconds`) and "Card expands · Nudges / 2 · 1". Amber tip box from the weakest zone. Again / Done (Done is primary, as in S5). Gaze timeline strip **skipped**: not trivial (needs per-second zone history in SessionStats plus a strip renderer). |
+| 2 Cue card (S4) | **Done.** 64 × 26 cm backing quad (S4's own note: widen to ~64 cm), title size 200 → 240, bullets 130 → 140 with "•". **Cyan countdown line** empties over the 4 s (`CueCardController.countdown`, `EyesUpSession.cardCountdown`). The card now sits *above* its anchor, so it no longer overlaps the front heads. Pill keeps **90 %** of card scale (was 40 %) on its own backing sized to the tag. |
+| 3 Podium (S4) | **Done.** Next is the largest target, **9.6 × 4.8 cm**, cyan primary. Prev 6.4 × 3.6, Finish 6.4 × 3.6 amber-framed (new `ButtonOptions.amber`). Timer "m:ss / m:ss" (`PodiumState.timerLabel`). Counter "n / N". Re-place moved into the info row, so its hidden slot no longer pushes the buttons off-center. |
+| 4 Setup (S1) | **Done.** "SETUP" pill next to the title. Subtitle "Rehearse with your eyes on the room." (scene-serialized input updated via the Editor API). Caption "Stage appears 2.5 m ahead / of where you're facing." next to Start. Decks: **"Eyes Up pitch" (5 cards)** and **"Self-intro" (3 cards)**. The deck button reads "Deck: Eyes Up pitch · 5 cards". |
+| 5 Nudge chevron (S3) | **Done.** 1 Hz pulse while visible: `chevronPulse(t)` = 0.5 + 0.5·cos(2πt) drives text alpha (35–100 %) and scale (0.90–1.05). Restarts on each show. |
+| 6 README | **Done.** Status: scene built via Lens Studio MCP, 7 LEAF done criteria pass, preview-only, demo video pending. |
+| Verification | `RecompileTypeScriptTool` succeeded. `RunAndCollectLogsTool` shows no `E` lines (W only: editor network auth, material batcher, depth format). 7/7 LEAF pass. `npm run check` green, **105/105** (was 97). Screenshots 01, 04, 05, 06 retaken. Project saved. Nothing committed. |
+
+## Decisions made without a human (pass 4)
+
+- **D20: deck trims.** Pitch 6 → 5: "Notes only when stuck" dropped, and its idea moved into "Why
+  glasses" using S4's bullets ("The audience is in your room" / "Notes only when you need them").
+  Self-intro 4 → 3: "Close" folded into "Why this team". The id changed `interview-intro` →
+  `self-intro`, with tests updated.
+- **D21: amber thresholds.** S5's layout note states the range as *above 15 % and below 35 %*, so the
+  boundaries 15 and 35 are amber. The S5 render also tints "Left 22 %", which contradicts its own
+  rule. The written rule wins.
+- **D22: balance formula unchanged.** S5 states `100 − Σ|zone% − 33.3|/2` and shows 86 for 22/58/20,
+  but that formula gives 75 for those numbers, and the existing normalized-TVD score gives 63. The
+  artifact isn't self-consistent, so the tested score stays. Only its presentation changed (badge).
+- **D23: tip rule.** The weakest zone (lowest share, ties left → right) gets "Next time, look
+  left/right more." or "…look at the center more." If every zone is in range: "Nice balance. Keep
+  it up." With no gaze at all: "Next time, look up at the audience."
+- **D24: "Cards" stat** shows card expands · nudges ("2 · 1"). S5's "2 of 5" has no defined meaning in
+  the plan (expands vs. sections reached), so it isn't shown.
+- **D25: cue card backing via runtime quads** (same EyesUpUI `addSurface` as the panels, D10). The
+  texts get `setRenderOrder(10)` so they draw over the translucent backing. Text width was measured
+  in the preview at ≈ 0.0124 cm per size unit per glyph, which sizes the pill backing.
+- **D26: Next is the primary (cyan) button** on the podium, per S4. Finish moved to the amber style,
+  which S4 describes as pulsing once the length is reached. That pulse is not built.
+
+## LEAF results (Interactive Preview, "Preview 2", after the final code change)
+
+| Scenario | Result |
+|---|---|
+| `start_places_audience` | ✅ succeeded |
+| `gaze_fills_halo` | ✅ succeeded |
+| `neglect_triggers_nudge` | ✅ succeeded |
+| `next_shows_card_then_pill` | ✅ succeeded |
+| `dwell_expands_pill` | ✅ succeeded |
+| `finish_shows_summary` | ✅ succeeded. **Expectation changed**: the `TimeText` check is now `^Nice work — \d+:\d\d$` (S5 puts the time in the title) |
+| `repeated_nudge` | ✅ succeeded |
+
+## Screenshots retaken
+
+| File | Shows |
+|---|---|
+| `01-setup-panel.png` | Title + SETUP pill, new subtitle, Length / Audience / "Deck: Eyes Up pitch · 5 cards", Start + caption |
+| `04-cue-card.png` | "The problem" card: 64 cm backing, bullets, cyan countdown line about ⅔ full, above the heads (from `capture_podium` just after start) |
+| `05-podium.png` | "1 / 5", "0:05 / 3:00", Prev · large cyan Next · amber Finish (camera pitched −24°, reset afterwards) |
+| `06-summary.png` | "Nice work — 0:03", target line, Balance 99 badge, bars, look-away "2 s · left · at 0:01", tip, Again / Done. Gaze is balanced in this run, so no amber zone is visible |
+
+## Still open after pass 4
+
+- Gaze timeline strip (S5 ③), Finish pulse at time-up (S4), Balance-badge two-size typography (one
+  Text role for number and caption), and the S3 chevron size (6 × 6 cm with "‹‹").
+- `devpost/demo-reel-timeline.md` still says "1 / 6". Re-run `demo_reel` before recording, since the
+  pitch deck now has 5 cards.
+- Demo recording, plus G3, G4, G5, G8, D10 and D2 as before.
+- Nothing committed.

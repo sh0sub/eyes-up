@@ -1,5 +1,6 @@
 /**
  * DeckData.ts — two sample decks as JSON constants (plan: "샘플 덱 2종(JSON 상수)").
+ * Pass 4: names and sizes follow artifact S1 — "Eyes Up pitch" (5 cards), "Self-intro" (3 cards).
  *
  * Each section has a full card (title + up to 3 short points) and a 3-word pill tag
  * shown after the card shrinks. Text is English because the demo video is English.
@@ -29,19 +30,15 @@ export const DECKS: readonly Deck[] = [
         tag: 'Screens pull eyes',
       },
       {
+        // Artifact S4 wording.
         title: 'Why glasses',
-        points: ['A laptop pulls your eyes down', 'Glasses keep the room in view'],
+        points: ['The audience is in your room', 'Notes only when you need them'],
         tag: 'Eyes stay up',
       },
       {
         title: 'How it works',
         points: ['Halo fills when you look', 'Chime and arrow for the side you miss'],
         tag: 'Halo, chime, arrow',
-      },
-      {
-        title: 'Notes only when stuck',
-        points: ['Card shows for four seconds', 'Look at the tag to see it again'],
-        tag: 'Notes when stuck',
       },
       {
         title: 'Your numbers',
@@ -56,8 +53,8 @@ export const DECKS: readonly Deck[] = [
     ],
   },
   {
-    id: 'interview-intro',
-    name: 'Interview self-intro',
+    id: 'self-intro',
+    name: 'Self-intro',
     sections: [
       {
         title: 'Who I am',
@@ -71,13 +68,8 @@ export const DECKS: readonly Deck[] = [
       },
       {
         title: 'Why this team',
-        points: ['What I admire here', 'Where I can help first'],
+        points: ['Where I can help first', 'Thank them, invite a question'],
         tag: 'Where I help',
-      },
-      {
-        title: 'Close',
-        points: ['Thank them', 'Invite a question'],
-        tag: 'Thanks, any questions',
       },
     ],
   },

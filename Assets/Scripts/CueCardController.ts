@@ -88,6 +88,12 @@ export class CueCardController {
     return this._mode === 'card' ? this.timer : 0;
   }
 
+  /** Countdown line on the card (artifact S4): 1 when the card opens → 0 when it shrinks to the pill; 0 unless the card is open. */
+  get countdown(): number {
+    if (this._mode !== 'card' || this.t.cardSeconds <= 0) return 0;
+    return Math.max(0, Math.min(1, 1 - this.timer / this.t.cardSeconds));
+  }
+
   start(): CardEvent {
     this.idx = 0;
     return this.showCard('start');

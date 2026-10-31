@@ -43,4 +43,4 @@
     -
       {}
   InputLines:
-    - '// @input string title = "Rehearsal summary" {"hint":"Panel title"}'
+    - '// @input string title = "Rehearsal summary" {"hint":"Unused since pass 4 (title is \"Nice work — m:ss\")"}'

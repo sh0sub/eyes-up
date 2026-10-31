@@ -10,7 +10,14 @@ Built for Learn AR with SPECS (deadline 2026-11-09 PST). New Lens built with CLA
 
 ## Status
 
-Planning done. Script logic for the core loop is in `Assets/Scripts/`. The Lens Studio scene is not built yet.
+- **Scene built** in Lens Studio 5.24.1, driven entirely through the Lens Studio MCP tools (no hand-edited scene files).
+- **7 LEAF done criteria pass** in the Interactive Preview: `start_places_audience`, `gaze_fills_halo`,
+  `neglect_triggers_nudge`, `next_shows_card_then_pill`, `dwell_expands_pill`, `finish_shows_summary`,
+  `repeated_nudge`. Node checks: `npm run check` (typecheck, lint, vitest).
+- **Preview-only.** Not run on a Spectacles device yet. Gaze is head rotation, simulated by LEAF in tests.
+- **Demo video pending.** The `demo_reel` LEAF scenario is ready (`devpost/demo-reel-timeline.md`), but
+  the screen recording hasn't been made yet.
+- Build log and design decisions: `devpost/build-notes.md`. Screenshots: `devpost/screenshots/`.
 
 ## Scripts and tests
 

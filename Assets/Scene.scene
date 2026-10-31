@@ -1369,13 +1369,12 @@
   ScriptAsset: !<reference> 01fb3902-3c93-4aab-b4fb-fda0393e837e
   ScriptInputsDefault:
     title: true
-    subtitle: true
   ScriptTypesDefault:
     {}
   ScriptInputs:
     "":
       title: Eyes Up
-      subtitle: Rehearse with an audience in your room
+      subtitle: Rehearse with your eyes on the room.
   ScriptTypes:
     "":
       {}

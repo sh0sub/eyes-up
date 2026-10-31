@@ -137,6 +137,11 @@ export class EyesUpSession {
     return this.card.total;
   }
 
+  /** 1 → 0 over the time the card is open (cyan countdown line on the card). */
+  get cardCountdown(): number {
+    return this.card.countdown;
+  }
+
   get cardTitle(): string | null {
     return this.card.section ? this.card.section.title : null;
   }

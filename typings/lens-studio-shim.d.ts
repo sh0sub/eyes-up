@@ -87,6 +87,7 @@ declare class SceneObject {
   getChild(index: number): SceneObject;
   createComponent(typeName: string): any;
   getComponent(typeName: string): any;
+  destroy(): void;
 }
 
 declare class ScriptScene {
@@ -154,6 +155,7 @@ declare class Text extends Component {
   horizontalOverflow: HorizontalOverflow;
   verticalOverflow: VerticalOverflow;
   layoutRect: Rect;
+  setRenderOrder(value: number): void;
 }
 
 declare class SceneEvent {

@@ -1,39 +1,86 @@
 /**
- * Summary panel view model (plan M8): time (m:ss), gaze % per zone, longest look-away,
- * card expands, balance score, Again / Done. Bars fill over 0.6 s.
+ * Summary panel view model (plan M8, artifact S5): "Nice work — m:ss" + "target m:ss · deck",
+ * gaze % per zone (amber when out of range), a Balance badge, longest look-away with its timestamp
+ * ("11 s · left · at 1:12"), card expands · nudges, one tip from the weakest zone, Again / Done.
+ * Bars fill over 0.6 s.
  */
 import { StatsSnapshot } from '../SessionStats';
 import { ZONE_NAMES, ZoneName } from './Tunables';
 import { clamp01, formatMSS } from './math';
 
 export const BAR_FILL_SECONDS = 0.6;
+/**
+ * Artifact S5: a zone is in range when 15% < share < 35% ("35% 미만·15% 초과"); anything else gets
+ * an amber label. (Even thirds = 33%.)
+ */
+export const ZONE_RANGE_LOW = 15;
+export const ZONE_RANGE_HIGH = 35;
+
+export interface SummaryContext {
+  /** Talk length from Setup, in seconds. */
+  targetSeconds: number;
+  deckName: string;
+}
 
 export interface SummaryState {
+  /** "Nice work — 2:51" */
+  titleLabel: string;
+  /** "target 3:00 · Eyes Up pitch" ('' when no context is given). */
+  targetLabel: string;
   timeLabel: string;
-  zones: Array<{ name: ZoneName; percent: number; label: string; bar: number }>;
+  zones: Array<{ name: ZoneName; percent: number; label: string; bar: number; outOfRange: boolean }>;
+  /** "11 s · left · at 1:12" */
   longestLookAwayLabel: string;
   cardExpandsLabel: string;
   nudgesLabel: string;
+  /** "2 · 1" (card expands · nudges). */
+  cardsNudgesLabel: string;
+  /** Badge number, e.g. "86". */
   balanceLabel: string;
   balanceScore: number;
+  /** One line from the weakest zone, e.g. "Next time, look left more." */
+  tip: string;
+}
+
+export function zoneOutOfRange(percent: number): boolean {
+  return !(percent > ZONE_RANGE_LOW && percent < ZONE_RANGE_HIGH);
+}
+
+/**
+ * One coaching line. The weakest zone (lowest share; ties go left → right) gets "look … more"
+ * unless every zone is in range. No gaze at all asks to look up.
+ */
+export function summaryTip(percents: readonly [number, number, number]): string {
+  if (percents[0] + percents[1] + percents[2] <= 0) return 'Next time, look up at the audience.';
+  if (percents.every((p) => !zoneOutOfRange(p))) return 'Nice balance. Keep it up.';
+  let weakest = 0;
+  for (let z = 1; z < 3; z++) if (percents[z] < percents[weakest]) weakest = z;
+  const where = ZONE_NAMES[weakest] === 'center' ? 'at the center' : ZONE_NAMES[weakest];
+  return `Next time, look ${where} more.`;
 }
 
 /** `shownSeconds` = time since the panel appeared (drives the 0.6 s bar fill). */
-export function summaryState(s: StatsSnapshot, shownSeconds: number): SummaryState {
+export function summaryState(s: StatsSnapshot, shownSeconds: number, ctx?: SummaryContext): SummaryState {
   const fill = clamp01(shownSeconds / BAR_FILL_SECONDS);
   const away = Math.round(s.longestLookAway.seconds);
+  const time = formatMSS(s.durationSeconds);
   return {
-    timeLabel: formatMSS(s.durationSeconds),
+    titleLabel: `Nice work — ${time}`,
+    targetLabel: ctx ? `target ${formatMSS(ctx.targetSeconds)} · ${ctx.deckName}` : '',
+    timeLabel: time,
     zones: ZONE_NAMES.map((name, z) => ({
       name,
       percent: s.zonePercents[z],
       label: `${s.zonePercents[z]}%`,
       bar: (s.zonePercents[z] / 100) * fill,
+      outOfRange: zoneOutOfRange(s.zonePercents[z]),
     })),
-    longestLookAwayLabel: `${away} s, ${s.longestLookAway.zoneName}`,
+    longestLookAwayLabel: `${away} s · ${s.longestLookAway.zoneName} · at ${formatMSS(s.longestLookAway.startSeconds)}`,
     cardExpandsLabel: `${s.cardExpands}`,
     nudgesLabel: `${s.nudges}`,
-    balanceLabel: `${s.balanceScore} / 100`,
+    cardsNudgesLabel: `${s.cardExpands} · ${s.nudges}`,
+    balanceLabel: `${s.balanceScore}`,
     balanceScore: s.balanceScore,
+    tip: summaryTip(s.zonePercents),
   };
 }

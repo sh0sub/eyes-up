@@ -15,7 +15,8 @@ export interface StatsSnapshot {
   zoneSeconds: [number, number, number];
   /** Integer percentages [left, center, right] summing to exactly 100 (or all 0 if no gaze at all). */
   zonePercents: [number, number, number];
-  longestLookAway: { seconds: number; zone: Zone; zoneName: ZoneName };
+  /** `startSeconds` = session time when that look-away began (Summary: "11 s · left · at 1:12"). */
+  longestLookAway: { seconds: number; zone: Zone; zoneName: ZoneName; startSeconds: number };
   cardExpands: number;
   nudges: number;
   balanceScore: number;
@@ -25,7 +26,7 @@ export class SessionStats {
   private duration = 0;
   private zoneTime: [number, number, number] = [0, 0, 0];
   private awayRun: [number, number, number] = [0, 0, 0];
-  private longest = { seconds: 0, zone: 0 as Zone };
+  private longest = { seconds: 0, zone: 0 as Zone, startSeconds: 0 };
   private cards = 0;
   private nudgeCount = 0;
 
@@ -33,7 +34,7 @@ export class SessionStats {
     this.duration = 0;
     this.zoneTime = [0, 0, 0];
     this.awayRun = [0, 0, 0];
-    this.longest = { seconds: 0, zone: 0 };
+    this.longest = { seconds: 0, zone: 0, startSeconds: 0 };
     this.cards = 0;
     this.nudgeCount = 0;
   }
@@ -46,7 +47,9 @@ export class SessionStats {
         this.awayRun[z] = 0;
       } else {
         this.awayRun[z] += dt;
-        if (this.awayRun[z] > this.longest.seconds) this.longest = { seconds: this.awayRun[z], zone: z };
+        if (this.awayRun[z] > this.longest.seconds) {
+          this.longest = { seconds: this.awayRun[z], zone: z, startSeconds: this.duration - this.awayRun[z] };
+        }
       }
     }
   }

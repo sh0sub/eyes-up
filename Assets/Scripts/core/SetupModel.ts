@@ -10,6 +10,9 @@ export const LENGTH_OPTIONS = [3, 5, 10] as const;
 export const AUDIENCE_OPTIONS = [3, 6, 9] as const;
 /** plan: on Start the panel shrinks for 0.3 s, then disappears. */
 export const SETUP_EXIT_SECONDS = 0.3;
+/** Pill label and caption next to Start (artifact S1 wording). */
+export const SETUP_PILL = 'SETUP';
+export const SETUP_CAPTION = "Stage appears 2.5 m ahead of where you're facing.";
 
 /** Snap a 0..1 slider value to the nearest option. */
 export function snapToOption<T extends number>(options: readonly T[], slider01: number): T {
@@ -55,8 +58,17 @@ export class SetupModel {
     return (DECKS.find((d) => d.id === this.cfg.deckId) ?? DECKS[0]).name;
   }
 
-  get labels(): { length: string; audience: string; deck: string } {
-    return { length: `${this.cfg.lengthMinutes} min`, audience: `${this.cfg.audienceCount} people`, deck: this.deckName };
+  get deckCardCount(): number {
+    return (DECKS.find((d) => d.id === this.cfg.deckId) ?? DECKS[0]).sections.length;
+  }
+
+  get labels(): { length: string; audience: string; deck: string; deckCards: string } {
+    return {
+      length: `${this.cfg.lengthMinutes} min`,
+      audience: `${this.cfg.audienceCount} people`,
+      deck: this.deckName,
+      deckCards: `${this.deckCardCount} cards`,
+    };
   }
 }
 

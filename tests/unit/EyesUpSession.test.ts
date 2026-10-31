@@ -139,7 +139,7 @@ describe('EyesUpSession / EyesUpApp core (M1 #3, #7)', () => {
     expect(s.finish()).toBe(false);
     s.launch();
     expect(() => s.configure({ deckId: 'missing' })).toThrow();
-    expect(s.configure({ audienceCount: 9, deckId: 'interview-intro' })).toBe(true);
+    expect(s.configure({ audienceCount: 9, deckId: 'self-intro' })).toBe(true);
     s.start();
     expect(s.configure({ audienceCount: 3 })).toBe(false);
     expect(s.layout!.seats).toHaveLength(9);

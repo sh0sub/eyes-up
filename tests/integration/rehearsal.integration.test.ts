@@ -104,7 +104,18 @@ describe('Eyes Up rehearsal — simulated end-to-end (LEAF scenarios 1-6)', () =
     gaze.lookAt(session.layout!.podiumPosition);
     const down = podiumState({ ...up, phase: session.phase, gazeForward: gaze.forward, cardIndex: session.cardIndex, cardTotal: session.cardTotal, elapsedSeconds: session.elapsedSeconds, podiumPitchDeg: session.t.podiumPitchDeg });
     expect(down.visible).toBe(true);
-    expect(down.sectionLabel).toBe('2 / 6');
+    expect(down.sectionLabel).toBe('2 / 5');
+    const timed = podiumState({
+      phase: session.phase,
+      gazeForward: gaze.forward,
+      cardIndex: session.cardIndex,
+      cardTotal: session.cardTotal,
+      elapsedSeconds: 81,
+      targetSeconds: session.targetSeconds,
+      podiumPitchDeg: session.t.podiumPitchDeg,
+    });
+    expect(timed.timerLabel).toBe('1:21 / 3:00');
+    expect(session.cardCountdown).toBeGreaterThan(0); // Next just opened "Why glasses"
   });
 
   it('balanced gaze sweep for the rest of the talk; stage line pulses at 60 s / 30 s and turns amber at 0 s', () => {

@@ -33,6 +33,26 @@ describe('SessionStats (#15)', () => {
     expect(snap.longestLookAway.zone).toBe(1);
     expect(snap.longestLookAway.zoneName).toBe('center');
     expect(snap.longestLookAway.seconds).toBeCloseTo(12, 6);
+    expect(snap.longestLookAway.startSeconds).toBeCloseTo(0, 6);
+  });
+
+  it('longest look-away records when it began ("at 1:12"); a later, longer run replaces it', () => {
+    const s = new SessionStats();
+    // 0:00–1:12: rotate right/center/left every second (center last seen 1:10–1:11, left 1:11–1:12),
+    // so no look-away exceeds 2 s.
+    runFor(72, (dt) => s.update(dt, (2 - (Math.floor(s.snapshot().durationSeconds + 1e-9) % 3)) as 0 | 1 | 2));
+    runFor(11, (dt) => s.update(dt, 2)); // then 11 s on the right: center ignored since 1:11
+    let snap = s.snapshot();
+    expect(snap.longestLookAway.zoneName).toBe('center');
+    expect(snap.longestLookAway.seconds).toBeCloseTo(12, 0);
+    expect(snap.longestLookAway.startSeconds).toBeCloseTo(71, 0);
+    runFor(1, (dt) => s.update(dt, 1)); // center seen again
+    runFor(20, (dt) => s.update(dt, 0)); // right now ignored 21 s, starting at 1:23
+    snap = s.snapshot();
+    expect(snap.longestLookAway.zoneName).toBe('right');
+    expect(snap.longestLookAway.startSeconds).toBeCloseTo(83, 0);
+    s.reset();
+    expect(s.snapshot().longestLookAway.startSeconds).toBe(0);
   });
 
   it('first zone to reach the record wins ties (left before center)', () => {

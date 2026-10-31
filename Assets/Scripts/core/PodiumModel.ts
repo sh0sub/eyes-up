@@ -11,6 +11,8 @@ export interface PodiumState {
   visible: boolean;
   sectionLabel: string;
   elapsedLabel: string;
+  /** Artifact S4: "elapsed / target", e.g. "1:21 / 3:00". Just elapsed when no target is given. */
+  timerLabel: string;
   controlsEnabled: boolean;
   replaceVisible: boolean;
 }
@@ -21,6 +23,8 @@ export interface PodiumInput {
   cardIndex: number;
   cardTotal: number;
   elapsedSeconds: number;
+  /** Talk length in seconds (Setup). Optional: omitted or 0 shows elapsed only. */
+  targetSeconds?: number;
   podiumPitchDeg: number;
 }
 
@@ -30,6 +34,8 @@ export function podiumState(i: PodiumInput): PodiumState {
     visible: onStage && pitchDeg(i.gazeForward) <= -i.podiumPitchDeg,
     sectionLabel: i.cardTotal > 0 ? `${i.cardIndex + 1} / ${i.cardTotal}` : '',
     elapsedLabel: formatMSS(i.elapsedSeconds),
+    timerLabel:
+      i.targetSeconds && i.targetSeconds > 0 ? `${formatMSS(i.elapsedSeconds)} / ${formatMSS(i.targetSeconds)}` : formatMSS(i.elapsedSeconds),
     controlsEnabled: i.phase === 'Rehearsal',
     replaceVisible: i.phase !== 'Rehearsal' && i.phase !== 'Launch',
   };

@@ -9,9 +9,18 @@
  * target. `onLengthSlider` / `onAudienceSlider` stay as the slider-style API (0..1 → snapped option).
  * Placement (1.1 m ahead, 10 cm below the eyes, facing the head) is done by EyesUpApp on Setup.
  */
-import { AUDIENCE_OPTIONS, LENGTH_OPTIONS, SetupModel, optionToSlider, setupExitScale, SETUP_EXIT_SECONDS } from './core/SetupModel';
+import {
+  AUDIENCE_OPTIONS,
+  LENGTH_OPTIONS,
+  SETUP_CAPTION,
+  SETUP_EXIT_SECONDS,
+  SETUP_PILL,
+  SetupModel,
+  optionToSlider,
+  setupExitScale,
+} from './core/SetupModel';
 import { SessionConfig } from './core/EyesUpSession';
-import { Panel, TEXT_SECONDARY, addButton, makePanel, textRow } from './EyesUpUI';
+import { BOX_NEUTRAL, Panel, TEXT_PRIMARY, TEXT_SECONDARY, addBox, addButton, flexRow, makePanel, textRow } from './EyesUpUI';
 
 const W = 40;
 const H = 30;
@@ -20,7 +29,7 @@ const DIST = 110;
 @component
 export class SetupPanel extends BaseScriptComponent {
   @input @hint('Panel title') title: string = 'Eyes Up';
-  @input @hint('Subtitle under the title') subtitle: string = 'Rehearse with an audience in your room';
+  @input @hint('Subtitle under the title (artifact S1 wording)') subtitle: string = 'Rehearse with your eyes on the room.';
 
   readonly model = new SetupModel();
   private panel!: Panel;
@@ -36,7 +45,10 @@ export class SetupPanel extends BaseScriptComponent {
     // button labels Button (39) → Headline1 (54); row gap 1.0 → 0.9 so it still fits 40 × 30 cm.
     this.panel = makePanel(this.getSceneObject(), W, H, 2, 0.9);
     const c = this.panel.content;
-    textRow(c, 'SetupTitle', this.title, 'Title2', W - 4, 4.0, DIST);
+    // Pass 4 (artifact S1): title with a "SETUP" pill on the right.
+    const titleRow = flexRow(c, 'SetupTitleRow', W - 4, 4.0, 1);
+    textRow(titleRow, 'SetupTitle', this.title, 'Title2', W - 15, 4.0, DIST);
+    addBox(titleRow, 'SetupPill', SETUP_PILL, 'Subheadline', 9, 2.6, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
     textRow(c, 'SetupSubtitle', this.subtitle, 'Headline2', W - 4, 2.2, DIST, TEXT_SECONDARY);
     const big = { labelRole: 'Headline1' as const };
     this.lengthText = addButton(c, 'LengthButton', '', 30, 3.6, DIST, () => this.cycleLength(), big).label;
@@ -54,11 +66,13 @@ export class SetupPanel extends BaseScriptComponent {
       },
       big,
     ).label;
+    // Start + the artifact caption side by side (keeps the panel inside 40 × 30 cm).
+    const startRow = flexRow(c, 'StartRow', W - 4, 4.4, 1);
     addButton(
-      c,
+      startRow,
       'StartButton',
       'Start rehearsal',
-      22,
+      20,
       4.4,
       DIST,
       () => {
@@ -67,6 +81,8 @@ export class SetupPanel extends BaseScriptComponent {
       },
       { icon: 'play_arrow', primary: true, labelRole: 'Headline1' },
     );
+    // The panel's Text never wraps (Overflow), so the caption breaks after "ahead".
+    textRow(startRow, 'SetupCaption', SETUP_CAPTION.replace(' of ', '\nof '), 'Subheadline', 15, 4.4, DIST, TEXT_SECONDARY);
     // Visibility is applied in UpdateEvent (after every UIKit element has run OnStart): disabling
     // a UIKit host before its OnStart stops it from ever initializing (specs-build-ui G3).
     this.createEvent('UpdateEvent').bind(() => {
@@ -126,6 +142,6 @@ export class SetupPanel extends BaseScriptComponent {
     const l = this.model.labels;
     this.lengthText.text = `Length: ${l.length}`;
     this.audienceText.text = `Audience: ${l.audience}`;
-    this.deckText.text = `Deck: ${l.deck}`;
+    this.deckText.text = `Deck: ${l.deck} · ${l.deckCards}`;
   }
 }

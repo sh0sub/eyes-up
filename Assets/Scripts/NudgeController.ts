@@ -145,3 +145,14 @@ export class NudgeController {
     return best;
   }
 }
+
+/** Artifact S3: the chevron pulses at 1 Hz while visible. */
+export const CHEVRON_PULSE_HZ = 1;
+
+/**
+ * Chevron pulse level 0..1, `t` seconds after the chevron appeared. Starts at 1 (full), dips to 0 at
+ * half a period and is back at 1 every full period (cosine, so there is no pop when it appears).
+ */
+export function chevronPulse(t: number, hz: number = CHEVRON_PULSE_HZ): number {
+  return 0.5 + 0.5 * Math.cos(2 * Math.PI * hz * Math.max(0, t));
+}

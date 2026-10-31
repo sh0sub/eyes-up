@@ -38,6 +38,14 @@ export const TEXT_PRIMARY = new vec4(1, 1, 1, 1);
 export const TEXT_SECONDARY = new vec4(1, 1, 1, 0.7);
 export const TEXT_ACCENT = new vec4(0.55, 0.85, 1.0, 1);
 export const TEXT_AMBER = new vec4(1.0, 0.75, 0.3, 1);
+/** Pass 4 (artifact S5): mint for the Balance badge. */
+export const TEXT_MINT = new vec4(0.55, 1.0, 0.8, 1);
+/** Pass 4: box tones (fill, frame) for badges, pills, stat boxes and the tip line. */
+export const BOX_NEUTRAL: [vec4, vec4] = [new vec4(0.22, 0.29, 0.4, 0.95), new vec4(0.6, 0.78, 0.95, 0.55)];
+export const BOX_MINT: [vec4, vec4] = [new vec4(0.12, 0.36, 0.3, 0.95), new vec4(0.5, 1.0, 0.8, 0.9)];
+export const BOX_AMBER: [vec4, vec4] = [new vec4(0.34, 0.26, 0.1, 0.95), new vec4(1.0, 0.78, 0.35, 0.85)];
+/** Cyan accent for countdown lines and bars. */
+export const ACCENT_CYAN = new vec4(0.45, 0.85, 1.0, 0.95);
 
 const CONTENT_Z = 0.6;
 const BUTTON_LABEL_Z = 0.08;
@@ -76,6 +84,11 @@ const PRIMARY_FACE = new vec4(0.18, 0.5, 0.62, 0.95);
 const PRIMARY_FACE_HOVER = new vec4(0.25, 0.64, 0.78, 1);
 const PRIMARY_FACE_PRESS = new vec4(0.34, 0.76, 0.9, 1);
 const PRIMARY_BORDER = new vec4(0.7, 0.95, 1, 1);
+/** Pass 4 (artifact S4): Finish is amber-framed, distinct from the cyan Next. */
+const AMBER_FACE = new vec4(0.42, 0.31, 0.12, 0.95);
+const AMBER_FACE_HOVER = new vec4(0.56, 0.42, 0.16, 1);
+const AMBER_FACE_PRESS = new vec4(0.7, 0.53, 0.2, 1);
+const AMBER_BORDER = new vec4(1, 0.8, 0.4, 1);
 
 /*
  * Why quads and not UIKit's own visuals: in this project (Lens Studio 5.24.1 + UIKit 4.0, which
@@ -121,10 +134,12 @@ export function addSurface(parent: SceneObject, w: number, h: number, z: number,
   return quad(parent, 'Fill', frame ? w - 2 * FRAME_CM : w, frame ? h - 2 * FRAME_CM : h, z + 0.02, fill);
 }
 
-function themeButton(button: Button, so: SceneObject, w: number, h: number, primary: boolean): void {
+function themeButton(button: Button, so: SceneObject, w: number, h: number, primary: boolean, amber: boolean): void {
   const [face, hover, press, border] = primary
     ? [PRIMARY_FACE, PRIMARY_FACE_HOVER, PRIMARY_FACE_PRESS, PRIMARY_BORDER]
-    : [BUTTON_FACE, BUTTON_FACE_HOVER, BUTTON_FACE_PRESS, BUTTON_BORDER];
+    : amber
+      ? [AMBER_FACE, AMBER_FACE_HOVER, AMBER_FACE_PRESS, AMBER_BORDER]
+      : [BUTTON_FACE, BUTTON_FACE_HOVER, BUTTON_FACE_PRESS, BUTTON_BORDER];
   const fill = addSurface(so, w, h, 0.02, face, border);
   const set = (c: vec4) => (fill.mainPass.baseColor = c);
   button.onHoverEnter.add(() => set(hover));
@@ -260,6 +275,34 @@ export interface ButtonOptions {
   primary?: boolean;
   /** Type-scale role of the label (default 'Button'). Pass 3 uses larger roles for demo legibility. */
   labelRole?: TextRole;
+  /** Amber-framed face (Finish, artifact S4). Ignored when `primary` is set. */
+  amber?: boolean;
+}
+
+/**
+ * Pass 4: a framed box in a flex row/column with centered text (badges, the SETUP pill, stat boxes,
+ * the tip line). `value` may hold '\n' for two lines.
+ */
+export function addBox(
+  parent: SceneObject,
+  name: string,
+  value: string,
+  role: TextRole,
+  widthCm: number,
+  heightCm: number,
+  distanceCm: number,
+  color: vec4,
+  tone: [vec4, vec4] = BOX_NEUTRAL,
+): Text {
+  const so = child(parent, name);
+  addSurface(so, widthCm, heightCm, 0, tone[0], tone[1]);
+  const labelSo = child(so, 'Label', new vec3(0, 0, BUTTON_LABEL_Z));
+  const t = makeText(labelSo, value, role, widthCm - 0.6, heightCm, distanceCm, color);
+  const item = so.createComponent(FlexItem.getTypeName()) as FlexItem;
+  item.overrideWidth = widthCm;
+  item.overrideHeight = heightCm;
+  item.flexShrink = 0;
+  return t;
 }
 
 /**
@@ -280,7 +323,7 @@ export function addButton(
   const so = child(parent, name);
   const button = so.createComponent(Button.getTypeName()) as Button;
   button.size = new vec3(widthCm, heightCm, 1);
-  themeButton(button, so, widthCm, heightCm, opts.primary === true);
+  themeButton(button, so, widthCm, heightCm, opts.primary === true, opts.amber === true);
   const role = opts.labelRole ?? 'Button';
   let labelX = 0;
   let labelW = widthCm - 0.5;

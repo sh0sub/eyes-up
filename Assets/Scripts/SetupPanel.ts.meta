@@ -46,4 +46,4 @@
       {}
   InputLines:
     - '// @input string title = "Eyes Up" {"hint":"Panel title"}'
-    - '// @input string subtitle = "Rehearse with an audience in your room" {"hint":"Subtitle under the title"}'
+    - '// @input string subtitle = "Rehearse with your eyes on the room." {"hint":"Subtitle under the title (artifact S1 wording)"}'

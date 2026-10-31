@@ -18,6 +18,8 @@
  */
 import { HaloVisual } from './AttentionMeter';
 import { CueCardView } from './CueCardController';
+import { getDeck } from './DeckData';
+import { chevronPulse } from './NudgeController';
 import { CameraGazeProvider, ScriptedGazeProvider, SwitchableGazeProvider } from './GazeProvider';
 import { Podium } from './Podium';
 import { SetupPanel } from './SetupPanel';
@@ -26,7 +28,7 @@ import { SummaryPanel } from './SummaryPanel';
 import { AudienceView, EyesUpSession, SessionViews } from './core/EyesUpSession';
 import { podiumState } from './core/PodiumModel';
 import { Vec3Like } from './core/math';
-import { faceTowards } from './EyesUpUI';
+import { ACCENT_CYAN, addSurface, child, faceTowards } from './EyesUpUI';
 
 /** Stage line colors (design): cool white while running, amber at 0 s. Never black. */
 const LINE_COLOR: [number, number, number] = [0.75, 0.85, 1.0];
@@ -38,6 +40,29 @@ const SETUP_BELOW_EYES_CM = 10;
 const SUMMARY_DISTANCE_CM = 150;
 /** design: panels follow the head only while the preview/device pose settles, then stay put. */
 const PANEL_SETTLE_SECONDS = 1.0;
+
+/**
+ * Pass 4 cue card (artifact S4, widened per its own note): a 64 × 26 cm backing at 2.5 m, title
+ * (size 240, was 200) and two bullets (140, was 130), and a cyan countdown line that empties over the 4 s.
+ * The pill keeps 90 % of card scale (was 40 %) so the 3-word tag reads from the start position.
+ */
+const CARD_W = 64;
+const CARD_H = 26;
+/** The card sits above the anchor (bottom edge 2 cm below it) so it clears the audience's heads. */
+const CARD_CENTER_Y = 11;
+const CARD_TITLE_Y = 18.5;
+const CARD_BODY_Y = 9;
+const CARD_COUNTDOWN_Y = 1.4;
+const CARD_COUNTDOWN_W = 58;
+const CARD_TITLE_SIZE = 240;
+const CARD_BODY_SIZE = 140;
+const PILL_SCALE = 0.9;
+const PILL_H = 10;
+const PILL_Y = 5;
+/** Measured in Preview: ≈ 0.0124 cm per size unit per glyph for Inter titles (size 200 → 2.5 cm). */
+const PILL_GLYPH_CM = 0.0124 * CARD_TITLE_SIZE;
+const CARD_FILL = new vec4(0.17, 0.23, 0.33, 0.9);
+const CARD_FRAME = new vec4(0.6, 0.85, 1.0, 0.8);
 
 @component
 export class EyesUpApp extends BaseScriptComponent {
@@ -78,9 +103,22 @@ export class EyesUpApp extends BaseScriptComponent {
   private scripted: ScriptedGazeProvider | null = null;
   private panelAge = 0;
   private views!: SessionViews;
+  private cardBg: SceneObject | null = null;
+  private pillBg: SceneObject | null = null;
+  private countdownPivot: SceneObject | null = null;
+  /** Seconds since the chevron appeared (1 Hz pulse) and each side's base text color. */
+  private hintAge = 0;
+  private hintTexts: [Text | null, Text | null] = [null, null];
+  private hintColors: [vec4, vec4] = [new vec4(1, 1, 1, 1), new vec4(1, 1, 1, 1)];
 
   onAwake(): void {
     this.collectAudience();
+    this.buildCueCard();
+    [this.edgeHintLeft, this.edgeHintRight].forEach((so, i) => {
+      const t = so ? (so.getComponent('Component.Text') as Text) : null;
+      this.hintTexts[i] = t;
+      if (t) this.hintColors[i] = t.textFill.color;
+    });
     // Each halo gets its own material so attention colors are per member.
     this.halos.forEach((h) => {
       if (h) h.mainMaterial = h.mainMaterial.clone();
@@ -208,11 +246,61 @@ export class EyesUpApp extends BaseScriptComponent {
         cardIndex: this.session.cardIndex,
         cardTotal: this.session.cardTotal,
         elapsedSeconds: this.session.elapsedSeconds,
+        targetSeconds: this.session.targetSeconds,
         podiumPitchDeg: this.session.t.podiumPitchDeg,
       }),
     );
     // Cue card / pill is billboarded toward the head (yaw only, so text stays upright).
     if (this.cueCard.enabled) faceTowards(this.cueCard, this.headPosition(), true);
+    if (this.countdownPivot && this.cueCard.enabled) {
+      this.countdownPivot.getTransform().setLocalScale(new vec3(Math.max(0.001, this.session.cardCountdown), 1, 1));
+    }
+    this.pulseChevron(dt);
+  }
+
+  /** Artifact S3: the visible chevron pulses at 1 Hz (brightness and a slight scale). */
+  private pulseChevron(dt: number): void {
+    const hints = [this.edgeHintLeft, this.edgeHintRight];
+    if (!hints.some((h) => h && h.enabled)) return;
+    this.hintAge += dt;
+    const p = chevronPulse(this.hintAge);
+    hints.forEach((so, i) => {
+      if (!so || !so.enabled) return;
+      const t = this.hintTexts[i];
+      const c = this.hintColors[i];
+      if (t) t.textFill.color = new vec4(c.x, c.y, c.z, c.w * (0.35 + 0.65 * p));
+      const s = 0.9 + 0.15 * p;
+      so.getTransform().setLocalScale(new vec3(s, s, s));
+    });
+  }
+
+  /**
+   * Pass 4: backing quad, countdown line and pill backing for the cue card. The texts get a later
+   * render order so they draw over the translucent backings (depthWrite is off on PanelSurface).
+   */
+  private buildCueCard(): void {
+    if (!this.cueCard || !this.cueCardTitle || !this.cueCardBody) return;
+    this.cardBg = child(this.cueCard, 'CardBg', new vec3(0, 0, -0.6));
+    addSurface(child(this.cardBg, 'Surface', new vec3(0, CARD_CENTER_Y, 0)), CARD_W, CARD_H, 0, CARD_FILL, CARD_FRAME);
+    this.countdownPivot = child(this.cardBg, 'Countdown', new vec3(-CARD_COUNTDOWN_W / 2, CARD_COUNTDOWN_Y, 0.1));
+    addSurface(child(this.countdownPivot, 'Line', new vec3(CARD_COUNTDOWN_W / 2, 0, 0)), CARD_COUNTDOWN_W, 0.6, 0, ACCENT_CYAN, null);
+    this.pillBg = child(this.cueCard, 'PillBg', new vec3(0, PILL_Y, -0.6));
+    this.pillBg.enabled = false;
+    this.cueCardTitle.size = CARD_TITLE_SIZE;
+    this.cueCardBody.size = CARD_BODY_SIZE;
+    [this.cueCardTitle, this.cueCardBody].forEach((t) => t.setRenderOrder(10));
+    this.cueCardTitle.getSceneObject().getTransform().setLocalPosition(new vec3(0, CARD_TITLE_Y, 0));
+    this.cueCardBody.getSceneObject().getTransform().setLocalPosition(new vec3(0, CARD_BODY_Y, 0));
+  }
+
+  private setCardLayout(pill: string | null): void {
+    if (this.cardBg) this.cardBg.enabled = pill === null;
+    this.cueCardTitle.getSceneObject().getTransform().setLocalPosition(new vec3(0, pill === null ? CARD_TITLE_Y : PILL_Y, 0));
+    if (!this.pillBg) return;
+    this.pillBg.enabled = pill !== null;
+    if (pill === null) return;
+    for (let i = this.pillBg.getChildrenCount() - 1; i >= 0; i--) this.pillBg.getChild(i).destroy();
+    addSurface(this.pillBg, pill.length * PILL_GLYPH_CM + 8, PILL_H, 0, CARD_FILL, CARD_FRAME);
   }
 
   /**
@@ -241,7 +329,10 @@ export class EyesUpApp extends BaseScriptComponent {
     this.panelAge = 0;
     this.placePanels();
     this.setupPanel.show(phase === 'Setup');
-    this.summaryPanel.show(phase === 'Summary' ? this.session.summary : null);
+    this.summaryPanel.show(phase === 'Summary' ? this.session.summary : null, {
+      targetSeconds: this.session.targetSeconds,
+      deckName: getDeck(this.session.config.deckId).name,
+    });
     const onStage = phase === 'Placing' || phase === 'Rehearsal' || phase === 'Finishing';
     this.stageLine.enabled = onStage;
     if (!onStage) this.cueCard.enabled = false;
@@ -319,16 +410,18 @@ export class EyesUpApp extends BaseScriptComponent {
       showCard: (section) => {
         this.cueCard.enabled = true;
         this.cueCardTitle.text = section.title;
-        this.cueCardBody.text = section.points.join('\n');
+        this.cueCardBody.text = section.points.map((p) => `• ${p}`).join('\n');
         this.cueCardBody.getSceneObject().enabled = true;
+        this.setCardLayout(null);
       },
       showPill: (tag) => {
         this.cueCardTitle.text = tag;
         this.cueCardBody.getSceneObject().enabled = false;
+        this.setCardLayout(tag);
       },
       hide: () => (this.cueCard.enabled = false),
       applyMorph: (m) => {
-        const s = 0.4 + 0.6 * m; // pill is 40% of the card size (design)
+        const s = PILL_SCALE + (1 - PILL_SCALE) * m; // pass 4: pill is 90% of the card size (was 40%)
         this.cueCard.getTransform().setLocalScale(new vec3(s, s, s));
       },
     };
@@ -339,6 +432,7 @@ export class EyesUpApp extends BaseScriptComponent {
       nudgeAudio: { playChime: (side) => this.play(side === 'left' ? this.nudgeAudioL : this.nudgeAudioR) },
       edgeHint: {
         show: (side) => {
+          this.hintAge = 0;
           this.edgeHintLeft.enabled = side === 'left';
           this.edgeHintRight.enabled = side === 'right';
         },

@@ -12,6 +12,13 @@ describe('DeckData (#9)', () => {
     expect(deck.sections[1].title).toBe('Why glasses');
   });
 
+  it('artifact S1 decks: "Eyes Up pitch" 5 cards, "Self-intro" 3 cards', () => {
+    expect(DECKS.map((d) => [d.name, d.sections.length])).toEqual([
+      ['Eyes Up pitch', 5],
+      ['Self-intro', 3],
+    ]);
+  });
+
   it('every section has a title, 1-3 points and a three-word pill tag', () => {
     for (const deck of DECKS) {
       expect(deck.sections.length).toBeGreaterThanOrEqual(2);

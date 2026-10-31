@@ -26,7 +26,7 @@ describe('CueCardController (#8, M6 #5)', () => {
     expect(cc.mode).toBe('card');
     tick(0.2);
     expect(cc.mode).toBe('pill');
-    expect(log.slice(-2)).toEqual(['card:The problem:1/6', 'pill:Screens pull eyes']);
+    expect(log.slice(-2)).toEqual(['card:The problem:1/5', 'pill:Screens pull eyes']);
   });
 
   it('LEAF next_shows_card_then_pill: Next -> "Why glasses", pill after 4.3 s', () => {
@@ -64,9 +64,26 @@ describe('CueCardController (#8, M6 #5)', () => {
     cc.prev();
     expect(cc.index).toBe(0);
     for (let i = 0; i < 10; i++) cc.next();
-    expect(cc.index).toBe(5);
-    expect(cc.sectionChangeCount).toBe(5);
+    // Pass 4: the pitch deck has 5 sections (artifact S1).
+    expect(cc.index).toBe(4);
+    expect(cc.sectionChangeCount).toBe(4);
     expect(cc.mode).toBe('card');
+  });
+
+  it('countdown line: 1 when the card opens, 0.5 at 2 s, 0 in pill / hidden (artifact S4)', () => {
+    const { cc, tick } = harness();
+    expect(cc.countdown).toBe(0); // hidden
+    cc.start();
+    expect(cc.countdown).toBe(1);
+    tick(2);
+    expect(cc.countdown).toBeCloseTo(0.5, 2);
+    tick(2.1);
+    expect(cc.mode).toBe('pill');
+    expect(cc.countdown).toBe(0);
+    cc.expand();
+    expect(cc.countdown).toBe(1); // re-expanded card restarts the line
+    cc.hide();
+    expect(cc.countdown).toBe(0);
   });
 
   it('Next during an open card restarts the 4 s timer', () => {
