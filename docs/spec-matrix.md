@@ -87,3 +87,33 @@ Live headless MCP: scene roots present (EyesUp, SpectaclesInteractionKit, LEAF),
 | R4-S1a | 07 S1 | Setup rows aligned | match | SetupPanel.ts: shared 8 cm left-aligned label column, all three rows 36 cm wide (deck buttons 9.5/9.5/6, unit cell fills the rest); fix-r4/setup.png, devpost/screenshots/01-setup-panel.png |
 | R4-win-warn | win | clean demo | blocked/out of scope (low) | Editor-internal: SceneMaterialBatcher retries and "Failed to load compile data" come from Lens Studio, not project scripts; after recompile + preview restart the log shows no E/F and only 2 editor W lines (network auth, depth format). Not visible in the demo video (Logger panel not shown) |
 | R4-R1/R2/R5 | 01 | public repo, YouTube, device | blocked | needs YouTube login / Spectacles |
+
+## Audit round 5 (2026-11-01, independent full conformance)
+
+Live headless MCP: 6 done-criteria LEAF scenarios PASSED (start_places_audience 2.6 s, gaze_fills_halo 4.3 s, neglect_triggers_nudge 11.8 s, next_shows_card_then_pill 7.6 s, dwell_expands_pill 7.9 s, finish_shows_summary 8.0 s), no E/F log lines. `npm run check`: 129/129 pass, typecheck and lint clean. Screenshots reviewed: devpost/screenshots/01-setup-panel.png, 02-audience-lit-halo.png, 06-summary.png.
+
+| id | artifact section | expected | status | evidence |
+|---|---|---|---|---|
+| R5-T | tests | check, typecheck, lint, LEAF 6 | match | 129/129, 6 PASSED live |
+| R5-S1 | 07 S1 | Setup panel contents and states | match | 01-setup-panel.png: title, SETUP chip, subtitle, segmented rows (selected cyan), 2 decks + Import, mint Start with play icon, caption. Length is segmented not slider (documented) |
+| R5-S1b | 07 S1 | Title and subtitle layout | gap (low) | Title "Eyes Up" is not left-aligned with row labels and the SETUP chip floats right; panel sits low over busy wall art so the lower rows overlap picture frames |
+| R5-S2 | 07 S2 | halos, only 2 members in FOV, "Why glasses" pill | match | 02-audience-lit-halo.png: lit cyan/white halo on watched member, dim neighbor |
+| R5-S2b | win | first-frame value visible in 3 min video | gap (low) | pill text in the hero capture is tiny at video scale; hero still reads mostly as two grey silhouettes |
+| R5-S5 | 07 S5 | Summary content | match | 06-summary.png: Nice work, Balance badge, L/C/R bars, timeline with nudge and longest look-away, 2 tiles, tip, Again/Done/Re-place, Session complete chip |
+| R5-S5b | 07 S5 | tile and tip legibility | gap (low) | stat tiles are translucent and the picture-frame art shows through their text; the tip bar text is amber on a busy background |
+| R5-S3/S4/S6 | 07 | nudge, podium, video | match | unchanged since round 4 (LEAF nudge/card PASSED live, devpost/walkthrough/03-05) |
+| R5-R1/R2/R5 | 01 | public repo, YouTube, device | blocked | needs YouTube login / Spectacles |
+
+## Audit round 5b (confirmation pass, 2026-11-01)
+
+Live headless MCP: 6 done-criteria LEAF scenarios PASSED (2.6, 4.3, 11.8, 7.6, 7.9, 8.0 s), no E/F lines (editor W lines only). `npm run check`: 129/129 pass, typecheck and lint clean. Reviewed devpost/screenshots 01, 03, 05, 06 against S1, S3, S4, S5.
+
+| id | artifact section | expected | status | evidence |
+|---|---|---|---|---|
+| R5b-T | tests | check, typecheck, lint, LEAF 6 | match | 129/129, 6 PASSED live |
+| R5b-states | 05 MVP / 06 flow | all state-machine nodes and edges (Setup, Placing, Rehearsal, Nudge, CardExpanded, TimeUp, Finishing, Summary, Again/Done/Re-place) | match | EyesUpSession and AppStateMachine tests, rehearsal.integration, LEAF finish_shows_summary |
+| R5b-S3a | 07 S3 | amber chevron + "left" clearly visible | gap (low, win) | 03-nudge-chevron.png: chevron and "left" are faint amber at low alpha over the wall, much weaker than the mockup; may not read at video scale |
+| R5b-S4a | 07 S4 | clean podium still | gap (low, win) | 05-podium.png has a "[capture_podium] PASSED" LEAF log overlay at top and a stray floor-line bar; remove or crop before it is used in Devpost media |
+| R5b-S5c | 07 S5 | tiles opaque enough | gap (low) | 06-summary.png tiles still translucent over picture-frame art (unchanged from R5-S5b) |
+| R5b-ASR | 05 Stretch | ASR filler counter | blocked | stretch, needs Snap login, not implemented |
+| R5b-sub | 01 Submission | public repo, YouTube URL in submission.md, device test | blocked | submission.md lines 65-66 still await the YouTube URL (entrant login); no Spectacles |
