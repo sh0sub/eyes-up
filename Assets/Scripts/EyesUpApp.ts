@@ -21,12 +21,13 @@ import { CueCardView } from './CueCardController';
 import { getDeck } from './DeckData';
 import { chevronAlpha, chevronPulse } from './NudgeController';
 import { CameraGazeProvider, ScriptedGazeProvider, SwitchableGazeProvider } from './GazeProvider';
-import { Podium } from './Podium';
+import { PODIUM_H_CM, PODIUM_W_CM, Podium } from './Podium';
 import { SetupPanel } from './SetupPanel';
 import { StageLayout } from './StagePlacer';
 import { SummaryPanel } from './SummaryPanel';
 import { AudienceView, EyesUpSession, SessionViews } from './core/EyesUpSession';
 import { PillRect } from './core/PillHit';
+import { ChevronBox, PlaneRect, placeChevron } from './core/ChevronPlacement';
 import { podiumState } from './core/PodiumModel';
 import { Vec3Like } from './core/math';
 import { ACCENT_CYAN, BOX_AMBER, addIcon, addSurface, child, faceTowards } from './EyesUpUI';
@@ -46,6 +47,16 @@ const CHEVRON_BACK_Y = 4.2;
 const CHEVRON_X_CM = 21;
 /** Round 7: hint dropped this far so the backing's top edge sits below the pill's bottom edge. */
 const CHEVRON_DROP_CM = 6.5;
+/** Hint plane: the chevron is head-locked 100 cm ahead; panels are projected into that plane for placement. */
+const CHEVRON_PLANE_CM = 100;
+/** Clear gap kept between the chevron backing and any panel (cm in the plane). */
+const CHEVRON_PANEL_MARGIN_CM = 1.5;
+/** Backing extents about the hint origin at the largest pulse scale (1.05). */
+const CHEVRON_BOX: ChevronBox = {
+  halfW: (CHEVRON_BACK_W / 2) * 1.05,
+  below: (CHEVRON_BACK_H / 2 - CHEVRON_BACK_Y) * 1.05,
+  above: (CHEVRON_BACK_H / 2 + CHEVRON_BACK_Y) * 1.05,
+};
 const CHEVRON_TEXT = new vec4(1.0, 0.82, 0.35, 1);
 /** ≈ 1.5 cm caption at 100 cm (S3: "left" 1.5 cm). */
 const CHEVRON_CAPTION_SIZE = 150;
@@ -135,6 +146,8 @@ export class EyesUpApp extends BaseScriptComponent {
   private hintAge = 0;
   private hintTexts: [Text | null, Text | null] = [null, null];
   private hintIcons: [Image | null, Image | null] = [null, null];
+  private hintBase: [vec3, vec3] = [new vec3(0, 0, 0), new vec3(0, 0, 0)];
+  private hintHidden: [boolean, boolean] = [false, false];
   private hintColors: [vec4, vec4] = [new vec4(1, 1, 1, 1), new vec4(1, 1, 1, 1)];
 
   onAwake(): void {
@@ -143,7 +156,8 @@ export class EyesUpApp extends BaseScriptComponent {
     [this.edgeHintLeft, this.edgeHintRight].forEach((so, i) => {
       if (!so) return;
       const hp = so.getTransform().getLocalPosition();
-      so.getTransform().setLocalPosition(new vec3((i === 0 ? -1 : 1) * CHEVRON_X_CM, hp.y - CHEVRON_DROP_CM, hp.z));
+      this.hintBase[i] = new vec3((i === 0 ? -1 : 1) * CHEVRON_X_CM, hp.y - CHEVRON_DROP_CM, hp.z);
+      so.getTransform().setLocalPosition(this.hintBase[i]);
       const t = so.getComponent('Component.Text') as Text;
       if (t) {
         t.text = i === 0 ? 'left' : 'right';
@@ -305,6 +319,8 @@ export class EyesUpApp extends BaseScriptComponent {
     const p = chevronPulse(this.hintAge);
     hints.forEach((so, i) => {
       if (!so || !so.enabled) return;
+      this.placeHint(so, i);
+      if (this.hintHidden[i]) return;
       const t = this.hintTexts[i];
       const c = this.hintColors[i];
       const a = chevronAlpha(p);
@@ -315,6 +331,55 @@ export class EyesUpApp extends BaseScriptComponent {
       const s = 0.9 + 0.15 * p;
       so.getTransform().setLocalScale(new vec3(s, s, s));
     });
+  }
+
+  /** World-space rect (corners via `host`'s transform) projected into the chevron's view plane, or null if behind the camera. */
+  private projectRect(host: SceneObject, cx: number, cy: number, halfW: number, halfH: number): PlaneRect | null {
+    const wt = host.getTransform().getWorldTransform();
+    const inv = this.camera.getTransform().getInvertedWorldTransform();
+    let r: PlaneRect | null = null;
+    for (const [dx, dy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+      const p = inv.multiplyPoint(wt.multiplyPoint(new vec3(cx + dx * halfW, cy + dy * halfH, 0)));
+      if (p.z > -5) return null;
+      const k = CHEVRON_PLANE_CM / -p.z;
+      const x = p.x * k;
+      const y = p.y * k;
+      r = r ? { minX: Math.min(r.minX, x), maxX: Math.max(r.maxX, x), minY: Math.min(r.minY, y), maxY: Math.max(r.maxY, y) } : { minX: x, maxX: x, minY: y, maxY: y };
+    }
+    return r;
+  }
+
+  /** Keep the head-locked chevron clear of the podium and the cue card (core/ChevronPlacement.ts). */
+  private placeHint(so: SceneObject, i: number): void {
+    const panels: PlaneRect[] = [];
+    const podiumRoot = this.podium.getSceneObject();
+    if (podiumRoot.enabled) {
+      const r = this.projectRect(podiumRoot, 0, 0, PODIUM_W_CM / 2, PODIUM_H_CM / 2);
+      if (r) panels.push(r);
+    }
+    if (this.cueCard.enabled) {
+      const asPill = !!this.pillBg && this.pillBg.enabled && this.pillWidth > 0;
+      const r = asPill
+        ? this.projectRect(this.cueCard, 0, PILL_Y, this.pillWidth / 2, PILL_H / 2)
+        : this.projectRect(this.cueCard, 0, CARD_CENTER_Y, CARD_W / 2, CARD_H / 2);
+      if (r) panels.push(r);
+    }
+    const cam = this.camera.getComponent('Component.Camera') as Camera;
+    const halfH = CHEVRON_PLANE_CM * Math.tan(cam.fov / 2);
+    const base = this.hintBase[i];
+    const spot = placeChevron(
+      i === 0 ? 'left' : 'right',
+      { x: base.x, y: base.y },
+      CHEVRON_BOX,
+      panels,
+      { margin: CHEVRON_PANEL_MARGIN_CM, viewHalfW: halfH * cam.aspect, viewHalfH: halfH },
+    );
+    this.hintHidden[i] = spot === null;
+    if (spot === null) {
+      so.getTransform().setLocalScale(new vec3(0, 0, 0));
+      return;
+    }
+    so.getTransform().setLocalPosition(new vec3(spot.x, spot.y, base.z));
   }
 
   /**

@@ -51,8 +51,8 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Start',
     heading: 'An audience in your room',
-    // Live real-camera capture 2026-11-01 05:27: Setup panel → pinch Start → audience → card "The problem".
-    footage: [{ from: '05:28:05', to: '05:28:22' }],
+    // Live real-camera capture 2026-11-01 06:19 (round 8): Setup panel → pinch Start → audience → card "The problem".
+    footage: [{ from: '06:19:52', to: '06:20:09' }],
     lines: [
       'You pick a length and a deck, here a five card pitch, and press Start with a pinch.',
       'Six audience members appear on the floor, two and a half meters ahead, in a half circle.',
@@ -69,7 +69,7 @@ export const SEGMENTS = [
     kicker: 'Gaze',
     heading: 'Whoever you look at lights up',
     speed: 1.3,
-    footage: [{ from: '05:28:22', to: '05:28:36' }],
+    footage: [{ from: '06:20:10', to: '06:20:22' }],
     gallery: 0.8,
     lines: [
       'Whoever you look at lights up. Their halo fills in about a second, and slowly cools when you look away.',
@@ -82,8 +82,8 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Nudge',
     heading: 'Ignore a side, get a tap',
-    // Live: the head turns to the right side, the left chevron appears and clears when the head turns back.
-    footage: [{ from: '05:28:38', to: '05:28:52' }],
+    // Live: the head turns to the right side, the left chevron appears and clears when the head turns back; later the right one.
+    footage: [{ from: '06:20:24', to: '06:20:43' }],
     gallery: 2.2,
     lines: [
       'Stare at one side for eight seconds, and you hear a soft chime, and a pulsing amber chevron appears at the edge of your view.',
@@ -103,8 +103,9 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Controls',
     heading: 'A podium only when you look down',
-    // Live: head pitched down shows the podium; pinch Next.
-    footage: [{ from: '05:29:07', to: '05:29:18' }],
+    // Live: head pitched down shows the podium; pinch Next. The right chevron appears beside it, never on it.
+    footage: [{ from: '06:21:00', to: '06:21:15' }],
+    speed: 1.2,
     lines: [
       'Controls appear only when you look down, like a real podium.',
       'Your slide count, the time against your target, and a big Next button live there, and nowhere else.',
@@ -117,7 +118,7 @@ export const SEGMENTS = [
     kicker: 'Notes',
     heading: 'Notes only when you need them',
     // Pinch Next → card "Why glasses" → pill "Eyes stay up" → dwell → card again with its countdown line.
-    footage: [{ from: '05:29:19', to: '05:29:40' }],
+    footage: [{ from: '06:21:19', to: '06:21:41' }],
     speed: 1.3,
     gallery: 6.5,
     lines: [
@@ -134,13 +135,13 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Finish',
     heading: 'Where your eyes went',
-    // Finish → Summary panel (1:40 live run) held.
-    footage: [{ from: '05:29:57', to: '05:30:14' }],
+    // Finish → Summary panel (1:55 live run) held.
+    footage: [{ from: '06:22:01', to: '06:22:21' }],
     gallery: 10,
     lines: [
       'Finish, and the audience applauds. Then you see where your eyes went.',
       'A balance score, the split between left, center and right, and a timeline of your gaze, with every nudge marked.',
-      'This run: one minute forty, only sixteen percent on the left. The tip says it plainly: next time, look left more.',
+      'This run: one minute fifty five, only seventeen percent on the left. The tip says it plainly: next time, look left more.',
     ],
     stills: [{ file: `${S}/06-summary.png`, crop: BAND, zoom: { rect: [96, 586, 284, 230], label: 'Rehearsal summary' } }],
   },

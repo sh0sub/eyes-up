@@ -19,8 +19,10 @@ export interface PodiumHandlers {
 }
 
 /** Pass 3 (demo legibility): 30 → 34 cm wide so the larger labels fit; buttons 7.2 × 3.6 cm (≥ 3 cm). */
-const W = 34;
-const H = 11;
+export const PODIUM_W_CM = 34;
+export const PODIUM_H_CM = 11;
+const W = PODIUM_W_CM;
+const H = PODIUM_H_CM;
 const DIST = 55;
 
 @component

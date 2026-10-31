@@ -66,7 +66,18 @@ declare enum VerticalOverflow {
   Shrink,
 }
 
+declare class mat4 {
+  multiplyPoint(p: vec3): vec3;
+}
+
+declare class Camera {
+  fov: number;
+  aspect: number;
+}
+
 declare class Transform {
+  getWorldTransform(): mat4;
+  getInvertedWorldTransform(): mat4;
   getWorldPosition(): vec3;
   setWorldPosition(p: vec3): void;
   getLocalPosition(): vec3;

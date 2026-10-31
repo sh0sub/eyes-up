@@ -141,3 +141,13 @@ Live headless MCP: 8 LEAF scenarios PASSED, no E/F lines. `npm run check`: 130/1
 | R7-S5 | 07 S5 | Summary and Re-place buttons clear the picture frames | match | SUMMARY_ABOVE_EYES_CM 17 -> 20; 06-summary.png shows about 20 px of wall between the panel border and the frames |
 | R7-S2 | win | gallery shows the larger pill clear of the halo | match | .local/screenshots/01-halo.png regenerated from the new video (gallery moment 0.8 s into the halo segment) |
 | R7-S6 | 07 S6 | demo video matches the current build | match | .local/video/eyes-up-demo.mp4 (2:39, not committed) rebuilt from a fresh all-live real-camera capture (nudge, podium, cue, Summary all live; no stills); narration says 8 scenarios, 130 tests, 1:40 run with 16 % left. Previous file kept as eyes-up-demo-prev.mp4 |
+
+## Polish round 8 (2026-11-01, chevron never covers a panel)
+
+Live headless MCP: 8 LEAF scenarios PASSED, no E/F lines. `npm run check`: 139/139 tests, typecheck and lint clean.
+
+| id | artifact section | expected | status | evidence |
+|---|---|---|---|---|
+| R8-S3 | 07 S3 | nudge chevron stays at the view edge and never overlaps the podium, cue card/pill or any panel | match | core/ChevronPlacement.ts (placement rule, tests/unit/ChevronPlacement.test.ts): panels are projected into the chevron's view plane each frame; the chevron keeps its edge spot, else takes the nearest clear spot beside, above or below, else is hidden (chime still plays). Fixes the right chevron covering the podium's right edge in the video |
+| R8-S6 | 07 S6 | demo video matches the current build | match | `.local/video/eyes-up-demo.mp4` (2:45, not committed) re-recorded live; frames checked around every nudge (left and right chevrons at the audience, beside/below the podium, beside the pill and card); narration says 1:55 run with 17 % left. Previous file kept as eyes-up-demo-prev.mp4 |
+| R8-S3b | 07 S3 | nudge still | match | 03-nudge-chevron.png / walkthrough 03-nudge.png recaptured: chevron sits 0.8 cm lower, clear of the centered pill |
