@@ -16,6 +16,7 @@ import { SessionStats, StatsSnapshot } from '../SessionStats';
 import { StageLayout, computeStageLayout } from '../StagePlacer';
 import { StageLine, StageLineAudio, StageLineEvent, StageLineView } from '../StageLine';
 import { AppAction, AppStateMachine, Phase } from './AppStateMachine';
+import { PillRect, uprightPillRect } from './PillHit';
 import { Tunables, ZONES, Zone, makeTunables, zoneOf } from './Tunables';
 import { Vec3Like, add, scale, sub } from './math';
 
@@ -164,6 +165,11 @@ export class EyesUpSession {
 
   get gazeZone(): Zone | null {
     return this.tracker.gazeZone;
+  }
+
+  /** The pill rectangle the dwell is tested against (null unless the pill is showing). */
+  get pillRect(): PillRect | null {
+    return this.tracker.pillRect;
   }
 
   liveStats(): StatsSnapshot {
@@ -337,7 +343,8 @@ export class EyesUpSession {
     }
     const cardEvent = this.card.update(dt);
     if (cardEvent) this.emit(cardEvent);
-    this.tracker.setPillTarget(this.card.mode === 'pill' ? layout.cardAnchor : null);
+    // Pass 6: dwell on the pill's real rectangle (live transform), not a cone around cardAnchor.
+    this.tracker.setPillTarget(this.card.mode === 'pill' ? this.currentPillRect(layout) : null);
 
     for (const e of this.line.update(this._elapsed, dt)) this.emit(e);
 
@@ -347,12 +354,21 @@ export class EyesUpSession {
     }
   }
 
+  private currentPillRect(layout: StageLayout): PillRect | null {
+    const view = this.views.cueCard;
+    if (view && view.pillRect) return view.pillRect();
+    return uprightPillRect(layout.cardAnchor, this.gaze.origin, FALLBACK_PILL_HALF_W, FALLBACK_PILL_HALF_H);
+  }
+
   private emit(e: SessionEvent): void {
     for (const l of this.listeners) l(e);
   }
 }
 
 const NO_HALO: HaloView = { applyHalo: () => undefined };
+/** Pill size used when the view does not report one (Node tests): ~30 × 10 cm at the card anchor. */
+const FALLBACK_PILL_HALF_W = 15;
+const FALLBACK_PILL_HALF_H = 5;
 
 function zoneCenter(points: readonly Vec3Like[], zone: Zone): Vec3Like {
   let sum: Vec3Like = { x: 0, y: 0, z: 0 };

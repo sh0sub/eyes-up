@@ -587,3 +587,101 @@ Rehearsal. `PanelModels.test.ts`'s snapshot fixture gained the `timeline` field.
 - Balance-badge two-size typography (one Text role for number and caption).
 - Demo recording, plus G3, G4, G5, G8, D10 and D2 as before.
 - Nothing committed.
+
+# Pass 6 (2026-10-31, headless)
+
+Same setup: Lens Studio 5.24.1 through the lens-studio MCP server ("Preview 2", Interactive), no
+human available. One bug: with the **real camera gaze** (CameraGazeProvider), looking straight at the
+pill for 2–3.5 s never re-expanded the card. It failed from the start position and from 1 m closer
+(CardBg / CueCardBody stayed hidden). LEAF `dwell_expands_pill` passed with ScriptedGazeProvider.
+
+## Root cause
+
+The dwell hit test was a **7° cone (`lookAngleDeg`) around `layout.cardAnchor`**, a point. It did not
+use the pill itself. Two things made that go wrong with a real head:
+
+1. **The cone covered the centre audience.** At the start pose the anchor is 15 cm above eye level,
+   the centre members' eyes are 10 cm below it, and the pill centre is 19.5 cm above it, all at
+   2.5 m. That puts the anchor ~3.4° from straight ahead, the centre eyes ~5.7° from the anchor, and
+   the pill 1.1° above it. Pass 4 raised the card above the heads and grew the pill to 90 % with
+   its own backing (PillBg 5 cm up the card × 0.9 = 4.5 cm above the anchor), but the target stayed
+   a cone at the anchor. A speaker who faces the room therefore counts as "on the pill". The dwell
+   fired on its own about 1 s after the pill appeared.
+2. **The latch then never re-armed.** `dwellLatched` resets only when the gaze leaves the target.
+   Looking from the centre audience straight up at the pill stays inside the same 7° cone, so the
+   dwell stayed latched and never fired again. LEAF passed because the scenario looks at member 0
+   (far left, outside the cone) before `lookAtPill`, which re-arms the latch.
+
+Reproduced live before the fix. Pinch Start, then the camera's `lookAt` at the pill (camera
+rotation x = 4.46°, inside 1° of the pill): CardBg stayed `enabled:false`. Then a separate `lookAt`
+far left (53° yaw) and back to the pill: the card expanded. Both moves in one batched
+MovePreviewCamera call do *not* re-arm, because both land in the same frame.
+
+## Fix
+
+- New pure `core/PillHit.ts`: `PillRect {center, right, up, halfWidth, halfHeight}` and
+  `pillHit(origin, forward, rect, marginDeg)`. It intersects the gaze ray with the pill plane and
+  tests the hit against the rectangle, grown by `marginDeg` of visual angle at the hit distance.
+  `uprightPillRect(center, viewer, hw, hh)` builds a yaw-billboarded rect (fallback and tests).
+- **D33: `pillMarginDeg` = 1.5°** (new tunable; ≈ 6.5 cm at 2.5 m, ≈ 4 cm at 1.5 m) allows for
+  head-gaze jitter. The centre audience's eyes stay ~18 cm outside the grown rect.
+- `GazeTracker.setPillTarget` takes a `PillRect` (copied by components, because a native `vec3`
+  doesn't spread). `onPill` = `pillHit(...)`. The latch behaviour is unchanged: one fire per look,
+  re-armed by leaving the pill.
+- `CueCardView.pillRect?()` is a new optional hook. **EyesUpApp** reports the live PillBg transform
+  every frame: world position (so it follows the billboard, the 0.9 pill scale and the morph), its
+  world `right` / `up` axes, and the backing size (`pill.length × 0.0124 × 240 + 8` cm wide, 10 cm
+  tall) × world scale. It returns null when PillBg is not enabled in the hierarchy. EyesUpSession
+  uses it when the pill shows. Without a view (Node tests) it falls back to a 30 × 10 cm upright
+  rect at the anchor. `session.pillRect` exposes the current target.
+- LEAF `lookAtPill` and `demo_reel`'s dwell look now aim at `session.pillRect.center` (the real
+  pill), not `cardAnchor`.
+- `typings/lens-studio-shim.d.ts`: added `Transform.getWorldScale/right/up` and
+  `SceneObject.isEnabledInHierarchy` (all exist in `Support/StudioLib.d.ts`).
+
+## Live verification (real CameraGazeProvider, MovePreviewCamera, scene state via QueryRuntimeSceneTool)
+
+| Run | Steps | Result |
+|---|---|---|
+| 1, start pose | Pinch Start, look at the centre audience's eyes (0, −10, −250) for ~8 s while the card collapses, then `lookAt` the pill (0, 19.5, −250.5), wait 1.5 s | Facing the audience the pill **stayed a pill** (no accidental dwell). After the pill look: **CardBg enabled, CueCardBody enabled** ("• We rehearse looking at screens …") |
+| 2, start pose | Look at member area (30, −10, −250) until the card collapsed (CardBg off, PillBg on), then the pill for 1.5 s | **CardBg + CueCardBody enabled** |
+| 3, 1 m closer | `setPosition` (0, 0, −100), look at the centre audience until the pill, then the pill (pitch 7.38°) for 1.5 s | **CardBg + CueCardBody enabled** |
+
+No look-away to a far member was needed in any run.
+
+## LEAF results (Interactive Preview, "Preview 2", after the final code change)
+
+| Scenario | Result |
+|---|---|
+| `start_places_audience` | ✅ succeeded |
+| `gaze_fills_halo` | ✅ succeeded |
+| `neglect_triggers_nudge` | ✅ succeeded |
+| `next_shows_card_then_pill` | ✅ succeeded |
+| `dwell_expands_pill` | ✅ succeeded |
+| `finish_shows_summary` | ✅ succeeded |
+| `repeated_nudge` | ✅ succeeded |
+| `finish_pulses_at_time` (extra) | ✅ succeeded |
+| `demo_reel` (extra, its dwell look changed) | ✅ PASSED at 71.7 s per the lens log. The MCP call timed out at ~60 s as before. Dwell look at t = 42.8 s → "Why glasses (dwell)" at 43.8 s. Summary zone %: left 20 / center 47 / right 33 |
+
+## Tests and build
+
+- `npm run check`: typecheck + lint + vitest **121/121** (was 115).
+- New `tests/unit/PillHit.test.ts` (5):
+  - centre and corners hit, just past the margin misses;
+  - rays pointing away or parallel to the plane miss;
+  - a yawed pill is tested along its own axes;
+  - **regression:** the old 7° anchor cone contains the centre audience, the pill rect doesn't;
+  - a straight look hits from the start pose and 1 m closer.
+- `GazeTracker.test.ts`:
+  - the existing dwell tests use the app-shaped pill (`fixtures.appPill`);
+  - **new regression:** face centre members for 6 s with the pill up → no fire, then look straight
+    at the pill → fires once after 1 s, from both head positions.
+- `RecompileTypeScriptTool` succeeded. `RunAndCollectLogsTool` shows no `E` lines (W only: editor
+  network auth, depth format, material batcher).
+- Project saved (`model.project.save()`). Nothing committed. `.mcp.json` untouched.
+
+## Still open after pass 6
+
+- The pill's real-device gaze jitter is untested. 1.5° is a guess for Spectacles head gaze and may
+  need tuning on device.
+- Everything listed under "Still open after pass 5".

@@ -74,12 +74,16 @@ declare class Transform {
   setLocalRotation(r: quat): void;
   getLocalScale(): vec3;
   setLocalScale(s: vec3): void;
+  getWorldScale(): vec3;
   readonly back: vec3;
   readonly forward: vec3;
+  readonly right: vec3;
+  readonly up: vec3;
 }
 
 declare class SceneObject {
   enabled: boolean;
+  readonly isEnabledInHierarchy: boolean;
   name: string;
   getTransform(): Transform;
   setParent(parent: SceneObject): void;

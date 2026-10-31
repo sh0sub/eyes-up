@@ -26,6 +26,7 @@ import { SetupPanel } from './SetupPanel';
 import { StageLayout } from './StagePlacer';
 import { SummaryPanel } from './SummaryPanel';
 import { AudienceView, EyesUpSession, SessionViews } from './core/EyesUpSession';
+import { PillRect } from './core/PillHit';
 import { podiumState } from './core/PodiumModel';
 import { Vec3Like } from './core/math';
 import { ACCENT_CYAN, addIcon, addSurface, child, faceTowards } from './EyesUpUI';
@@ -115,6 +116,8 @@ export class EyesUpApp extends BaseScriptComponent {
   private views!: SessionViews;
   private cardBg: SceneObject | null = null;
   private pillBg: SceneObject | null = null;
+  /** Width (cm, before world scale) of the current pill backing. */
+  private pillWidth = 0;
   private countdownPivot: SceneObject | null = null;
   /** Seconds since the chevron appeared (1 Hz pulse) and each side's base text color. */
   private hintAge = 0;
@@ -321,7 +324,30 @@ export class EyesUpApp extends BaseScriptComponent {
     this.pillBg.enabled = pill !== null;
     if (pill === null) return;
     for (let i = this.pillBg.getChildrenCount() - 1; i >= 0; i--) this.pillBg.getChild(i).destroy();
-    addSurface(this.pillBg, pill.length * PILL_GLYPH_CM + 8, PILL_H, 0, CARD_FILL, CARD_FRAME);
+    this.pillWidth = pill.length * PILL_GLYPH_CM + 8;
+    addSurface(this.pillBg, this.pillWidth, PILL_H, 0, CARD_FILL, CARD_FRAME);
+  }
+
+  /**
+   * Pass 6: the dwell target is the pill backing as it is on screen — PillBg's world position
+   * (5 cm up the billboarded card, × the 0.9 pill scale), its world axes, and its backing size ×
+   * world scale. Before this the dwell aimed a 7° cone at `layout.cardAnchor`, which also covered
+   * the centre audience and kept the dwell latched (build-notes Pass 6).
+   */
+  private pillRect(): PillRect | null {
+    if (!this.pillBg || !this.pillBg.isEnabledInHierarchy || this.pillWidth <= 0) return null;
+    const t = this.pillBg.getTransform();
+    const s = t.getWorldScale();
+    const p = t.getWorldPosition();
+    const r = t.right;
+    const u = t.up;
+    return {
+      center: { x: p.x, y: p.y, z: p.z },
+      right: { x: r.x, y: r.y, z: r.z },
+      up: { x: u.x, y: u.y, z: u.z },
+      halfWidth: (this.pillWidth / 2) * Math.abs(s.x),
+      halfHeight: (PILL_H / 2) * Math.abs(s.y),
+    };
   }
 
   /**
@@ -445,6 +471,7 @@ export class EyesUpApp extends BaseScriptComponent {
         const s = PILL_SCALE + (1 - PILL_SCALE) * m; // pass 4: pill is 90% of the card size (was 40%)
         this.cueCard.getTransform().setLocalScale(new vec3(s, s, s));
       },
+      pillRect: () => this.pillRect(),
     };
 
     return {

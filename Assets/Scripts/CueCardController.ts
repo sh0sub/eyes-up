@@ -11,6 +11,7 @@
  * "card expands" number on the summary. Next/Prev section changes are counted separately.
  */
 import { Deck, DeckSection } from './DeckData';
+import { PillRect } from './core/PillHit';
 import { Tunables } from './core/Tunables';
 
 export type CardMode = 'hidden' | 'card' | 'pill';
@@ -23,6 +24,11 @@ export interface CueCardView {
   hide(): void;
   /** 0 = pill, 1 = full card. Called every update while tweening. */
   applyMorph?(morph: number): void;
+  /**
+   * Pass 6: the pill's live world rectangle (transform × backing size) for the dwell hit test, or
+   * null if it is not on screen. Optional: without it the session uses a rect at the card anchor.
+   */
+  pillRect?(): PillRect | null;
 }
 
 export type CardEvent =

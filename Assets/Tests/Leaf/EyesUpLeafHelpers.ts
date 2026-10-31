@@ -57,7 +57,9 @@ export function lookAtMember(rig: Rig, i: number): void {
 export function lookAtPill(rig: Rig): void {
   const layout = rig.session.layout;
   if (!layout) throw new Error('no stage layout yet');
-  rig.gaze.lookAt(layout.cardAnchor);
+  // Pass 6: aim at the pill as it is on screen (the dwell hit test uses its live rectangle).
+  const rect = rig.session.pillRect;
+  rig.gaze.lookAt(rect ? rect.center : layout.cardAnchor);
 }
 
 /** Pitch the scripted gaze ~29° down (podium shows at ≥ podiumPitchDeg, 15° by default) and wait for it to appear. */

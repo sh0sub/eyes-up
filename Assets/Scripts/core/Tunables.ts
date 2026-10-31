@@ -22,6 +22,11 @@ export interface Tunables {
   cardSeconds: number;
   /** plan: pill dwell time that re-expands the card (1 s). */
   dwellSeconds: number;
+  /**
+   * design (pass 6): the dwell hit test is the pill's own rectangle, grown by this much visual angle
+   * for head-gaze jitter (1.5° ≈ 6.5 cm at 2.5 m; the centre audience's eyes stay ~18 cm outside it).
+   */
+  pillMarginDeg: number;
   /** design: gaze is "in a zone" if the nearest audience member is within this angle. */
   zoneAngleDeg: number;
 
@@ -65,6 +70,7 @@ export const DEFAULT_TUNABLES: Readonly<Tunables> = Object.freeze({
   nudgeCooldownSeconds: 8,
   cardSeconds: 4,
   dwellSeconds: 1,
+  pillMarginDeg: 1.5,
   zoneAngleDeg: 15,
 
   stageDistanceCm: 250,

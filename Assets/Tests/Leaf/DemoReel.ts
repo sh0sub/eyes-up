@@ -210,7 +210,8 @@ export class DemoReel extends Scenario {
     await sleep(1800);
     lookMember(3);
     await sleep(1600);
-    reticle.look(card);
+    const pill = session.pillRect;
+    reticle.look(pill ? v(pill.center) : card);
     this.mark('gaze dwells on the pill');
     await waitUntil(() => session.cardMode === 'card', 3000, () => 'card re-expands');
     await sleep(3000);

@@ -10,8 +10,11 @@
  *
  * Pill dwell: while the pill is shown, looking at it for `dwellSeconds` (1 s) fires once;
  * it fires again only after the gaze has left the pill (so staring does not loop).
+ * "Looking at it" is a hit on the pill's actual rectangle (core/PillHit.ts, pass 6), not a 7° cone
+ * around the card anchor.
  */
 import { GazeProvider } from './GazeProvider';
+import { PillRect, pillHit } from './core/PillHit';
 import { Tunables, Zone, zoneOf } from './core/Tunables';
 import { Vec3Like, angleDeg, sub } from './core/math';
 
@@ -24,11 +27,11 @@ export interface GazeFrame {
   dwellFired: boolean;
 }
 
-export type GazeTunables = Pick<Tunables, 'lookAngleDeg' | 'zoneAngleDeg' | 'dwellSeconds'>;
+export type GazeTunables = Pick<Tunables, 'lookAngleDeg' | 'zoneAngleDeg' | 'dwellSeconds' | 'pillMarginDeg'>;
 
 export class GazeTracker {
   private targets: Vec3Like[] = [];
-  private pillTarget: Vec3Like | null = null;
+  private pillTarget: PillRect | null = null;
   private dwellAccum = 0;
   private dwellLatched = false;
   private last: GazeFrame = { angles: [], looking: [], nearestIndex: -1, gazeZone: null, dwellFired: false };
@@ -44,16 +47,23 @@ export class GazeTracker {
     return this.targets.length;
   }
 
-  /** Enable pill dwell at a world point, or disable with null (card expanded / hidden). */
-  setPillTarget(point: Vec3Like | null): void {
-    this.pillTarget = point ? { ...point } : null;
-    if (!point) {
+  /** Enable pill dwell on the pill's world rectangle, or disable with null (card expanded / hidden). */
+  setPillTarget(rect: PillRect | null): void {
+    // Explicit components: a native Lens vec3 has no own enumerable x/y/z (see GazeProvider.ts).
+    const c = (p: Vec3Like): Vec3Like => ({ x: p.x, y: p.y, z: p.z });
+    this.pillTarget = rect ? { ...rect, center: c(rect.center), right: c(rect.right), up: c(rect.up) } : null;
+    if (!rect) {
       this.dwellAccum = 0;
     }
   }
 
   get pillDwellSeconds(): number {
     return this.dwellAccum;
+  }
+
+  /** The current dwell target (null while the pill is not shown). */
+  get pillRect(): PillRect | null {
+    return this.pillTarget;
   }
 
   update(dt: number, gaze: GazeProvider): GazeFrame {
@@ -77,7 +87,7 @@ export class GazeTracker {
 
     let dwellFired = false;
     if (this.pillTarget) {
-      const onPill = angleDeg(forward, sub(this.pillTarget, origin)) <= this.t.lookAngleDeg;
+      const onPill = pillHit(origin, forward, this.pillTarget, this.t.pillMarginDeg);
       if (!onPill) {
         this.dwellAccum = 0;
         this.dwellLatched = false;
