@@ -36,6 +36,8 @@ const TYPE_SCALE: Record<TextRole, { size: number; weight: number }> = {
 /** Light text colors (never black on an additive display). */
 export const TEXT_PRIMARY = new vec4(1, 1, 1, 1);
 export const TEXT_SECONDARY = new vec4(1, 1, 1, 0.7);
+/** Round 3 (artifact S1): row labels and captions on the panel need near-white contrast. */
+export const TEXT_LABEL = new vec4(1, 1, 1, 0.95);
 export const TEXT_ACCENT = new vec4(0.55, 0.85, 1.0, 1);
 export const TEXT_AMBER = new vec4(1.0, 0.75, 0.3, 1);
 /** Pass 4 (artifact S5): mint for the Balance badge. */

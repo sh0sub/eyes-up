@@ -380,6 +380,7 @@ export class EyesUpApp extends BaseScriptComponent {
     this.summaryPanel.show(phase === 'Summary' ? this.session.summary : null, {
       targetSeconds: this.session.targetSeconds,
       deckName: getDeck(this.session.config.deckId).name,
+      cardCount: getDeck(this.session.config.deckId).sections.length,
     });
     const onStage = phase === 'Placing' || phase === 'Rehearsal' || phase === 'Finishing';
     this.stageLine.enabled = onStage;

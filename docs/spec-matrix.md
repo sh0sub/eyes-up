@@ -56,3 +56,20 @@ Live headless MCP drive: Setup, Start pinch, audience view, Next pinch, card and
 | C2-logs | tests | no runtime errors | match | no E/F lines; only SceneMaterialBatcher "batching retries exhausted" warnings for text visuals, depth-format warning, editor network auth warnings |
 | C2-warn | win | clean logger in demo footage | gap (low) | batcher warnings on 10 text visuals; cosmetic, not visible in the video unless the Logger panel is shown |
 | C2-vid | 07 S6 / 01 | video matches current build | match (upload blocked) | video rebuilt from current-build footage (see S6), 154.9 s under 3 min; public YouTube upload still blocked (needs entrant YouTube login) |
+
+## Audit round 3 (2026-11-01, full conformance)
+
+Live headless MCP drive: scene hierarchy matches plan (SetupPanel, Audience_1..9, CueCard, StageLine, Podium, SummaryPanel, 3 audio sources); `npm run check` 129/129 pass, typecheck and lint clean; 12 LEAF scenarios PASSED live (6 done-criteria plus repeated_nudge, capture_*, finish_pulses_at_time, demo_reel). Screenshots: scratchpad converge/eyes-up/r3 (capture blobs under the session tool-results).
+
+| id | artifact section | expected | status | evidence |
+|---|---|---|---|---|
+| R3-T | tests | check, typecheck, lint, LEAF | match | 129/129, 12 PASSED |
+| R3-S1 | 07 S1 | Setup panel contents | match | live capture: title, SETUP chip, subtitle, segmented 3/5/10 and 3/6/9, deck buttons + Import, mint Start with play icon, caption |
+| R3-S2 | 07 S2 | audience halos, 6 members | match | live capture shows 6 members with halo rings, cue card above |
+| R3-S3 | 07 S3 | amber chevron + "left" | match | devpost/screenshots/03-nudge-chevron.png |
+| R3-S4 | 07 S4 | card + podium 2/5, 1:22 / 3:00, Prev/Next/Finish | match | live capture after Next |
+| R3-S5a | 07 S5 | stat tiles readable | match | Tiles 4.8 -> 6.4 cm tall with Headline1 labels, panel 47 -> 53 cm and row gap 0.5 -> 1.3 cm so the tip bar clears the tiles; label now "Cards · Nudges" with "0 of 5 · 1" like the mockup (SummaryContext.cardCount, unit test). Live capture: scratchpad converge/eyes-up/fix-r3/summary.png, devpost/screenshots/06-summary.png |
+| R3-D1 | 08 devpost tree | walkthrough/, leaf-results.md, learnings.md | match | devpost/walkthrough/01-setup..06-summary, devpost/leaf-results.md (12 scenarios), devpost/learnings.md; linked from submission.md |
+| R3-win-learnings | 03 win | process and learnings narrative for judges | match | devpost/learnings.md: 4 habits mapping, 3 strengths, logic proven / feel unproven table |
+| R3-S1-contrast | 07 S1 | row labels and caption legible | match | new TEXT_LABEL (alpha 0.95 vs 0.7) for Talk length / Audience / Deck / unit / subtitle; caption Subheadline -> Headline2. Live capture fix-r3/setup.png, devpost/screenshots/01-setup-panel.png |
+| R3-R1/R2/R5 | 01 | public repo, YouTube, device | blocked | unchanged (needs YouTube login / Spectacles) |

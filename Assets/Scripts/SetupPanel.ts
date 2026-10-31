@@ -22,7 +22,7 @@ import {
   setupExitScale,
 } from './core/SetupModel';
 import { SessionConfig } from './core/EyesUpSession';
-import { BOX_NEUTRAL, Panel, TEXT_PRIMARY, TEXT_SECONDARY, addBox, addButton, flexRow, makePanel, textRow } from './EyesUpUI';
+import { BOX_NEUTRAL, Panel, TEXT_LABEL, TEXT_PRIMARY, addBox, addButton, flexRow, makePanel, textRow } from './EyesUpUI';
 
 const W = 40;
 const H = 30;
@@ -52,13 +52,13 @@ export class SetupPanel extends BaseScriptComponent {
     const titleRow = flexRow(c, 'SetupTitleRow', W - 4, 4.0, 1);
     textRow(titleRow, 'SetupTitle', this.title, 'Title2', W - 15, 4.0, DIST);
     addBox(titleRow, 'SetupPill', SETUP_PILL, 'Subheadline', 9, 2.6, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
-    textRow(c, 'SetupSubtitle', this.subtitle, 'Headline2', W - 4, 2.2, DIST, TEXT_SECONDARY);
+    textRow(c, 'SetupSubtitle', this.subtitle, 'Headline2', W - 4, 2.2, DIST, TEXT_LABEL);
     // Pass 6 (artifact S1): segmented 3/5/10 and 3/6/9 controls (selected = cyan), deck list, mint Start.
     const seg = { labelRole: 'Headline1' as const };
     this.lengthSeg = this.segmentRow(c, 'Length', 'Talk length', LENGTH_OPTIONS, 'min', (v) => this.model.setLengthSlider(optionToSlider(LENGTH_OPTIONS, v)), seg);
     this.audienceSeg = this.segmentRow(c, 'Audience', 'Audience', AUDIENCE_OPTIONS, 'people', (v) => this.model.setAudienceSlider(optionToSlider(AUDIENCE_OPTIONS, v)), seg);
     const deckRow = flexRow(c, 'DeckRow', W - 4, 4.4, 1);
-    textRow(deckRow, 'DeckLabel', 'Deck', 'Headline2', 5, 4.4, DIST, TEXT_SECONDARY);
+    textRow(deckRow, 'DeckLabel', 'Deck', 'Headline2', 5, 4.4, DIST, TEXT_LABEL);
     this.deckButtons = DECKS.map((d) => {
       const id = d.id;
       const btn = addButton(
@@ -96,7 +96,7 @@ export class SetupPanel extends BaseScriptComponent {
       { icon: 'play_arrow', mint: true, labelRole: 'Headline1' },
     );
     // The panel's Text never wraps (Overflow), so the caption breaks after "ahead".
-    textRow(startRow, 'SetupCaption', SETUP_CAPTION.replace(' of ', '\nof '), 'Subheadline', 15, 4.4, DIST, TEXT_SECONDARY);
+    textRow(startRow, 'SetupCaption', SETUP_CAPTION.replace(' of ', '\nof '), 'Headline2', 15, 4.4, DIST, TEXT_LABEL);
     // Visibility is applied in UpdateEvent (after every UIKit element has run OnStart): disabling
     // a UIKit host before its OnStart stops it from ever initializing (specs-build-ui G3).
     this.createEvent('UpdateEvent').bind(() => {
@@ -140,7 +140,7 @@ export class SetupPanel extends BaseScriptComponent {
     btn: { labelRole: 'Headline1' },
   ): Array<{ value: number; setSelected: (on: boolean) => void }> {
     const row = flexRow(parent, `${name}Row`, W - 4, 3.6, 1);
-    textRow(row, `${name}Label`, label, 'Headline2', 9, 3.6, DIST, TEXT_SECONDARY);
+    textRow(row, `${name}Label`, label, 'Headline2', 9, 3.6, DIST, TEXT_LABEL);
     const segs = options.map((value) => {
       const b = addButton(
         row,
@@ -157,7 +157,7 @@ export class SetupPanel extends BaseScriptComponent {
       );
       return { value, setSelected: b.setSelected };
     });
-    textRow(row, `${name}Unit`, unit, 'Subheadline', 5.5, 3.6, DIST, TEXT_SECONDARY);
+    textRow(row, `${name}Unit`, unit, 'Subheadline', 5.5, 3.6, DIST, TEXT_LABEL);
     return segs;
   }
 

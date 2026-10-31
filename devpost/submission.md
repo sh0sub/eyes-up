@@ -64,7 +64,7 @@ the summary, repeated nudge).
 - Repository: this repository (MIT).
 - Demo video (under 3 min, built by `scripts/video/build-video.mjs`): add the public YouTube URL
   here after upload (needs the entrant's YouTube account).
-- Screenshots: `devpost/screenshots/`. Build log: `devpost/build-notes.md`. Design brief:
+- Walkthrough: `devpost/walkthrough/` (01-setup to 06-summary). Learnings: `devpost/learnings.md`. LEAF log: `devpost/leaf-results.md`. Screenshots: `devpost/screenshots/`. Build log: `devpost/build-notes.md`. Design brief:
   `devpost/design-brief.md`. Spec check against the plan: `docs/spec-matrix.md`.
 
 ## Built with

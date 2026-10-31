@@ -120,6 +120,8 @@ describe('SummaryModel (#28 SummaryPanel logic, M8 #20)', () => {
     expect(s.cardsNudgesLabel).toBe('2 · 3');
     expect(s.tip).toBe('Next time, look right more.');
     expect(summaryState(snap, 1).targetLabel).toBe('');
+    // Artifact S5 tile "Cards · Nudges 2 of 5 · 1": the deck size is shown when known.
+    expect(summaryState(snap, 1, { targetSeconds: 180, deckName: 'x', cardCount: 5 }).cardsNudgesLabel).toBe('2 of 5 · 3');
   });
   it('zone range is 15 < share < 35 (artifact S5); amber outside', () => {
     expect([14, 15, 16, 34, 35, 36].map(zoneOutOfRange)).toEqual([true, true, false, false, true, true]);

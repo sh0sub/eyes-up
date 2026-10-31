@@ -20,6 +20,8 @@ export interface SummaryContext {
   /** Talk length from Setup, in seconds. */
   targetSeconds: number;
   deckName: string;
+  /** Cards in the deck; shows "2 of 5" for the card-expands tile (artifact S5). */
+  cardCount?: number;
 }
 
 export interface SummaryState {
@@ -33,7 +35,7 @@ export interface SummaryState {
   longestLookAwayLabel: string;
   cardExpandsLabel: string;
   nudgesLabel: string;
-  /** "2 · 1" (card expands · nudges). */
+  /** "2 of 5 · 1" (cards · nudges); "2 · 1" without a deck size. */
   cardsNudgesLabel: string;
   /** Badge number, e.g. "86". */
   balanceLabel: string;
@@ -78,7 +80,7 @@ export function summaryState(s: StatsSnapshot, shownSeconds: number, ctx?: Summa
     longestLookAwayLabel: `${away} s · ${s.longestLookAway.zoneName} · at ${formatMSS(s.longestLookAway.startSeconds)}`,
     cardExpandsLabel: `${s.cardExpands}`,
     nudgesLabel: `${s.nudges}`,
-    cardsNudgesLabel: `${s.cardExpands} · ${s.nudges}`,
+    cardsNudgesLabel: `${ctx?.cardCount ? `${s.cardExpands} of ${ctx.cardCount}` : s.cardExpands} · ${s.nudges}`,
     balanceLabel: `${s.balanceScore}`,
     balanceScore: s.balanceScore,
     tip: summaryTip(s.zonePercents),

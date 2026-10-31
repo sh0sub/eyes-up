@@ -4,7 +4,7 @@
  * three zone rows (name · bar · %, amber when out of 15–35 %), two stat boxes (longest look-away
  * with timestamp, card expands · nudges), a one-line tip, Again / Done.
  * Pass 5 adds S5's gaze timeline strip (③) between the zone bars and the stat boxes, a mint check
- * icon left of the title and a "Session complete" chip above the panel. The panel grew 40 → 47 cm
+ * icon left of the title and a "Session complete" chip above the panel. The panel grew 40 → 53 cm
  * tall to fit the strip (D27).
  * Logic: core/SummaryModel.ts and core/GazeTimeline.ts (unit-tested).
  *
@@ -46,7 +46,7 @@ const CORAL = new vec4(1.0, 0.45, 0.4, 1);
 const CORAL_FILL = new vec4(0.42, 0.14, 0.13, 0.95);
 const NUDGE_AMBER = new vec4(1.0, 0.75, 0.3, 1);
 const W = 50;
-const H = 47;
+const H = 53;
 const DIST = 150;
 const BAR_W = 27;
 const BAR_H = 1.2;
@@ -88,7 +88,7 @@ export class SummaryPanel extends BaseScriptComponent {
   private wantVisible = false;
 
   onAwake(): void {
-    this.panel = makePanel(this.getSceneObject(), W, H, 2.0, 0.5);
+    this.panel = makePanel(this.getSceneObject(), W, H, 2.0, 1.3);
     const c = this.panel.content;
     // "Session complete" chip above the panel (artifact S5).
     const chip = child(this.panel.root, 'CompleteChip', new vec3(0, H / 2 + 2.8, 0.6));
@@ -120,10 +120,10 @@ export class SummaryPanel extends BaseScriptComponent {
     // Gaze timeline strip (artifact S5 ③), drawn in show().
     this.timelineBlock = addBlock(c, 'GazeTimeline', TL_W, TL_H);
     // Stat boxes (artifact S5 ④).
-    const stats = flexRow(c, 'SummaryStats', W - 6, 4.8, 1.2);
-    this.longestText = addBox(stats, 'LongestText', 'Longest look-away\n0 s', 'Headline2', 23.4, 4.8, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
-    this.cardsText = addBox(stats, 'CardsText', 'Card expands · Nudges\n0 · 0', 'Headline2', 19.4, 4.8, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
-    this.tipText = addBox(c, 'TipText', '', 'Headline2', W - 6, 3.0, DIST, TEXT_AMBER, BOX_AMBER);
+    const stats = flexRow(c, 'SummaryStats', W - 6, 6.4, 1.2);
+    this.longestText = addBox(stats, 'LongestText', 'Longest look-away\n0 s', 'Headline1', 23.4, 6.4, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
+    this.cardsText = addBox(stats, 'CardsText', 'Cards · Nudges\n0 · 0', 'Headline1', 19.4, 6.4, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
+    this.tipText = addBox(c, 'TipText', '', 'Headline2', W - 6, 3.2, DIST, TEXT_AMBER, BOX_AMBER);
     const buttons = flexRow(c, 'SummaryButtons', W - 6, 4.4, 3);
     const big = { labelRole: 'Headline2' as const };
     addButton(buttons, 'AgainButton', 'Again', 12, 4.2, DIST, () => this.onAgain?.(), { icon: 'replay', ...big });
@@ -189,7 +189,7 @@ export class SummaryPanel extends BaseScriptComponent {
       if (this.zoneBars[i]) this.zoneBars[i].getTransform().setLocalScale(new vec3(Math.max(0.001, z.bar), 1, 1));
     });
     this.longestText.text = `Longest look-away\n${s.longestLookAwayLabel}`;
-    this.cardsText.text = `Card expands · Nudges\n${s.cardsNudgesLabel}`;
+    this.cardsText.text = `Cards · Nudges\n${s.cardsNudgesLabel}`;
     this.tipText.text = s.tip;
   }
 
