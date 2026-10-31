@@ -1,0 +1,49 @@
+- !<AssetImportMetadata/6847c898-18a6-4d94-8268-620e4308a34b>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 01fb3902-3c93-4aab-b4fb-fda0393e837e
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 01fb3902-3c93-4aab-b4fb-fda0393e837e
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> cea8e58f-cab9-437b-8dd4-e66553f9af0c
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/cea8e58f-cab9-437b-8dd4-e66553f9af0c>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  VersionPrerelease: ""
+  UpdateOrder: 0
+  ComponentUid: 1e946bf6-d5e1-4c9f-ad53-de73ac7fca2a
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    subtitle: false
+    title: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - title: Eyes Up
+      subtitle: Rehearse with an audience in your room
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input string title = "Eyes Up" {"hint":"Panel title"}'
+    - '// @input string subtitle = "Rehearse with an audience in your room" {"hint":"Subtitle under the title"}'

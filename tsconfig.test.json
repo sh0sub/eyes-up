@@ -2,14 +2,26 @@
   // Node-side typecheck for tests and all scripts. Lens Studio globals (BaseScriptComponent,
   // vec3, SceneObject, ...) come from typings/lens-studio-shim.d.ts, a minimal hand-written
   // stand-in that is never shipped to Lens Studio.
+  // tsconfig.json is owned by Lens Studio (it rewrites it on save), so everything the Node check
+  // needs is overridden here: `paths` no longer points into Cache/ (package sources need the real
+  // Lens declarations), so package imports resolve to the `declare module` stubs in the shim.
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "target": "ES2020",
     "lib": ["ES2020"],
+    "strict": true,
+    "experimentalDecorators": true,
+    "skipLibCheck": true,
+    "isolatedModules": false,
+    "allowJs": false,
+    "paths": {},
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "types": ["vitest/globals"]
   },
-  "include": ["Assets/**/*.ts", "typings/**/*.d.ts", "tests/**/*.ts", "vitest.config.ts"]
+  "include": ["Assets/**/*.ts", "typings/**/*.d.ts", "tests/**/*.ts", "vitest.config.ts"],
+  // Assets/Tests holds LEAF scenarios; they import Leaf.lspkg and are checked by Lens Studio only.
+  "exclude": ["node_modules", "Cache", "Packages", "Support", "Assets/Tests", "Assets/Leaf.lspkg"]
 }

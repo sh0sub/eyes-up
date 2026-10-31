@@ -1,4 +1,4 @@
-import { CameraGazeProvider, ScriptedGazeProvider } from '../../Assets/Scripts/GazeProvider';
+import { CameraGazeProvider, ScriptedGazeProvider, SwitchableGazeProvider } from '../../Assets/Scripts/GazeProvider';
 import { length } from '../../Assets/Scripts/core/math';
 
 describe('GazeProvider (#12)', () => {
@@ -22,6 +22,36 @@ describe('GazeProvider (#12)', () => {
     const g = new ScriptedGazeProvider(o);
     o.x = 99;
     expect(g.origin.x).toBe(1);
+  });
+
+  it('copies a vec3 whose x/y/z are prototype getters (native Lens vec3, found by LEAF)', () => {
+    class NativeLikeVec3 {
+      constructor(private readonly v: [number, number, number]) {}
+      get x() {
+        return this.v[0];
+      }
+      get y() {
+        return this.v[1];
+      }
+      get z() {
+        return this.v[2];
+      }
+    }
+    const g = new ScriptedGazeProvider(new NativeLikeVec3([4, 5, 6]));
+    expect(g.origin).toEqual({ x: 4, y: 5, z: 6 });
+    g.setOrigin(new NativeLikeVec3([7, 8, 9]));
+    expect(g.origin).toEqual({ x: 7, y: 8, z: 9 });
+  });
+
+  it('SwitchableGazeProvider delegates to the current provider and can swap at runtime', () => {
+    const cam = new ScriptedGazeProvider({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: -1 });
+    const scripted = new ScriptedGazeProvider({ x: 1, y: 2, z: 3 }, { x: 1, y: 0, z: 0 });
+    const g = new SwitchableGazeProvider(cam);
+    expect(g.forward).toEqual({ x: 0, y: 0, z: -1 });
+    g.use(scripted);
+    expect(g.source).toBe(scripted);
+    expect(g.origin).toEqual({ x: 1, y: 2, z: 3 });
+    expect(g.forward).toEqual({ x: 1, y: 0, z: 0 });
   });
 
   it('CameraGazeProvider reads position and Transform.back from a transform-like object', () => {

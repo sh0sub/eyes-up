@@ -24,7 +24,8 @@ export interface CameraTransformLike {
   getWorldPosition(): Vec3Like;
   /**
    * Lens Studio cameras look down their local -Z, which `Transform.back` returns in world space.
-   * (미확인: Lens Studio에서 확인 — SIK의 카메라 방향 헬퍼가 `back`을 쓰는 것으로 알고 있으나 실행 확인 전)
+   * Checked in Lens Studio 5.24.1: `Transform.back: vec3` exists in StudioLib.d.ts, and a camera
+   * with identity rotation faces world -Z (AGENTS.md), so `back` is the look direction.
    */
   readonly back: Vec3Like;
 }
@@ -41,13 +42,40 @@ export class CameraGazeProvider implements GazeProvider {
   }
 }
 
+/**
+ * Delegates to whichever provider is current. EyesUpApp hands this to the session once, so a LEAF
+ * scenario can swap the live camera for a ScriptedGazeProvider at runtime (LEAF cannot move the
+ * preview camera, and the `useScriptedGaze` @input is fixed at edit time).
+ */
+export class SwitchableGazeProvider implements GazeProvider {
+  constructor(private current: GazeProvider) {}
+
+  get origin(): Vec3Like {
+    return this.current.origin;
+  }
+
+  get forward(): Vec3Like {
+    return this.current.forward;
+  }
+
+  get source(): GazeProvider {
+    return this.current;
+  }
+
+  use(provider: GazeProvider): void {
+    this.current = provider;
+  }
+}
+
 /** Test/LEAF provider: forward is set by the scenario. Defaults to the Lens Studio camera pose (origin, looking -Z). */
 export class ScriptedGazeProvider implements GazeProvider {
   private _origin: Vec3Like;
   private _forward: Vec3Like;
 
+  // Copies use explicit components, not `{ ...origin }`: a native Lens `vec3` has no own enumerable
+  // x/y/z, so spreading it yields `{}` (found by LEAF start_places_audience in Lens Studio 5.24.1).
   constructor(origin: Vec3Like = v3(0, 0, 0), forward: Vec3Like = v3(0, 0, -1)) {
-    this._origin = { ...origin };
+    this._origin = v3(origin.x, origin.y, origin.z);
     this._forward = normalize(forward);
   }
 
@@ -60,7 +88,7 @@ export class ScriptedGazeProvider implements GazeProvider {
   }
 
   setOrigin(origin: Vec3Like): void {
-    this._origin = { ...origin };
+    this._origin = v3(origin.x, origin.y, origin.z);
   }
 
   setForward(forward: Vec3Like): void {

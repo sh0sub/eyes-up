@@ -1,8 +1,10 @@
 /**
  * MINIMAL hand-written stand-in for Lens Studio globals, used ONLY so `npm run typecheck`
  * can check the Lens component files in Node. It is not complete and not authoritative:
- * Lens Studio provides the real declarations (Support/) when the project is opened.
- * Every member below is something the Eyes Up components use. (미확인: Lens Studio에서 확인)
+ * Lens Studio provides the real declarations (Support/StudioLib.d.ts) when the project is opened,
+ * and `RecompileTypeScriptTool` checks the components against those. Every member below is
+ * something the Eyes Up components use; signatures were copied from Support/StudioLib.d.ts and
+ * the UIKit 4.0 sources (package `UIKit.lspkg`) in Cache/TypeScript/Src/Packages (Lens Studio 5.24.1).
  */
 declare function component(target: any): any;
 declare function input(...args: any[]): any;
@@ -11,11 +13,22 @@ declare function allowUndefined(target: any, key: string): void;
 declare function print(message: any): void;
 declare function getDeltaTime(): number;
 
+declare class vec2 {
+  constructor(x: number, y: number);
+  x: number;
+  y: number;
+}
 declare class vec3 {
   constructor(x: number, y: number, z: number);
   x: number;
   y: number;
   z: number;
+  readonly length: number;
+  add(v: vec3): vec3;
+  sub(v: vec3): vec3;
+  uniformScale(s: number): vec3;
+  normalize(): vec3;
+  static up(): vec3;
 }
 declare class vec4 {
   constructor(x: number, y: number, z: number, w: number);
@@ -24,10 +37,41 @@ declare class vec4 {
   z: number;
   w: number;
 }
+declare class quat {
+  static lookAt(forward: vec3, up: vec3): quat;
+  static angleAxis(angle: number, axis: vec3): quat;
+}
+declare class Rect {
+  static create(left: number, right: number, bottom: number, top: number): Rect;
+}
+declare enum HorizontalAlignment {
+  Left,
+  Center,
+  Right,
+}
+declare enum VerticalAlignment {
+  Bottom,
+  Center,
+  Top,
+}
+declare enum HorizontalOverflow {
+  Overflow,
+  Truncate,
+  Wrap,
+  Shrink,
+}
+declare enum VerticalOverflow {
+  Overflow,
+  Truncate,
+  Shrink,
+}
 
 declare class Transform {
   getWorldPosition(): vec3;
   setWorldPosition(p: vec3): void;
+  setLocalPosition(p: vec3): void;
+  setWorldRotation(r: quat): void;
+  setLocalRotation(r: quat): void;
   getLocalScale(): vec3;
   setLocalScale(s: vec3): void;
   readonly back: vec3;
@@ -38,7 +82,17 @@ declare class SceneObject {
   enabled: boolean;
   name: string;
   getTransform(): Transform;
+  setParent(parent: SceneObject): void;
+  getChildrenCount(): number;
+  getChild(index: number): SceneObject;
+  createComponent(typeName: string): any;
+  getComponent(typeName: string): any;
 }
+
+declare class ScriptScene {
+  createSceneObject(name: string): SceneObject;
+}
+declare const global: { scene: ScriptScene };
 
 declare class Component {
   enabled: boolean;
@@ -46,22 +100,60 @@ declare class Component {
   getTransform(): Transform;
 }
 
+declare class Asset {
+  name: string;
+}
+declare function requireAsset(path: string): Asset;
+declare class Texture extends Asset {}
+declare class Font extends Asset {}
 declare class Pass {
   baseColor: vec4;
+  baseTex: Texture;
+  depthTest: boolean;
+  depthWrite: boolean;
 }
-declare class Material {
+declare class Material extends Asset {
   mainPass: Pass;
+  clone(): Material;
+}
+declare class RenderMesh extends Asset {
+  readonly aabbMin: vec3;
+  readonly aabbMax: vec3;
 }
 declare class RenderMeshVisual extends Component {
+  mesh: RenderMesh;
   mainPass: Pass;
   mainMaterial: Material;
 }
+declare class Image extends Component {
+  mainPass: Pass;
+  mainMaterial: Material;
+}
+declare namespace Audio {
+  enum PlaybackMode {
+    LowPower,
+    LowLatency,
+  }
+}
 declare class AudioComponent extends Component {
+  playbackMode: Audio.PlaybackMode;
   play(loops: number): void;
   stop(fade: boolean): void;
 }
+declare class TextFill {
+  color: vec4;
+}
 declare class Text extends Component {
+  font: Font;
   text: string;
+  size: number;
+  depthTest: boolean;
+  textFill: TextFill;
+  horizontalAlignment: HorizontalAlignment;
+  verticalAlignment: VerticalAlignment;
+  horizontalOverflow: HorizontalOverflow;
+  verticalOverflow: VerticalOverflow;
+  layoutRect: Rect;
 }
 
 declare class SceneEvent {
@@ -71,12 +163,63 @@ declare class SceneEvent {
 declare class ScriptComponent extends Component {}
 
 declare class BaseScriptComponent extends ScriptComponent {
+  static getTypeName(): string;
   createEvent(eventType: 'OnStartEvent' | 'UpdateEvent' | 'OnEnableEvent' | 'OnDisableEvent'): SceneEvent;
 }
 
-declare module 'SpectaclesInteractionKit.lspkg/Components/Interaction/Interactable/Interactable' {
-  /** SIK Interactable (pinch target). Only the event we use is declared. */
-  export class Interactable extends BaseScriptComponent {
-    onTriggerEnd: { add(callback: (event?: any) => void): void };
+declare module 'UIKit.lspkg/Scripts/BackPlate' {
+  export class BackPlate extends BaseScriptComponent {
+    size: vec2;
+    style: 'default' | 'dark' | 'simple';
+  }
+}
+declare module 'UIKit.lspkg/Scripts/Components/Button/Button' {
+  export class Button extends BaseScriptComponent {
+    size: vec3;
+    onHoverEnter: { add(callback: (event?: any) => void): void };
+    onHoverExit: { add(callback: (event?: any) => void): void };
+    onTriggerDown: { add(callback: (event?: any) => void): void };
+    onTriggerUp: { add(callback: (event?: any) => void): void };
+  }
+}
+declare module 'UIKit.lspkg/Scripts/Components/Layout2D/Flex/FlexTypes' {
+  export enum FlexDirection {
+    Row = 'row',
+    Column = 'column',
+  }
+  export enum FlexJustify {
+    Start = 'start',
+    Center = 'center',
+  }
+  export enum FlexAlign {
+    Start = 'start',
+    Center = 'center',
+    Stretch = 'stretch',
+  }
+}
+declare module 'UIKit.lspkg/Scripts/Components/Layout2D/Flex/FlexItem' {
+  export class FlexItem extends BaseScriptComponent {
+    overrideWidth: number;
+    overrideHeight: number;
+    flexShrink: number;
+    flexGrow: number;
+  }
+}
+declare module 'UIKit.lspkg/Scripts/Components/Layout2D/Flex/FlexLayout' {
+  import { FlexItem } from 'UIKit.lspkg/Scripts/Components/Layout2D/Flex/FlexItem';
+  import { FlexAlign, FlexDirection, FlexJustify } from 'UIKit.lspkg/Scripts/Components/Layout2D/Flex/FlexTypes';
+  export class FlexLayout extends BaseScriptComponent {
+    width: number;
+    height: number;
+    direction: FlexDirection;
+    justifyContent: FlexJustify;
+    alignItems: FlexAlign;
+    rowGap: number;
+    columnGap: number;
+    paddingTop: number;
+    paddingBottom: number;
+    paddingLeft: number;
+    paddingRight: number;
+    addItems(items: ReadonlyArray<FlexItem>): void;
   }
 }

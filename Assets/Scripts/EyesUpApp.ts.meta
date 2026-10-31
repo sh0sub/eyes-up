@@ -1,0 +1,126 @@
+- !<AssetImportMetadata/ec8a3d66-09c5-4b9a-84d8-103631502d21>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 09c64280-ad3f-4cdd-85ef-13294ac24d4f
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 09c64280-ad3f-4cdd-85ef-13294ac24d4f
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> bd939e8b-f72c-4ba7-83c4-1c5e13f2c608
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/bd939e8b-f72c-4ba7-83c4-1c5e13f2c608>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  VersionPrerelease: ""
+  UpdateOrder: 0
+  ComponentUid: 22077458-f4c2-43ba-bf26-66742378a6a4
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    applauseAudio: false
+    audience: false
+    audienceRoot: false
+    camera: false
+    cardSeconds: false
+    cueCard: false
+    cueCardBody: false
+    cueCardTitle: false
+    drainSeconds: false
+    dwellSeconds: false
+    edgeHintLeft: false
+    edgeHintRight: false
+    fillSeconds: false
+    halos: false
+    lookAngleDeg: false
+    nudgeAudioL: false
+    nudgeAudioR: false
+    nudgeSeconds: false
+    podium: false
+    podiumPitchDeg: false
+    setupPanel: false
+    stageLine: false
+    stageLineVisual: false
+    summaryPanel: false
+    tickAudio: false
+    toneAudio: false
+    useScriptedGaze: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - lookAngleDeg: !<float> 7.000000
+      fillSeconds: !<float> 1.000000
+      drainSeconds: !<float> 12.000000
+      nudgeSeconds: !<float> 8.000000
+      cardSeconds: !<float> 4.000000
+      dwellSeconds: !<float> 1.000000
+      podiumPitchDeg: !<float> 15.000000
+      camera: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      audienceRoot: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      audience: !<reference.SceneObject[]>
+        []
+      halos: !<reference.RenderMeshVisual[]>
+        []
+      cueCard: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      cueCardTitle: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      cueCardBody: !<reference.Text> 00000000-0000-0000-0000-000000000000
+      edgeHintLeft: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      edgeHintRight: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      nudgeAudioL: !<reference.AudioComponent> 00000000-0000-0000-0000-000000000000
+      nudgeAudioR: !<reference.AudioComponent> 00000000-0000-0000-0000-000000000000
+      stageLine: !<reference.SceneObject> 00000000-0000-0000-0000-000000000000
+      stageLineVisual: !<reference.RenderMeshVisual> 00000000-0000-0000-0000-000000000000
+      tickAudio: !<reference.AudioComponent> 00000000-0000-0000-0000-000000000000
+      toneAudio: !<reference.AudioComponent> 00000000-0000-0000-0000-000000000000
+      applauseAudio: !<reference.AudioComponent> 00000000-0000-0000-0000-000000000000
+      podium: !<MappingBased.AssignableType_1> 00000000-0000-0000-0000-000000000000
+      setupPanel: !<MappingBased.AssignableType_2> 00000000-0000-0000-0000-000000000000
+      summaryPanel: !<MappingBased.AssignableType_3> 00000000-0000-0000-0000-000000000000
+      useScriptedGaze: false
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input float lookAngleDeg = 7 {"hint":"Gaze counts as \"looking at\" within this angle (deg)"}'
+    - '// @input float fillSeconds = 1 {"hint":"Seconds for a halo to fill"}'
+    - '// @input float drainSeconds = 12 {"hint":"Seconds for a halo to drain"}'
+    - '// @input float nudgeSeconds = 8 {"hint":"Seconds a zone may stay below 0.2 before a nudge"}'
+    - '// @input float cardSeconds = 4 {"hint":"Seconds the cue card stays open"}'
+    - '// @input float dwellSeconds = 1 {"hint":"Seconds of gaze on the pill to re-open the card"}'
+    - '// @input float podiumPitchDeg = 15 {"hint":"Head pitch (deg, downward) that shows the podium. Design pass 2: 15 (was 12)"}'
+    - // @input SceneObject camera
+    - '// @input SceneObject audienceRoot {"hint":"Parent of Audience_1..9 (used when the arrays below are empty)"}'
+    - '// @input SceneObject[] audience = {} {"hint":"Audience_1..9 roots, left to right (optional)"}'
+    - '// @input Component.RenderMeshVisual[] halos = {} {"hint":"One halo visual per audience member (optional)"}'
+    - // @input SceneObject cueCard
+    - // @input Component.Text cueCardTitle
+    - // @input Component.Text cueCardBody
+    - // @input SceneObject edgeHintLeft
+    - // @input SceneObject edgeHintRight
+    - // @input Component.AudioComponent nudgeAudioL
+    - // @input Component.AudioComponent nudgeAudioR
+    - // @input SceneObject stageLine
+    - // @input Component.RenderMeshVisual stageLineVisual
+    - // @input Component.AudioComponent tickAudio
+    - // @input Component.AudioComponent toneAudio
+    - // @input Component.AudioComponent applauseAudio
+    - // @input AssignableType_1 podium
+    - // @input AssignableType_2 setupPanel
+    - // @input AssignableType_3 summaryPanel
+    - '// @input bool useScriptedGaze {"hint":"LEAF only: drive gaze from ScriptedGazeProvider instead of the camera"}'

@@ -1,6 +1,7 @@
 /**
  * Podium view model (plan M7): Prev / Next / Finish pinch buttons, section counter, elapsed time.
- * Visible only while the head pitches down ~12° (wristwatch metaphor). Re-place is a small button
+ * Visible only while the head pitches down at least `podiumPitchDeg` (15° since design pass 2; the plan said ~12°), like a
+ * wristwatch. Re-place is a small button
  * on the left, hidden during Rehearsal (plan edge "어디서나 → Placing").
  */
 import { Phase } from './AppStateMachine';

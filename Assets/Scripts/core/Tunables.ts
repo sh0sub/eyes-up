@@ -43,7 +43,11 @@ export interface Tunables {
   applauseSeconds: number;
   /** plan: "Finish?" prompt appears at target length + 30 s. */
   finishPromptAfterSeconds: number;
-  /** plan: podium visible only when the head pitches down about 12°. */
+  /**
+   * plan: podium visible only when the head pitches down "about 12°". Design pass 2: raised to 15°
+   * because a resting head (and the Interactive preview's default camera, −12°) sat right on the
+   * threshold and the podium flashed on at rest (build-notes G6).
+   */
   podiumPitchDeg: number;
   /** plan: podium sits 55 cm in front of the head ... */
   podiumDistanceCm: number;
@@ -72,7 +76,7 @@ export const DEFAULT_TUNABLES: Readonly<Tunables> = Object.freeze({
   placingSeconds: 0.5,
   applauseSeconds: 1.5,
   finishPromptAfterSeconds: 30,
-  podiumPitchDeg: 12,
+  podiumPitchDeg: 15,
   podiumDistanceCm: 55,
   podiumBelowCm: 30,
 });

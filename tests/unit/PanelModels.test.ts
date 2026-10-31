@@ -3,6 +3,7 @@ import { podiumState } from '../../Assets/Scripts/core/PodiumModel';
 import { summaryState } from '../../Assets/Scripts/core/SummaryModel';
 import { StatsSnapshot } from '../../Assets/Scripts/SessionStats';
 import { v3 } from '../../Assets/Scripts/core/math';
+import { DEFAULT_TUNABLES } from '../../Assets/Scripts/core/Tunables';
 
 describe('SetupModel (#28 SetupPanel logic, S1 #22)', () => {
   it('defaults 3 min / 6 people / Eyes Up pitch', () => {
@@ -34,10 +35,18 @@ describe('SetupModel (#28 SetupPanel logic, S1 #22)', () => {
 });
 
 describe('PodiumModel (#28 Podium logic, M7 #6)', () => {
-  const base = { cardIndex: 1, cardTotal: 6, elapsedSeconds: 75.4, podiumPitchDeg: 12 };
-  it('visible only on stage when looking down >= 12°', () => {
+  const base = { cardIndex: 1, cardTotal: 6, elapsedSeconds: 75.4, podiumPitchDeg: DEFAULT_TUNABLES.podiumPitchDeg };
+  it('default threshold is 15° (design pass 2, was 12°)', () => {
+    expect(DEFAULT_TUNABLES.podiumPitchDeg).toBe(15);
+  });
+  it('visible only on stage when looking down >= 15°', () => {
     expect(podiumState({ ...base, phase: 'Rehearsal', gazeForward: v3(0, 0, -1) }).visible).toBe(false);
-    expect(podiumState({ ...base, phase: 'Rehearsal', gazeForward: v3(0, -0.25, -1) }).visible).toBe(true); // ~14°
+    // resting / preview default pitch (−12°) and ~14° no longer flash the podium
+    expect(podiumState({ ...base, phase: 'Rehearsal', gazeForward: v3(0, -Math.tan((12 * Math.PI) / 180), -1) }).visible).toBe(false);
+    expect(podiumState({ ...base, phase: 'Rehearsal', gazeForward: v3(0, -0.25, -1) }).visible).toBe(false); // ~14°
+    expect(podiumState({ ...base, phase: 'Rehearsal', gazeForward: v3(0, -0.3, -1) }).visible).toBe(true); // ~16.7°
+    // still tunable: an explicit 12° threshold keeps the old behavior
+    expect(podiumState({ ...base, podiumPitchDeg: 12, phase: 'Rehearsal', gazeForward: v3(0, -0.25, -1) }).visible).toBe(true);
     expect(podiumState({ ...base, phase: 'Summary', gazeForward: v3(0, -1, -1) }).visible).toBe(false);
   });
   it('labels: section counter and m:ss elapsed; Re-place hidden during Rehearsal', () => {

@@ -1,19 +1,35 @@
 {
-  // Lens Studio project config.
-  // Lens Studio generates/maintains its own tsconfig.json when the project is saved here
-  // (File > Save As eyes-up/). If it overwrites this file, keep its version and only make
-  // sure "experimentalDecorators" stays true. (미확인: Lens Studio에서 확인)
-  // Node tests do NOT use this file; they use tsconfig.test.json.
   "compilerOptions": {
-    "target": "ES2019",
-    "module": "ES2020",
-    "moduleResolution": "node",
-    "lib": ["ES2019"],
-    "experimentalDecorators": true,
-    "strict": true,
-    "noImplicitOverride": true,
-    "skipLibCheck": true,
+    "allowJs": true,
+    "isolatedModules": true,
+    "lib": [
+      "es2021"
+    ],
+    "module": "commonjs",
+    "noEmit": true,
+    "paths": {
+      "*": [
+        "./Assets/*",
+        "./Packages/*",
+        "./Cache/TypeScript/Src/Packages/*"
+      ],
+      "Leaf.lspkg/Interactors/interactor/ik/visualizer/bitmoji/BitmojiCharacter.lsc/*": [
+        "./Assets/Leaf.lspkg/Interactors/interactor/ik/visualizer/bitmoji/BitmojiCharacter.lsc/*",
+        "./Cache/TypeScript/Src/Assets/Leaf.lspkg/Interactors/interactor/ik/visualizer/bitmoji/BitmojiCharacter.lsc/*"
+      ]
+    },
+    "skipDefaultLibCheck": true,
+    "target": "es2021",
     "types": []
   },
-  "include": ["Assets/**/*.ts", "Support/**/*.d.ts"]
+  "exclude": [
+    "node_modules/typescript/lib/lib.dom.d.ts"
+  ],
+  "include": [
+    "./Cache/TypeScript/lib/LensifyTS/Declarations/**/*.d.ts",
+    "./Assets/**/*.ts",
+    "./Packages/**/*.ts",
+    "./Cache/TypeScript/Src/Packages/**/*.ts",
+    "./Cache/TypeScript/Src/Assets/Leaf.lspkg/Interactors/interactor/ik/visualizer/bitmoji/BitmojiCharacter.lsc/**/*.ts"
+  ]
 }

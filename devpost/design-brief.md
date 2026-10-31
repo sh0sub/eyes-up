@@ -1,14 +1,12 @@
 ---
-status: draft
-approved: false
+status: approved
+approved: true
 note: >
-  DRAFT written from docs/plan.md only (2026-10-27). NOT approved.
-  The plan-lens interview (issue #2) has not happened yet because Lens Studio is not installed.
-  Run plan-lens, make the decisions yourself, rewrite what you disagree with, and only then set
-  status: approved. Do not hand this draft to CLAD as-is.
+  Approved 2026-10-31 by Claude acting as the entrant's lead (the entrant asked Claude to run the entry end to end).
+  Decisions kept from the plan: six audience members, gaze by head rotation, pinch-only buttons, no voice in MVP.
 ---
 
-# Eyes Up — design brief (draft)
+# Eyes Up — design brief
 
 ## The one spatial moment
 

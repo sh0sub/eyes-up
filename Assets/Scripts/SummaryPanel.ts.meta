@@ -1,0 +1,46 @@
+- !<AssetImportMetadata/cd9113c5-5b72-4fa1-b69e-ce4fe17821a6>
+  ImportedAssetIds:
+    TypeScriptAsset: !<reference> 7196db19-d61f-4a81-811c-156a52edf268
+  ImporterName: TypeScriptAssetImporter
+  PrimaryAsset: !<reference> 7196db19-d61f-4a81-811c-156a52edf268
+  PackageType: NotAPackage
+  LegacyPackagePolicy: ~
+  ExtraData:
+    {}
+  AssetDataMap:
+    TypeScriptAsset: !<own> 241c34a4-9157-4976-af6f-52f235f2e278
+  DependentFiles:
+    []
+  ImporterSettings: !<AssetImporterSettings>
+    {}
+  CompressionSettings: !<own> 00000000-0000-0000-0000-000000000000
+- !<TypeScriptAssetData/241c34a4-9157-4976-af6f-52f235f2e278>
+  SvgIcon: ""
+  SetupScript:
+    code: ""
+  Description: ""
+  VersionMajor: 0
+  VersionMinor: 0
+  VersionPatch: 0
+  VersionPrerelease: ""
+  UpdateOrder: 0
+  ComponentUid: 12cf0f3f-7550-4338-8b3c-5fc34dffd59d
+  ExportUid: 00000000-0000-0000-0000-000000000000
+  PackagePolicy: CanBeUnpacked
+  ScriptInputsHidden:
+    title: false
+  ScriptTypesHidden:
+    {}
+  ReadMe: !<reference> 00000000-0000-0000-0000-000000000000
+  DeclarationFile: !<reference> 00000000-0000-0000-0000-000000000000
+  Tags:
+    []
+  Attachments:
+    []
+  DefaultScriptInputs:
+    - title: Rehearsal summary
+  ScriptTypes:
+    -
+      {}
+  InputLines:
+    - '// @input string title = "Rehearsal summary" {"hint":"Panel title"}'

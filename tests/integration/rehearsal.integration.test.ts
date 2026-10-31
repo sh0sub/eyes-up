@@ -98,11 +98,11 @@ describe('Eyes Up rehearsal — simulated end-to-end (LEAF scenarios 1-6)', () =
       cardIndex: session.cardIndex,
       cardTotal: session.cardTotal,
       elapsedSeconds: session.elapsedSeconds,
-      podiumPitchDeg: 12,
+      podiumPitchDeg: session.t.podiumPitchDeg,
     });
     expect(up.visible).toBe(false);
     gaze.lookAt(session.layout!.podiumPosition);
-    const down = podiumState({ ...up, phase: session.phase, gazeForward: gaze.forward, cardIndex: session.cardIndex, cardTotal: session.cardTotal, elapsedSeconds: session.elapsedSeconds, podiumPitchDeg: 12 });
+    const down = podiumState({ ...up, phase: session.phase, gazeForward: gaze.forward, cardIndex: session.cardIndex, cardTotal: session.cardTotal, elapsedSeconds: session.elapsedSeconds, podiumPitchDeg: session.t.podiumPitchDeg });
     expect(down.visible).toBe(true);
     expect(down.sectionLabel).toBe('2 / 6');
   });

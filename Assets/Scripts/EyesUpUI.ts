@@ -1,0 +1,310 @@
+/**
+ * EyesUpUI.ts — shared UIKit composition helpers for the Eyes Up panels (Setup, Podium, Summary).
+ *
+ * Follows the CLAD `specs-build-ui` conventions: Canvas at the panel root, a UIKit BackPlate as the
+ * surface, a `Content` child lifted +0.6 cm in Z holding a FlexLayout column, FlexItems auto-discovered
+ * on start, UIKit `Button`s with a raw Text label lifted +0.08 cm, and text sized through one
+ * type-scale table (`applyTextRole`) scaled by the panel's viewing distance.
+ *
+ * Specs is additive (black = transparent). Pass 2 theme: translucent blue-grey surfaces with a light
+ * hairline frame, brighter blue-grey button faces with a visible border (hover / press tint), light
+ * text in Inter, and Material icons on the key buttons. See the note above `quad()` for why the
+ * surfaces are quads.
+ */
+import { BackPlate } from 'UIKit.lspkg/Scripts/BackPlate';
+import { Button } from 'UIKit.lspkg/Scripts/Components/Button/Button';
+import { FlexItem } from 'UIKit.lspkg/Scripts/Components/Layout2D/Flex/FlexItem';
+import { FlexLayout } from 'UIKit.lspkg/Scripts/Components/Layout2D/Flex/FlexLayout';
+import { FlexAlign, FlexDirection, FlexJustify } from 'UIKit.lspkg/Scripts/Components/Layout2D/Flex/FlexTypes';
+
+export type TextRole = 'Title1' | 'Title2' | 'HeadlineXL' | 'Headline1' | 'Headline2' | 'Subheadline' | 'Button' | 'Callout' | 'Body' | 'Caption';
+
+/** specs-build-ui type scale, calibrated for 110 cm. Caption (38) is the readable floor. */
+const TYPE_SCALE: Record<TextRole, { size: number; weight: number }> = {
+  Title1: { size: 105, weight: 700 },
+  Title2: { size: 93, weight: 700 },
+  HeadlineXL: { size: 62, weight: 700 },
+  Headline1: { size: 54, weight: 700 },
+  Headline2: { size: 48, weight: 700 },
+  Subheadline: { size: 41, weight: 700 },
+  Button: { size: 39, weight: 500 },
+  Callout: { size: 39, weight: 700 },
+  Body: { size: 39, weight: 500 },
+  Caption: { size: 38, weight: 500 },
+};
+
+/** Light text colors (never black on an additive display). */
+export const TEXT_PRIMARY = new vec4(1, 1, 1, 1);
+export const TEXT_SECONDARY = new vec4(1, 1, 1, 0.7);
+export const TEXT_ACCENT = new vec4(0.55, 0.85, 1.0, 1);
+export const TEXT_AMBER = new vec4(1.0, 0.75, 0.3, 1);
+
+const CONTENT_Z = 0.6;
+const BUTTON_LABEL_Z = 0.08;
+
+/** Theme font (FontSelector → Assets/Fonts/Inter.ttf). */
+const THEME_FONT = requireAsset('../Fonts/Inter.ttf') as Font;
+/** ImageMaterialPreset (premultiplied alpha, depthTest on / depthWrite off) for icon Images. */
+const IMAGE_MATERIAL = requireAsset('../Materials/ImageMaterial.mat') as Material;
+
+/** Material Symbols imported with IconSelector (defaults: Rounded, 600, white, 512 px). */
+export type IconName = 'play_arrow' | 'chevron_left' | 'chevron_right' | 'flag' | 'replay' | 'check';
+const ICONS: Record<IconName, Texture> = {
+  play_arrow: requireAsset('../Icons/play_arrow.png') as Texture,
+  chevron_left: requireAsset('../Icons/chevron_left.png') as Texture,
+  chevron_right: requireAsset('../Icons/chevron_right.png') as Texture,
+  flag: requireAsset('../Icons/flag.png') as Texture,
+  replay: requireAsset('../Icons/replay.png') as Texture,
+  check: requireAsset('../Icons/check.png') as Texture,
+};
+
+// ---- theme (design pass 2: never black; the additive display shows roughly color × alpha) ----
+/** Panel surface: translucent blue-grey with a light hairline frame. */
+const SURFACE_FILL = new vec4(0.2, 0.27, 0.37, 0.8);
+const SURFACE_BORDER = new vec4(0.6, 0.78, 0.95, 0.55);
+/** Button faces: brighter blue-grey than the surface, with a light frame. */
+const BUTTON_FACE = new vec4(0.3, 0.42, 0.58, 0.95);
+const BUTTON_FACE_HOVER = new vec4(0.4, 0.56, 0.76, 1);
+const BUTTON_FACE_PRESS = new vec4(0.5, 0.68, 0.9, 1);
+const BUTTON_BORDER = new vec4(0.78, 0.9, 1, 0.9);
+/** Primary action (Start / Finish / Again): cyan-teal face. */
+const PRIMARY_FACE = new vec4(0.18, 0.5, 0.62, 0.95);
+const PRIMARY_FACE_HOVER = new vec4(0.25, 0.64, 0.78, 1);
+const PRIMARY_FACE_PRESS = new vec4(0.34, 0.76, 0.9, 1);
+const PRIMARY_BORDER = new vec4(0.7, 0.95, 1, 1);
+
+/*
+ * Why quads and not UIKit's own visuals: in this project (Lens Studio 5.24.1 + UIKit 4.0, which
+ * targets 5.25) UIKit's RoundedRectangle (`CollapsedSquircle` mesh/shader) never draws. A BackPlate
+ * forced to solid red still shows nothing in the Preview, with no log errors, while scene meshes
+ * and UIKit-hosted Images draw fine (pass-2 probe). That is pass-1 gap G2. So BackPlate and
+ * Button keep doing layout, colliders and interaction, and the visible surface and frame are plain
+ * unlit quads (Materials/PanelSurface.mat, Normal blend, depthWrite off) drawn in hierarchy order
+ * under the Canvas. This is a recorded deviation from CLAD's "no hand-rolled backplate" rule
+ * (build-notes, pass 2, D10). Remove it once UIKit draws on this Lens Studio version.
+ */
+const SURFACE_MATERIAL = requireAsset('../Materials/PanelSurface.mat') as Material;
+const QUAD_MESH = requireAsset('../Materials/PanelQuad.mesh') as RenderMesh;
+const FRAME_CM = 0.15;
+
+/** An unlit colored rectangle `w × h` cm, centered on `parent`'s origin, at local z `z`. */
+function quad(parent: SceneObject, name: string, w: number, h: number, z: number, color: vec4): RenderMeshVisual {
+  const so = child(parent, name, new vec3(0, 0, z));
+  const rmv = so.createComponent('Component.RenderMeshVisual') as RenderMeshVisual;
+  rmv.mesh = QUAD_MESH;
+  const mat = SURFACE_MATERIAL.clone();
+  mat.mainPass.baseColor = color;
+  rmv.mainMaterial = mat;
+  // The plane preset's size and orientation are read from its AABB rather than assumed.
+  const ext = QUAD_MESH.aabbMax.sub(QUAD_MESH.aabbMin);
+  const t = so.getTransform();
+  if (ext.z > ext.y) {
+    // XZ plane (faces +Y): stand it up so it faces +Z like the UI.
+    t.setLocalRotation(quat.angleAxis(Math.PI / 2, new vec3(1, 0, 0)));
+    t.setLocalScale(new vec3(w / Math.max(ext.x, 1e-4), 1, h / Math.max(ext.z, 1e-4)));
+  } else {
+    t.setLocalScale(new vec3(w / Math.max(ext.x, 1e-4), h / Math.max(ext.y, 1e-4), 1));
+  }
+  return rmv;
+}
+
+/**
+ * Visible surface: a light frame quad with a slightly smaller fill quad in front. Returns the
+ * fill so callers can recolor it (button hover / press).
+ */
+export function addSurface(parent: SceneObject, w: number, h: number, z: number, fill: vec4, frame: vec4 | null): RenderMeshVisual {
+  if (frame) quad(parent, 'Frame', w, h, z, frame);
+  return quad(parent, 'Fill', frame ? w - 2 * FRAME_CM : w, frame ? h - 2 * FRAME_CM : h, z + 0.02, fill);
+}
+
+function themeButton(button: Button, so: SceneObject, w: number, h: number, primary: boolean): void {
+  const [face, hover, press, border] = primary
+    ? [PRIMARY_FACE, PRIMARY_FACE_HOVER, PRIMARY_FACE_PRESS, PRIMARY_BORDER]
+    : [BUTTON_FACE, BUTTON_FACE_HOVER, BUTTON_FACE_PRESS, BUTTON_BORDER];
+  const fill = addSurface(so, w, h, 0.02, face, border);
+  const set = (c: vec4) => (fill.mainPass.baseColor = c);
+  button.onHoverEnter.add(() => set(hover));
+  button.onHoverExit.add(() => set(face));
+  button.onTriggerDown.add(() => set(press));
+  button.onTriggerUp.add(() => set(hover));
+}
+
+function addIcon(parent: SceneObject, icon: IconName, sizeCm: number, local: vec3): Image {
+  const so = child(parent, 'Icon', local);
+  so.getTransform().setLocalScale(new vec3(sizeCm, sizeCm, 1));
+  const img = so.createComponent('Component.Image') as Image;
+  const mat = IMAGE_MATERIAL.clone();
+  mat.mainPass.baseTex = ICONS[icon];
+  mat.mainPass.depthTest = true;
+  mat.mainPass.depthWrite = false;
+  img.mainMaterial = mat;
+  return img;
+}
+
+export function roleSize(role: TextRole, distanceCm = 110): number {
+  return TYPE_SCALE[role].size * (distanceCm / 110);
+}
+
+export function applyTextRole(t: Text, role: TextRole, distanceCm = 110): void {
+  t.size = roleSize(role, distanceCm);
+  (t as Text & { weight?: number }).weight = TYPE_SCALE[role].weight;
+}
+
+export function child(parent: SceneObject, name: string, local?: vec3): SceneObject {
+  const so = global.scene.createSceneObject(name);
+  so.setParent(parent);
+  if (local) so.getTransform().setLocalPosition(local);
+  return so;
+}
+
+export interface Panel {
+  /** Enable/disable this to show or hide the panel (the script host itself stays enabled). */
+  root: SceneObject;
+  /** FlexLayout column host; add rows with `textRow` / `buttonRow`. */
+  content: SceneObject;
+  backPlate: BackPlate;
+}
+
+/**
+ * Canvas + dark BackPlate (fixed `widthCm × heightCm`) + a centered FlexLayout column.
+ * The panel lives under a `Panel` child so the host script keeps running while it is hidden.
+ */
+export function makePanel(host: SceneObject, widthCm: number, heightCm: number, padCm: number, gapCm: number): Panel {
+  const root = child(host, 'Panel');
+  root.createComponent('Component.Canvas');
+  const backPlate = root.createComponent(BackPlate.getTypeName()) as BackPlate;
+  backPlate.style = 'dark';
+  backPlate.size = new vec2(widthCm, heightCm);
+  addSurface(root, widthCm, heightCm, 0, SURFACE_FILL, SURFACE_BORDER); // drawn before Content
+
+  const content = child(root, 'Content', new vec3(0, 0, CONTENT_Z));
+  const flex = content.createComponent(FlexLayout.getTypeName()) as FlexLayout;
+  flex.width = widthCm;
+  flex.height = heightCm;
+  flex.direction = FlexDirection.Column;
+  flex.justifyContent = FlexJustify.Center;
+  flex.alignItems = FlexAlign.Center;
+  flex.rowGap = gapCm;
+  flex.paddingTop = padCm;
+  flex.paddingBottom = padCm;
+  flex.paddingLeft = padCm;
+  flex.paddingRight = padCm;
+  return { root, content, backPlate };
+}
+
+// FlexItems are NOT passed to `addItems`: children are built in onAwake, before the parent
+// FlexLayout initializes, so its default `autoDiscoverItemsOnStart` picks them up. Calling
+// `addItems` before init throws in UIKit 4.0 ("Cannot add items while autoDiscoverItemsOnStart is
+// enabled and the layout is not initialized") — checked in Lens Studio 5.24.1.
+
+function makeText(so: SceneObject, value: string, role: TextRole, widthCm: number, heightCm: number, distanceCm: number, color: vec4): Text {
+  const t = so.createComponent('Component.Text') as Text;
+  t.text = value;
+  t.font = THEME_FONT;
+  t.depthTest = true;
+  applyTextRole(t, role, distanceCm);
+  t.textFill.color = color;
+  t.horizontalAlignment = HorizontalAlignment.Center;
+  t.verticalAlignment = VerticalAlignment.Center;
+  t.horizontalOverflow = HorizontalOverflow.Overflow;
+  t.verticalOverflow = VerticalOverflow.Overflow;
+  t.layoutRect = Rect.create(-widthCm / 2, widthCm / 2, -heightCm / 2, heightCm / 2);
+  return t;
+}
+
+/** One text row in a FlexLayout column (or one cell in a row). */
+export function textRow(
+  parent: SceneObject,
+  name: string,
+  value: string,
+  role: TextRole,
+  widthCm: number,
+  heightCm: number,
+  distanceCm = 110,
+  color: vec4 = TEXT_PRIMARY,
+): Text {
+  const so = child(parent, name);
+  const t = makeText(so, value, role, widthCm, heightCm, distanceCm, color);
+  const item = so.createComponent(FlexItem.getTypeName()) as FlexItem;
+  item.overrideWidth = widthCm;
+  item.overrideHeight = heightCm;
+  item.flexShrink = 0;
+  return t;
+}
+
+/** A horizontal FlexLayout row inside a column. */
+export function flexRow(parent: SceneObject, name: string, widthCm: number, heightCm: number, gapCm: number): SceneObject {
+  const so = child(parent, name);
+  const flex = so.createComponent(FlexLayout.getTypeName()) as FlexLayout;
+  flex.width = widthCm;
+  flex.height = heightCm;
+  flex.direction = FlexDirection.Row;
+  flex.justifyContent = FlexJustify.Center;
+  flex.alignItems = FlexAlign.Center;
+  flex.columnGap = gapCm;
+  const item = so.createComponent(FlexItem.getTypeName()) as FlexItem;
+  item.overrideWidth = widthCm;
+  item.overrideHeight = heightCm;
+  item.flexShrink = 0;
+  return so;
+}
+
+export interface ButtonOptions {
+  /** Leading Material icon (IconSelector import). */
+  icon?: IconName;
+  /** Primary action styling (cyan-teal face). */
+  primary?: boolean;
+}
+
+/**
+ * UIKit Button with a raw Text label and an optional leading icon. The SceneObject is named `name`
+ * so LEAF can find its Interactable with `findInteractablesByName(name)`. Size is set before the
+ * Button initializes. Icon + label are centered as a group on the face, both lifted +0.08 cm.
+ */
+export function addButton(
+  parent: SceneObject,
+  name: string,
+  label: string,
+  widthCm: number,
+  heightCm: number,
+  distanceCm: number,
+  onClick: () => void,
+  opts: ButtonOptions = {},
+): { button: Button; label: Text } {
+  const so = child(parent, name);
+  const button = so.createComponent(Button.getTypeName()) as Button;
+  button.size = new vec3(widthCm, heightCm, 1);
+  themeButton(button, so, widthCm, heightCm, opts.primary === true);
+  let labelX = 0;
+  let labelW = widthCm - 0.5;
+  if (opts.icon) {
+    const iconSize = Math.min(heightCm * 0.6, 2.4);
+    const gap = 0.3;
+    // Estimated label width (Inter at the Button role ≈ 0.42 cm per glyph at 110 cm) so the
+    // icon + label group is centered on the face.
+    const glyph = (roleSize('Button', distanceCm) / 39) * 0.42;
+    const textW = Math.min(widthCm - iconSize - 1.2, label.length * glyph);
+    const groupW = iconSize + gap + textW;
+    addIcon(so, opts.icon, iconSize, new vec3(-groupW / 2 + iconSize / 2, 0, BUTTON_LABEL_Z));
+    labelX = -groupW / 2 + iconSize + gap + textW / 2;
+    labelW = textW + 0.4;
+  }
+  const labelSo = child(so, 'Label', new vec3(labelX, 0, BUTTON_LABEL_Z));
+  const text = makeText(labelSo, label, 'Button', labelW, heightCm, distanceCm, TEXT_PRIMARY);
+  const item = so.createComponent(FlexItem.getTypeName()) as FlexItem;
+  item.overrideWidth = widthCm;
+  item.overrideHeight = heightCm;
+  item.flexShrink = 0;
+  button.onTriggerUp.add(() => onClick());
+  return { button, label: text };
+}
+
+/** Rotate `so` so its front (+Z, the UI face) points at `target` (optionally yaw-only). */
+export function faceTowards(so: SceneObject, target: vec3, yawOnly: boolean): void {
+  const t = so.getTransform();
+  const p = t.getWorldPosition();
+  let dir = target.sub(p);
+  if (yawOnly) dir = new vec3(dir.x, 0, dir.z);
+  if (dir.length < 1e-4) return;
+  t.setWorldRotation(quat.lookAt(dir.normalize(), vec3.up()));
+}
