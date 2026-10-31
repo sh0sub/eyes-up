@@ -23,4 +23,11 @@ export default tseslint.config(
     files: ['typings/**/*.d.ts'],
     rules: { '@typescript-eslint/no-explicit-any': 'off', '@typescript-eslint/no-unused-vars': 'off' },
   },
+  {
+    // Node build scripts (demo video assembly).
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: { process: 'readonly', console: 'readonly', Buffer: 'readonly', setTimeout: 'readonly', fetch: 'readonly', WebSocket: 'readonly' },
+    },
+  },
 );
