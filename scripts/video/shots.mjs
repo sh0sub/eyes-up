@@ -150,14 +150,14 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Finish',
     heading: 'Where your eyes went',
-    // Clean scripted Summary capture (0:22 run): large still, read at full size.
+    // Clean scripted Summary capture (0:45 run: Balance 87, Cards 1 of 5, Nudges 1): large still, read at full size.
     gallery: 2,
     lines: [
       'Finish, and the audience applauds. Then you see where your eyes went.',
       'A balance score, the split between left, center and right, and a timeline of your gaze, with every nudge marked.',
-      'This short run spent sixty one percent on the right and only seven on the left. The tip says it plainly: next time, look left more.',
+      'This forty five second run scored a balance of eighty seven, with forty two percent on the right and twenty six on the left. One nudge, one card, and the tip says it plainly: next time, look left more.',
     ],
-    stills: [{ file: `${S}/06-summary.png`, crop: [480, 0, 640, 690] }],
+    stills: [{ file: `${S}/06-summary.png`, crop: [445, 195, 650, 675] }],
   },
   {
     id: '09-built',

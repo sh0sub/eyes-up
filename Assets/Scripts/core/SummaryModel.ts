@@ -1,7 +1,7 @@
 /**
  * Summary panel view model (plan M8, artifact S5): "Nice work — m:ss" + "target m:ss · deck",
  * gaze % per zone (amber when out of range), a Balance badge, longest look-away with its timestamp
- * ("11 s · left · at 1:12"), card expands · nudges, one tip from the weakest zone, Again / Done.
+ * ("11 s · left · at 1:12"), separate Cards ("2 of 5") and Nudges ("1") tiles, one tip from the weakest zone, Again / Done.
  * Bars fill over 0.6 s.
  */
 import { StatsSnapshot } from '../SessionStats';
@@ -35,8 +35,8 @@ export interface SummaryState {
   longestLookAwayLabel: string;
   cardExpandsLabel: string;
   nudgesLabel: string;
-  /** "2 of 5 · 1" (cards · nudges); "2 · 1" without a deck size. */
-  cardsNudgesLabel: string;
+  /** Cards tile value: "2 of 5" (cards opened of the deck); "2" without a deck size. */
+  cardsLabel: string;
   /** Badge number, e.g. "86". */
   balanceLabel: string;
   balanceScore: number;
@@ -80,7 +80,7 @@ export function summaryState(s: StatsSnapshot, shownSeconds: number, ctx?: Summa
     longestLookAwayLabel: `${away} s · ${s.longestLookAway.zoneName} · at ${formatMSS(s.longestLookAway.startSeconds)}`,
     cardExpandsLabel: `${s.cardExpands}`,
     nudgesLabel: `${s.nudges}`,
-    cardsNudgesLabel: `${ctx?.cardCount ? `${s.cardExpands} of ${ctx.cardCount}` : s.cardExpands} · ${s.nudges}`,
+    cardsLabel: ctx?.cardCount ? `${s.cardExpands} of ${ctx.cardCount}` : `${s.cardExpands}`,
     balanceLabel: `${s.balanceScore}`,
     balanceScore: s.balanceScore,
     tip: summaryTip(s.zonePercents),

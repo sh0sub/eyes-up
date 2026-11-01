@@ -16,7 +16,7 @@ Preview only, not tested on a Spectacles device.
 | 6 | `finish_shows_summary` | Summary shows, zones sum to 100 ± 1, time as m:ss | PASSED |
 | 7 | `repeated_nudge` | A second nudge fires after the cooldown on the same side | PASSED |
 | 8 | `finish_pulses_at_time` | Finish button rests before the target time and pulses after it | PASSED |
-| 9 | `capture_summary` | Capture helper. Gave left 7 / center 32 / right 61, Balance 58 | PASSED |
+| 9 | `capture_summary` | Capture helper (about 45 s run). Gave left 26 / center 32 / right 42, Balance 87, 1 card, 1 nudge | PASSED |
 | 10 | `capture_nudge_hold` | Capture helper for `walkthrough/03-nudge.png` | PASSED |
 | 11 | `capture_podium` | Capture helper for `walkthrough/05-podium.png` | PASSED |
 | 12 | `demo_reel` | About 71 s showcase for the video (the MCP call times out at 60 s, the scenario finishes) | PASSED |
