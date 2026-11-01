@@ -229,9 +229,10 @@ export class SummaryPanel extends BaseScriptComponent {
       addSurface(child(root, 'NudgeStem', new vec3(x, (TL_ROW_Y[2] + TL_NUDGE_Y) / 2, 0.25)), 0.12, TL_ROW_Y[2] - TL_NUDGE_Y, 0, NUDGE_AMBER, null);
       addSurface(child(root, 'NudgeDot', new vec3(x, TL_NUDGE_Y, 0.3)), 0.6, 0.6, 0, NUDGE_AMBER, null);
       // One "nudge" word per marker unless it would overlap the previous one.
-      if (x - lastLabelX > 6) {
-        lastLabelX = x;
-        const lx = Math.min(x + 2.9, TL_X0 + TL_STRIP_W - 2.4);
+      // Compare the clamped label centres: near the right edge several markers share one clamped x.
+      const lx = Math.min(x + 2.9, TL_X0 + TL_STRIP_W - 2.4);
+      if (lx - lastLabelX > 6) {
+        lastLabelX = lx;
         labels.push(() => addText(root, 'NudgeLabel', 'nudge', 'Subheadline', 5, 1.6, DIST, NUDGE_AMBER, new vec3(lx, TL_NUDGE_Y, 0.3)));
       }
     });

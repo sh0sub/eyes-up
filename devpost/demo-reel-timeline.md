@@ -11,7 +11,7 @@ How to replay: `run_leaf_scenario demo_reel` (preview) with
 times out at ~60 s, but the scenario keeps running to the end. Lens log: `✅ Scenario demo_reel completed successfully`.
 
 What's real: the app logic, gaze-driven halos, nudge, chime, cue card, pill dwell, applause and
-Summary. Nothing is sped up or staged, and no tunable is changed. What's simulated: head gaze
+Summary. The `demo_reel` scenario itself runs in real time, with nothing staged and no tunable changed. (The demo video is cut from separate live preview clips; four of its segments play at x1.2-1.3 speed and carry a speed badge.) What's simulated: head gaze
 (ScriptedGazeProvider) and pinches (LEAF interactor). The **amber diamond reticle** is a demo-only
 marker for where the simulated head points. LEAF can't move the preview camera, so the view
 itself stays still.

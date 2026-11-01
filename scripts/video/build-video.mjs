@@ -168,7 +168,7 @@ html,body{margin:0;width:${W}px;height:${H}px;overflow:hidden;background:transpa
 .col{position:absolute;left:${COL_X}px;right:64px;top:${MB.y}px;bottom:${H - MB.y - MB.h}px;display:flex;flex-direction:column}
 .kick{font-size:20px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--primary-ink)}
 .col h1{margin:14px 0 0;font-size:44px;line-height:1.1;font-weight:800;letter-spacing:-.01em}
-.cap{margin-top:auto;margin-bottom:auto;font-size:31px;line-height:1.38;font-weight:600;border-left:5px solid var(--primary);padding-left:20px}
+.cap{margin-top:auto;margin-bottom:auto;font-size:34px;line-height:1.34;font-weight:600;border-left:5px solid var(--primary);padding-left:20px}
 .prog{height:6px;border-radius:3px;background:var(--line)}.prog i{display:block;height:6px;border-radius:3px;background:var(--primary)}
 .foot{margin-top:14px;font-size:17px;line-height:1.35;color:var(--muted)}
 .card{position:absolute;inset:0;background:var(--canvas)}
@@ -212,7 +212,7 @@ function mediaHtml(seg, si, ci, cue) {
     const marks = (seg.marks ?? [])
       .map(({ rect: [x, y, w, h], label }) => `<div class="mark" style="border-style:dashed;left:${MB.x + x * sc}px;top:${MB.y + y * sc}px;width:${w * sc}px;height:${h * sc}px"></div><div class="inset-label" style="left:${MB.x + x * sc}px;top:${MB.y + y * sc - 36}px;text-shadow:0 1px 3px rgba(0,0,0,.8)">${esc(label)}</div>`)
       .join('');
-    media = `<div class="hole"></div>${marks}<div class="chip"><b>LIVE</b>Lens Studio Interactive Preview · no device${seg.live.speed > 1.01 ? ` · ×${seg.live.speed.toFixed(2).replace(/0$/, '')} speed` : ''}</div><div class="note">Head turns and pinches driven through Lens Studio preview tools</div>`;
+    media = `<div class="hole"></div>${marks}<div class="chip"><b>LIVE</b>Lens Studio Interactive Preview · no device${seg.live.speed > 1.01 ? ` · ×${seg.live.speed.toFixed(2).replace(/0$/, '')} speed` : ''}${seg.zoom ? ' · zoomed in' : ''}</div><div class="note">Head turns and pinches driven through Lens Studio preview tools</div>`;
   } else {
     const st = seg.stills[Math.min(ci, seg.stills.length - 1)];
     media = `<div class="bg"></div>${stillHtml(st, 'Lens Studio Interactive Preview capture · no device')}`;
@@ -222,6 +222,13 @@ function mediaHtml(seg, si, ci, cue) {
   <div class="cap">${esc(cue.text)}</div>
   <div class="prog"><i style="width:${(((si + 1) / total) * 100).toFixed(1)}%"></i></div>
   <div class="foot">Eyes Up · a Lens for Snap Spectacles<br>Sounds synthesized locally</div></div>`;
+}
+
+function coldHtml(seg, cue) {
+  const speed = seg.live?.speed > 1.01 ? ` · ×${seg.live.speed.toFixed(2).replace(/0$/, '')} speed` : '';
+  return `<div class="chip" style="left:48px;top:40px"><b>LIVE</b>Lens Studio Interactive Preview · no device${speed} · zoomed in</div>
+  <div class="chip" style="left:auto;right:48px;top:40px;background:#fff;color:#20232d">Eyes Up · a Lens for Snap Spectacles</div>
+  <div class="capbar" style="font-size:44px;padding:26px 44px">${esc(cue.text)}</div>`;
 }
 
 function cardHtml(seg, ci, cue) {
@@ -337,7 +344,7 @@ async function renderStage(cdp) {
   for (const [si, seg] of SEGMENTS.entries()) {
     seg.stage = [];
     for (const [ci, cue] of seg.cues.entries()) {
-      const body = seg.type === 'card' ? cardHtml(seg, ci, cue) : mediaHtml(seg, si, ci, cue);
+      const body = seg.type === 'card' ? cardHtml(seg, ci, cue) : seg.type === 'cold' ? coldHtml(seg, cue) : mediaHtml(seg, si, ci, cue);
       const html = path.join(dir, `${seg.id}-${ci}.html`);
       const png = path.join(dir, `${seg.id}-${ci}.png`);
       writeFileSync(html, `<!doctype html><html><head><meta charset="utf-8"><style>${CSS}</style></head><body>${body}</body></html>`);
@@ -383,10 +390,37 @@ function encode() {
       }
       const footList = path.join(dir, `${seg.id}-footage.txt`);
       concatList(footList, ticks, dur);
+      let screen;
+      if (seg.type === 'cold') {
+        const [cx, cy, cw, ch] = seg.crop;
+        screen = [`[1:v]crop=${cw}:${ch}:${cx}:${cy},scale=${W}:${H}:flags=lanczos,setsar=1,fps=${FPS}[b1]`];
+      } else if (seg.zoom) {
+        // Keyframes [t, zoom, centre x, centre y] (preview px), linear in between; crop follows the centre.
+        const lerp = (k) => {
+          const f = (i) => (i === k.length - 1 ? `${k[i][1]}` : `if(lt(t,${k[i + 1][0]}),${k[i][1]}+(${k[i + 1][1]}-${k[i][1]})*(t-${k[i][0]})/${k[i + 1][0] - k[i][0]},${f(i + 1)})`);
+          return f(0);
+        };
+        const pick = (idx) => {
+          const f = (i) => (i === seg.zoom.length - 1 ? `${seg.zoom[i][idx]}` : `if(lt(t,${seg.zoom[i + 1][0]}),${seg.zoom[i][idx]}+(${seg.zoom[i + 1][idx]}-${seg.zoom[i][idx]})*(t-${seg.zoom[i][0]})/${seg.zoom[i + 1][0] - seg.zoom[i][0]},${f(i + 1)})`);
+          return f(0);
+        };
+        const sc = MB.w / CROP.w;
+        const Z = lerp(seg.zoom.map((k) => [k[0], k[1]]));
+        screen = [
+          `[1:v]crop=${CROP.w}:${CROP.h}:${CROP.x}:${CROP.y},scale=w='${MB.w}*(${Z})':h='${MB.h}*(${Z})':eval=frame:flags=bicubic,` +
+            `crop=${MB.w}:${MB.h}:x='clip((${pick(2)})*${sc}*(${Z})-${MB.w / 2},0,${MB.w}*((${Z})-1))':y='clip((${pick(3)})*${sc}*(${Z})-${MB.h / 2},0,${MB.h}*((${Z})-1))',setsar=1,fps=${FPS}[scr]`,
+          `color=c=0x151a26:s=${W}x${H}:r=${FPS}:d=${dur.toFixed(3)}[base]`,
+          `[base][scr]overlay=${MB.x}:${MB.y}:eof_action=repeat[b1]`,
+        ];
+      } else {
+        screen = [
+          `[1:v]crop=${CROP.w}:${CROP.h}:${CROP.x}:${CROP.y},scale=${MB.w}:${MB.h}:flags=lanczos,setsar=1,fps=${FPS}[scr]`,
+          `color=c=0x151a26:s=${W}x${H}:r=${FPS}:d=${dur.toFixed(3)}[base]`,
+          `[base][scr]overlay=${MB.x}:${MB.y}:eof_action=repeat[b1]`,
+        ];
+      }
       const filter = [
-        `color=c=0x151a26:s=${W}x${H}:r=${FPS}:d=${dur.toFixed(3)}[base]`,
-        `[1:v]crop=${CROP.w}:${CROP.h}:${CROP.x}:${CROP.y},scale=${MB.w}:${MB.h}:flags=lanczos,setsar=1,fps=${FPS}[scr]`,
-        `[base][scr]overlay=${MB.x}:${MB.y}:eof_action=repeat[b1]`,
+        ...screen,
         `[0:v]format=rgba,fps=${FPS}[stage]`,
         `[b1][stage]overlay=0:0:eof_action=repeat,format=yuv420p[v]`,
         `[2:a]apad[a]`,
@@ -430,7 +464,7 @@ try {
   buildAudio();
   const foot = loadFootage();
   for (const seg of SEGMENTS) {
-    if (seg.type !== 'media') continue;
+    if (seg.type !== 'media' && seg.type !== 'cold') continue;
     seg.live = pickFootage(foot, seg);
     if (seg.live && seg.live.length > seg.duration) seg.duration = seg.live.length; // narration padded with silence
   }

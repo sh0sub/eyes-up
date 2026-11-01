@@ -28,6 +28,18 @@ const BAND = [0, 470, 475, 700]; // starts below the LEAF result line (y ≈ 445
 
 export const SEGMENTS = [
   {
+    // 5-8 s cold open: the halo lighting up, then the nudge chevron, full-bleed live footage, before any title.
+    id: '00-cold',
+    type: 'cold',
+    speed: 1.3,
+    crop: [150, 185, 720, 405],
+    footage: [{ from: 106, to: 137 }],
+    lines: [
+      'Look at someone, and they light up.',
+      'Ignore a side, and it taps you on the shoulder.',
+    ],
+  },
+  {
     id: '01-hook',
     type: 'card',
     card: 'hook',
@@ -51,12 +63,14 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Start',
     heading: 'An audience in your room',
-    // Live real-camera capture 2026-11-01 06:19 (round 8): Setup panel → pinch Start → audience → card "The problem".
-    footage: [{ from: '06:19:52', to: '06:20:09' }],
+    // Live real-camera capture 2026-11-01 06:20: Setup panel → pinch Start (06:20:07) → audience → card "The problem" → pill.
+    footage: [{ from: '06:20:02', to: '06:20:15' }],
+    // Zoom on the Setup panel (preview px), then ease out to the whole room when the audience appears.
+    zoom: [[0, 2.1, 438, 300], [4.2, 2.1, 438, 300], [5.8, 1, 438, 305]],
     lines: [
-      'You pick a length and a deck, here a five card pitch, and press Start with a pinch.',
-      'Six audience members appear on the floor, two and a half meters ahead, in a half circle.',
-      'Your first point floats above them for four seconds, then shrinks to a three word pill.',
+      'You pick a length and a deck, then press Start with a pinch.',
+      'Six audience members appear on the floor, two and a half meters ahead.',
+      'Your first point floats above them, then shrinks to a three word pill.',
     ],
     stills: [
       { file: `${S}/01-setup-panel.png`, crop: BAND },
@@ -69,7 +83,7 @@ export const SEGMENTS = [
     kicker: 'Gaze',
     heading: 'Whoever you look at lights up',
     speed: 1.3,
-    footage: [{ from: '06:20:10', to: '06:20:22' }],
+    footage: [{ from: '06:20:14', to: '06:20:26' }],
     gallery: 0.8,
     lines: [
       'Whoever you look at lights up. Their halo fills in about a second, and slowly cools when you look away.',
@@ -106,6 +120,7 @@ export const SEGMENTS = [
     // Live: head pitched down shows the podium; pinch Next. The right chevron appears beside it, never on it.
     footage: [{ from: '06:21:00', to: '06:21:15' }],
     speed: 1.2,
+    zoom: [[0, 1.45, 440, 350]],
     lines: [
       'Controls appear only when you look down, like a real podium.',
       'Your slide count, the time against your target, and a big Next button live there, and nowhere else.',
@@ -135,15 +150,14 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Finish',
     heading: 'Where your eyes went',
-    // Finish → Summary panel (1:55 live run) held.
-    footage: [{ from: '06:22:01', to: '06:22:21' }],
-    gallery: 10,
+    // Clean scripted Summary capture (0:22 run): large still, read at full size.
+    gallery: 2,
     lines: [
       'Finish, and the audience applauds. Then you see where your eyes went.',
       'A balance score, the split between left, center and right, and a timeline of your gaze, with every nudge marked.',
-      'This run: one minute fifty five, only seventeen percent on the left. The tip says it plainly: next time, look left more.',
+      'This short run spent sixty one percent on the right and only seven on the left. The tip says it plainly: next time, look left more.',
     ],
-    stills: [{ file: `${S}/06-summary.png`, crop: BAND, zoom: { rect: [96, 586, 284, 230], label: 'Rehearsal summary' } }],
+    stills: [{ file: `${S}/06-summary.png`, crop: [480, 0, 640, 690] }],
   },
   {
     id: '09-built',

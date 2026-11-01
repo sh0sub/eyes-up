@@ -68,7 +68,7 @@ still plays), instead of ever covering a panel (unit tested).
 ## Links
 
 - Repository: this repository (MIT).
-- Demo video (2:45, under 3 min, narrated and captioned, built by `scripts/video/build-video.mjs`):
+- Demo video (2:48, under 3 min, narrated and captioned, built by `scripts/video/build-video.mjs`). It opens with a cold open of the halo and the nudge chevron. Live clips are zoomed in on the Setup and podium panels, four clips play at x1.2-1.3 speed (shown as a badge on screen), and the Summary is a still capture:
   YouTube URL: **TODO_PASTE_PUBLIC_YOUTUBE_URL_HERE** (upload needs the entrant's YouTube account;
   set it to Public or Unlisted before submitting).
 - Walkthrough: `devpost/walkthrough/` (01-setup to 06-summary). Learnings: `devpost/learnings.md`. LEAF log: `devpost/leaf-results.md`. Screenshots: `devpost/screenshots/`. Build log: `devpost/build-notes.md`. Design brief:

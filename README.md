@@ -19,8 +19,7 @@ Built for Learn AR with SPECS (deadline 2026-11-09 PST). New Lens built with CLA
 - **Nudge chevron placement rule** (`Assets/Scripts/core/ChevronPlacement.ts`): the chevron keeps its
   edge-of-view spot, and panels (podium, cue card) are projected into its view plane each frame so it
   slides aside or hides rather than covering one. Unit tested.
-- **Demo video:** 2:45, narrated and captioned. `scripts/video/build-video.mjs` builds it from the
-  `demo_reel` LEAF scenario (`devpost/demo-reel-timeline.md`). YouTube: **TODO_PASTE_PUBLIC_YOUTUBE_URL_HERE**
+- **Demo video:** 2:48, narrated and captioned, opening with a short cold open (halo, nudge chevron). Live preview clips are zoomed in on the Setup and podium panels, some play at x1.2-1.3 speed (badged on screen), and the Summary is a still capture. `scripts/video/build-video.mjs` builds it from Lens Studio preview footage. YouTube: **TODO_PASTE_PUBLIC_YOUTUBE_URL_HERE**
   (the upload needs the entrant's account).
 - Setup: segmented 3/5/10 min and 3/6/9 audience buttons (selected = cyan), deck list, optional
   "Import text" deck typed on the AR keyboard. The summary has Again / Done / Re-place.
