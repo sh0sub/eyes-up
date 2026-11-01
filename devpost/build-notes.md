@@ -156,7 +156,7 @@ see-and-fix loop was run by hand).
 
 ## Known gaps / open problems
 
-- **G1: no SFX.** The `build-sfx` generator is written at `tempAssetGen/sfx.cjs` (NudgeChime,
+- **G1: no SFX (RESOLVED: the four WAVs are in Assets/GeneratedSFX and wired in).** The `build-sfx` generator is written at `tempAssetGen/sfx.cjs` (NudgeChime,
   StartTick, TimeUpTone, Applause; synthesized algorithmically, no copyrighted audio). Running
   `node` on it needed an approval this headless run couldn't get, so no WAVs exist. To finish: run
   `node tempAssetGen/sfx.cjs`, import `Assets/GeneratedSFX/*.wav`, add AudioComponents

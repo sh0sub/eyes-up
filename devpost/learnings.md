@@ -34,7 +34,7 @@ more.") close the loop: look, get feedback, adjust, run it again (Again keeps th
 | Does 8 s of neglect trigger a left chime and chevron, and clear when you look? | Logic proven | LEAF `neglect_triggers_nudge`, `repeated_nudge` |
 | Does Next show the card, then a tag after 4 s, and does a 1 s dwell reopen it? | Logic proven | LEAF `next_shows_card_then_pill`, `dwell_expands_pill` |
 | Does Finish show a Summary whose zones sum to 100 and whose time reads m:ss? | Logic proven | LEAF `finish_shows_summary` |
-| Do the timing rules hold under edge cases (gaps, ties, no gaze at all)? | Logic proven | 129 Node tests, typecheck and lint clean |
+| Do the timing rules hold under edge cases (gaps, ties, no gaze at all)? | Logic proven | 139 Node tests, typecheck and lint clean |
 | Are panels legible and comfortable at real distance on Spectacles optics? | **Feel unproven** | Preview only, tuned from preview screenshots |
 | Does the spatial chime clearly come from the left or right? | **Feel unproven** | Cannot be judged in the editor |
 | Is a head-rotation gaze ray accurate enough to count as "looking at a person"? | **Feel unproven** | Preview injects gaze; a device has no eye tracking in this Lens |

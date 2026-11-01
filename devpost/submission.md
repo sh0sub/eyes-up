@@ -34,10 +34,13 @@ A new Lens built with CLAD and the Lens Studio MCP skill pack, driven end to end
 Studio MCP tools. The scene uses UIKit panels and buttons, the audience, halo, nudge and cue card
 are TypeScript components. All logic (state machine, gaze zones, halo attention, nudge rules, cue
 card, stage-line timer, session stats, panel view models, deck import parser) is plain TypeScript
-with no Lens Studio dependency, so Node tests it: 130 unit and integration tests, typecheck and
+with no Lens Studio dependency, so Node tests it: 139 unit and integration tests, typecheck and
 lint all pass. Eight LEAF scenarios pass in the Interactive Preview (start places the audience,
 gaze fills the halo, neglect triggers a nudge, card then pill, dwell expands the pill, finish shows
-the summary, repeated nudge, stage-line pulses at 60 s and 30 s).
+the summary, repeated nudge, the Finish button pulses once the talk length is reached). The nudge
+chevron follows a placement rule: it keeps its spot at the edge of the view, and each frame the
+podium and cue card are projected into the same plane so it slides aside, or is hidden (the chime
+still plays), instead of ever covering a panel (unit tested).
 
 ## What we learned
 
@@ -54,7 +57,10 @@ the summary, repeated nudge, stage-line pulses at 60 s and 30 s).
 
 ## What is not done (honest list)
 
-- Not tested on a Spectacles device (none available). Gaze is head rotation, simulated in preview.
+- Preview only, not tested on a Spectacles device (none available). Gaze is head rotation, simulated
+  in preview. Spatial direction of the chime and legibility at 2.5 m on real optics are unverified.
+- The video shows the Lens Studio Interactive Preview. Gaze and pinches in it are driven by the LEAF
+  test harness (head ray and pinch simulated), and the narration and sounds are synthesized locally.
 - Voice features (filler-word counter) are not in this build.
 - The AR keyboard for deck import does not open in the Lens Studio preview. The outline parser is
   unit tested and the sample decks cover the demo.
@@ -62,11 +68,15 @@ the summary, repeated nudge, stage-line pulses at 60 s and 30 s).
 ## Links
 
 - Repository: this repository (MIT).
-- Demo video (under 3 min, built by `scripts/video/build-video.mjs`): add the public YouTube URL
-  here after upload (needs the entrant's YouTube account).
+- Demo video (2:45, under 3 min, narrated and captioned, built by `scripts/video/build-video.mjs`):
+  YouTube URL: **TODO_PASTE_PUBLIC_YOUTUBE_URL_HERE** (upload needs the entrant's YouTube account;
+  set it to Public or Unlisted before submitting).
 - Walkthrough: `devpost/walkthrough/` (01-setup to 06-summary). Learnings: `devpost/learnings.md`. LEAF log: `devpost/leaf-results.md`. Screenshots: `devpost/screenshots/`. Build log: `devpost/build-notes.md`. Design brief:
   `devpost/design-brief.md`. Spec check against the plan: `docs/spec-matrix.md`.
 
 ## Built with
 
 Lens Studio 5.24.1, TypeScript, UIKit, Spectacles Interaction Kit, LEAF, CLAD, Lens Studio MCP.
+Started from the SPECS base template (template, SIK and UIKit are standard Snap packages). Sound
+effects are generated locally and the narration is macOS text to speech, so there is no third-party
+music. No logos or trademarks are shown in the video. Not used: Remote Service Gateway, SnapML, ASR.

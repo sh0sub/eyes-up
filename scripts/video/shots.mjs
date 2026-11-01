@@ -153,7 +153,7 @@ export const SEGMENTS = [
     lines: [
       'Eyes Up was built in Lens Studio by an AI coding agent, through the Lens Studio MCP tools, following the CLAD skills.',
       'Eight scripted LEAF scenarios check the done criteria in the Interactive Preview. All eight pass.',
-      'The core logic, gaze, halos, nudges and cue cards, is covered by one hundred thirty unit and integration tests in Node.',
+      'The core logic, gaze, halos, nudges and cue cards, is covered by one hundred thirty nine unit and integration tests in Node.',
     ],
   },
   {

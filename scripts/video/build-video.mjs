@@ -265,7 +265,7 @@ function cardHtml(seg, ci, cue) {
             <div style="font-size:20px;line-height:1.5;color:var(--muted);margin-top:8px">VirtualScene, ExecuteEditorCode, PreviewPanelTool, MovePreviewCamera, PreviewInteractTool, CapturePanelScreenshotTool, RunAndCollectLogsTool, run_leaf_scenario …</div></div>
           <div style="${box(1)}"><div style="font-size:26px;font-weight:800">CLAD skills followed</div>
             <div style="font-size:20px;line-height:1.5;color:var(--muted);margin-top:8px">specs-experience-builder, specs-build-ui, build-sfx, specs-audio, specs-leaf-write-scenarios, specs-leaf-run-in-preview, verify-preview</div></div>
-          <div style="${box(ci >= 2 ? 1 : 0.35)}"><div style="font-size:54px;font-weight:800;color:var(--primary-ink);line-height:1">130 / 130</div>
+          <div style="${box(ci >= 2 ? 1 : 0.35)}"><div style="font-size:54px;font-weight:800;color:var(--primary-ink);line-height:1">139 / 139</div>
             <div style="font-size:22px;color:var(--muted);margin-top:8px">Node unit + integration tests (vitest) for the core rehearsal logic</div></div>
         </div>
         <div style="${box(ci >= 1 ? 1 : 0.35)}">
