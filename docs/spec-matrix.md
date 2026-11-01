@@ -24,7 +24,7 @@ Audit round 1, 2026-11-01. Evidence: live Lens Studio 5.24.1 preview via MCP (sc
 | S4 | 07 S4 Podium + card | Card 50x18 with title and 2 bullets, countdown line; podium with Prev/Next/Finish | match | live-podium.png; card has title only in live-audience frame (bullets fade after pill) |
 | S5 | 07 S5 Summary | Title, Balance badge, bars, timeline, 2 stat tiles, tip, Again/Done, Session complete chip | match | live-summary.png has all |
 | S6 | 07 S6 Video keyframe | Lens Studio window with hierarchy, preview, inspector, logger | match | demo video rebuilt 2026-11-01 (`.local/video/eyes-up-demo.mp4`, 2:35, not committed) from a fresh live demo_reel capture of the current build: segmented Setup panel, cyan halos, cue card/pill/dwell and the 0:42 Summary are live footage; nudge and podium use labelled stills (the scripted reel cannot turn the camera). Narration/test count (129) updated. Evidence: scripts/video/shots.mjs, scratchpad converge/eyes-up/fix-r2 |
-| R1 | 01 Submission | Public repo | blocked | cannot verify remote visibility offline |
+| R1 | 01 Submission | Public repo | match | gh repo view sh0sub/eyes-up: PUBLIC (2026-11-01) |
 | R2 | 01 Submission | Under 3 min YouTube video | blocked | video assembled locally by `scripts/video/build-video.mjs`; the public YouTube upload needs the entrant's YouTube account login, so no URL yet. README and devpost/submission.md say so |
 | R3 | 01 Submission | Text: what, who, what you learned | match (round 1) | `devpost/submission.md` has what it does, who it is for, how it was built, what we learned, honest not-done list |
 | R4 | 01 Skill pack | devpost/design-brief.md approved | match | status approved |
