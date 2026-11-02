@@ -6,11 +6,18 @@ Hackathon: Learn AR with SPECS. Deadline 2026-11-09 PST.
 
 - **Problem:** people rehearse talks staring at slides, a phone or a script, so the room never gets practice.
 - **Spatial moment:** on Spectacles a virtual audience sits 2.5 m ahead, lights up where you look, and chimes and points when you ignore one side for 8 seconds.
-- **Proof:** LEAF 8/8 scenarios pass in the Lens Studio Interactive Preview and 139 tests pass. Preview only, gaze driven by the LEAF harness, not tested on a device.
+- **Proof:** LEAF 8/8 scenarios pass in the Lens Studio Interactive Preview and 139 tests pass. Preview only, gaze driven by the LEAF harness, not tested on a device. Gaze = head direction in this build.
+
+> **Judge in 60 seconds**
+> 1. Video, first 20 s: live Setup panel, pinch Start, audience appears, halo lights up.
+> 2. Video, Summary segment (last part): left / center / right split, longest look-away, tip.
+> 3. `devpost/leaf-results.md`: 8/8 scenarios PASSED, plus `devpost/screenshots/09-process-at-a-glance.png`.
 
 ## Tagline
 
 Rehearse your talk with your eyes on the room, not on your notes.
+
+![Eyes Up: the watched audience member lights up in cyan](screenshots/08-halo-cyan.png)
 
 ## What it does
 
@@ -39,12 +46,13 @@ loop the Lens is built around.
 ### Gallery order
 
 1. `devpost/screenshots/08-halo-cyan.png` (the halo, the hook)
-2. `devpost/screenshots/02-audience-lit-halo.png`
-3. `devpost/screenshots/03-nudge-chevron.png`
-4. `devpost/screenshots/04-cue-card.png`
-5. `devpost/screenshots/05-podium.png`
-6. `devpost/screenshots/06-summary.png`
-7. `devpost/screenshots/01-setup-panel.png`
+2. `devpost/screenshots/09-process-at-a-glance.png` (process: halo fix, hit-area fix, LEAF 8/8, 139 tests, Setup to Summary)
+3. `devpost/screenshots/02-audience-lit-halo.png`
+4. `devpost/screenshots/03-nudge-chevron.png`
+5. `devpost/screenshots/04-cue-card.png`
+6. `devpost/screenshots/05-podium.png`
+7. `devpost/screenshots/06-summary.png`
+8. `devpost/screenshots/01-setup-panel.png`
 
 ## Who it is for
 
@@ -90,7 +98,7 @@ the summary, repeated nudge, the Finish button pulses once the talk length is re
 ## Links
 
 - Repository: this repository (MIT).
-- Demo video (2:14, under 3 min, narrated and captioned, built by `scripts/video/build-video.mjs`). It opens straight on live preview footage (Setup panel, pinch Start, audience appears by about 0:12, halo) with a lower-third and the line that a test harness turns the head. Live clips run in real time or at x1.2-1.3 (badged on screen), the badge reads PREVIEW, and the Summary is a still capture with a slow zoom on the bars, the red longest look-away block and the tip:
+- Demo video (2:14, under 3 min, narrated and captioned, opens on live preview footage; badge reads PREVIEW):
   YouTube URL: **TODO_PASTE_PUBLIC_YOUTUBE_URL_HERE** (upload needs the entrant's YouTube account;
   set it to Public or Unlisted before submitting).
 - Walkthrough: `devpost/walkthrough/` (01-setup to 06-summary). Learnings: `devpost/learnings.md`. LEAF log: `devpost/leaf-results.md`. Screenshots: `devpost/screenshots/`. Build log: `devpost/build-notes.md`. Design brief:

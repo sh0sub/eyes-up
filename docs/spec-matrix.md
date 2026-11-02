@@ -1,6 +1,8 @@
 # Spec matrix (artifact "specs" section vs running product)
 
-Audit round 1, 2026-11-01. Evidence: live Lens Studio 5.24.1 preview via MCP (screenshots in the audit scratchpad `converge/eyes-up/live-*.png`), `npm run check` (123 tests pass, typecheck and lint clean), 6 LEAF scenarios PASSED live.
+Current state (2026-11-03): `npm run check` 139 tests pass, typecheck and lint clean; 8 LEAF scenarios PASSED live in the Interactive Preview; demo video 2:14 (`.local/video/eyes-up-demo.mp4`, not committed). Preview only, not tested on a Spectacles device.
+
+Historical note, dated audit round 1 (2026-11-01, superseded): Evidence: live Lens Studio 5.24.1 preview via MCP (screenshots in the audit scratchpad `converge/eyes-up/live-*.png`), `npm run check` (123 tests pass, typecheck and lint clean), 6 LEAF scenarios PASSED live.
 
 | id | artifact section | expected | status | evidence |
 |---|---|---|---|---|
@@ -151,4 +153,4 @@ Live headless MCP: 8 LEAF scenarios PASSED, no E/F lines. `npm run check`: 139/1
 | R8-S3 | 07 S3 | nudge chevron stays at the view edge and never overlaps the podium, cue card/pill or any panel | match | core/ChevronPlacement.ts (placement rule, tests/unit/ChevronPlacement.test.ts): panels are projected into the chevron's view plane each frame; the chevron keeps its edge spot, else takes the nearest clear spot beside, above or below, else is hidden (chime still plays). Fixes the right chevron covering the podium's right edge in the video |
 | R8-S6 | 07 S6 | demo video matches the current build | match | `.local/video/eyes-up-demo.mp4` (2:45, not committed) re-recorded live; frames checked around every nudge (left and right chevrons at the audience, beside/below the podium, beside the pill and card); narration says 1:55 run with 17 % left. Previous file kept as eyes-up-demo-prev.mp4 |
 | R8-S3b | 07 S3 | nudge still | match | 03-nudge-chevron.png / walkthrough 03-nudge.png recaptured: chevron sits 0.8 cm lower, clear of the centered pill |
-| R9-S5b | 07 S5 | stat tile labels unambiguous | match | The old "Cards · Nudges 1 of 5 · 1" tile is now three tiles: Longest look-away, "Cards 1 of 5", "Nudges 1" (the S5 spec lists Cards "2 of 5" and Nudges "1" separately). `summaryState.cardsLabel` / `nudgesLabel` unit-tested. Live check: nudge label sits clear of the axis and strip. 06-summary recaptured from `capture_summary` (0:45, Balance 87, 26/32/42), video rebuilt 2:52 (previous kept as eyes-up-demo-prev.mp4), 139 tests, 8/8 LEAF PASSED |
+| R9-S5b | 07 S5 | stat tile labels unambiguous | match | The old "Cards · Nudges 1 of 5 · 1" tile is now three tiles: Longest look-away, "Cards 1 of 5", "Nudges 1" (the S5 spec lists Cards "2 of 5" and Nudges "1" separately). `summaryState.cardsLabel` / `nudgesLabel` unit-tested. Live check: nudge label sits clear of the axis and strip. 06-summary recaptured from `capture_summary` (0:45, Balance 87, 26/32/42), video rebuilt (2:52 at the time, since replaced by the current 2:14 cut: see header), 139 tests, 8/8 LEAF PASSED |

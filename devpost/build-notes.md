@@ -1,7 +1,7 @@
 # Eyes Up — build notes (Spectacles build, 2026-10-31)
 
 Headless Claude Code run against Lens Studio 5.24.1 through the lens-studio MCP server.
-Result label: **logic proven / feel unproven.** All 6 LEAF done-criteria scenarios pass in
+Result label: **logic proven / feel unproven.** All 6 LEAF done-criteria scenarios (of 8 in the final run, see leaf-results.md) pass in
 Interactive Preview. Nobody has walked around in the preview or done the comfort check yet (see
 "Not done").
 

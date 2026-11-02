@@ -1,6 +1,10 @@
 # eyes-up
 
+![Eyes Up: the watched audience member lights up in cyan](devpost/screenshots/08-halo-cyan.png)
+
 **Eyes Up** is a presentation rehearsal coach for Spectacles. It seats a small virtual audience in your room, lights up whoever you look at, nudges you toward the side you ignore, and hides your notes until you need them.
+
+**Pitch:** people rehearse staring at slides, so the room never gets practice. On Spectacles a virtual audience sits 2.5 m ahead, lights up where you look, and chimes and points when you ignore one side for 8 seconds. LEAF 8/8 and 139 tests pass in the Interactive Preview; gaze = head direction, driven by the LEAF harness, not tested on a device. Process at a glance: `devpost/screenshots/09-process-at-a-glance.png`.
 
 Built for Learn AR with SPECS (deadline 2026-11-09 PST). New Lens built with CLAD and the Lens Studio MCP skill pack; preview-only is acceptable, no device required.
 

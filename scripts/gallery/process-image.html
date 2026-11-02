@@ -1,0 +1,64 @@
+<!doctype html><meta charset="utf-8"><title>Eyes Up process at a glance</title>
+<style>
+:root{--ink:#14161f;--muted:#5b6070;--cy:#00b8d9;--bg:#eef2ff;--card:#fff;--amber:#e8920c}
+*{box-sizing:border-box}html,body{margin:0;width:1800px;height:1200px;background:var(--bg);font-family:-apple-system,"SF Pro Display","Helvetica Neue",Arial,sans-serif;color:var(--ink)}
+.wrap{padding:44px 56px}
+h1{margin:0;font-size:46px;letter-spacing:-.01em}
+.sub{font-size:22px;color:var(--muted);margin-top:6px}
+.row{display:grid;gap:24px;margin-top:26px}
+.r1{grid-template-columns:1fr 1fr 0.8fr}
+.card{background:var(--card);border-radius:18px;padding:20px 22px}
+.k{font-size:15px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#4a5cd6}
+.t{font-size:27px;font-weight:800;margin:4px 0 12px}
+.pair{display:flex;gap:12px}
+.pair div.im{flex:1;height:290px;border-radius:12px;background-color:#6b665f;background-repeat:no-repeat;position:relative}
+.cap{position:absolute;left:8px;bottom:8px;background:#20232d;color:#fff;font-size:17px;font-weight:700;border-radius:7px;padding:4px 9px}
+.note{font-size:18px;color:var(--muted);margin-top:10px;line-height:1.4}
+.big{font-size:84px;font-weight:800;color:var(--cy);line-height:1;letter-spacing:-.02em}
+.big2{font-size:76px;font-weight:800;line-height:1}
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:6px}
+.strip .s{position:relative}
+.strip .im{height:300px;border-radius:12px;background-size:cover;background-position:center;background-color:#6b665f}
+.strip .n{font-size:20px;font-weight:800;margin-top:8px}
+.arrow{color:#4a5cd6}
+.foot{font-size:18px;color:var(--muted);margin-top:16px}
+</style>
+<div class="wrap">
+<h1>Eyes Up: process at a glance</h1>
+<div class="sub">Two fixes found by looking at the Interactive Preview, checked by 8 LEAF scenarios and 139 tests.</div>
+<div class="row r1">
+ <div class="card"><div class="k">Fix 1 &middot; Halo</div><div class="t">Pale halo washed out, saturated cyan reads</div>
+  <div class="pair">
+   <div class="im" style="background-image:url('before-halo-pale.png');background-size:712px 2100px;background-position:-374px -901px"><span class="cap">Before: pale disc</span></div>
+   <div class="im" style="background-image:url('../../devpost/screenshots/08-halo-cyan.png');background-size:1126px auto;background-position:-574px -243px"><span class="cap">After: saturated cyan</span></div>
+  </div>
+  <div class="note">Additive displays punish pale colors. The lit state keeps the red channel low.</div></div>
+ <div class="card"><div class="k">Fix 2 &middot; Gaze hit area</div><div class="t">Cone replaced by the real pill rectangle</div>
+  <svg viewBox="0 0 560 290" width="100%" height="290" style="background:#f4f6fb;border-radius:12px">
+   <g font-family="Helvetica,Arial" font-size="15" fill="#5b6070">
+   <text x="20" y="26" font-weight="700" fill="#14161f">Before: cone</text><text x="300" y="26" font-weight="700" fill="#14161f">After: pill rectangle</text></g>
+   <path d="M20 150 L250 70 L250 230 Z" fill="#e8920c" opacity=".25"/><rect x="190" y="125" width="64" height="50" rx="10" fill="#6b7280"/>
+   <circle cx="200" cy="130" r="0"/><text x="30" y="262" font-family="Helvetica,Arial" font-size="15" fill="#5b6070">cone also caught the center audience</text>
+   <rect x="380" y="115" width="160" height="52" rx="26" fill="none" stroke="#00b8d9" stroke-width="4"/>
+   <text x="403" y="147" font-family="Helvetica,Arial" font-size="17" font-weight="700" fill="#14161f">Why glasses</text>
+   <path d="M300 141 L376 141" stroke="#00b8d9" stroke-width="3"/><path d="M368 133 L378 141 L368 149" fill="none" stroke="#00b8d9" stroke-width="3"/>
+   <text x="300" y="262" font-family="Helvetica,Arial" font-size="15" fill="#5b6070">dwell only on the pill itself</text>
+  </svg>
+  <div class="note">Gaze is a head ray in this build, so each target needs a generous but exact hit area. (Diagram)</div></div>
+ <div class="card"><div class="k">Checks</div><div class="t">Logic in Node, Lens in LEAF</div>
+  <div class="big">8 / 8</div><div class="note" style="margin-top:4px">LEAF scenarios PASSED in the Interactive Preview</div>
+  <div class="big2" style="margin-top:20px">139</div><div class="note" style="margin-top:4px">unit and integration tests, typecheck and lint clean</div>
+ </div>
+</div>
+<div class="card" style="margin-top:26px"><div class="k">The loop the Lens teaches</div><div class="t">Setup <span class="arrow">&rarr;</span> Look <span class="arrow">&rarr;</span> Nudge <span class="arrow">&rarr;</span> Cue card <span class="arrow">&rarr;</span> Podium <span class="arrow">&rarr;</span> Summary <span class="arrow">&rarr;</span> Again</div>
+ <div class="strip">
+  <div class="s"><div class="im" style="background-image:url('../../devpost/screenshots/01-setup-panel.png')"></div><div class="n">1 Setup</div></div>
+  <div class="s"><div class="im" style="background-image:url('../../devpost/screenshots/02-audience-lit-halo.png')"></div><div class="n">2 Look</div></div>
+  <div class="s"><div class="im" style="background-image:url('../../devpost/screenshots/03-nudge-chevron.png')"></div><div class="n">3 Nudge</div></div>
+  <div class="s"><div class="im" style="background-image:url('../../devpost/screenshots/04-cue-card.png')"></div><div class="n">4 Cue card</div></div>
+  <div class="s"><div class="im" style="background-image:url('../../devpost/screenshots/05-podium.png')"></div><div class="n">5 Podium</div></div>
+  <div class="s"><div class="im" style="background-image:url('../../devpost/screenshots/06-summary.png')"></div><div class="n">6 Summary</div></div>
+ </div>
+ <div class="foot">Lens Studio 5.24.1 Interactive Preview captures. Preview only, gaze driven by the LEAF harness (head direction), not tested on a Spectacles device.</div>
+</div>
+</div>
