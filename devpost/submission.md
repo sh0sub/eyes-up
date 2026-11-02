@@ -2,24 +2,49 @@
 
 Hackathon: Learn AR with SPECS. Deadline 2026-11-09 PST.
 
+## Pitch
+
+- **Problem:** people rehearse talks staring at slides, a phone or a script, so the room never gets practice.
+- **Spatial moment:** on Spectacles a virtual audience sits 2.5 m ahead, lights up where you look, and chimes and points when you ignore one side for 8 seconds.
+- **Proof:** LEAF 8/8 scenarios pass in the Lens Studio Interactive Preview and 139 tests pass. Preview only, gaze driven by the LEAF harness, not tested on a device.
+
 ## Tagline
 
 Rehearse your talk with your eyes on the room, not on your notes.
 
 ## What it does
 
-Eyes Up is a presentation rehearsal coach for Spectacles. Pinch Start and a small virtual audience
-(3, 6 or 9 glassy silhouettes) takes a seat in a half circle 2.5 m ahead of you. Whoever you look at
-lights up in cyan within a second, so you can see where your attention is going. If you ignore one
-side for 8 seconds, a soft chime plays from that side and an amber double chevron appears at the
-edge of your view. Your next talking point floats above the audience for 4 seconds, then shrinks to
-a three-word tag you can glance at (look at it for a second and it opens again). Look down like a
-wristwatch to see the podium: Prev, Next, Finish, a section counter and the talk timer. When you
-finish, the audience applauds and a summary shows your left / center / right split, a gaze timeline,
-your longest look-away, how often you used the cards and a one-line tip.
+Eyes Up is a presentation rehearsal coach for Spectacles. Setup is three pinches (talk length
+3 / 5 / 10 min, audience 3 / 6 / 9, deck: two samples or your own outline), then Start rehearsal.
 
-Setup is three pinches: talk length (3 / 5 / 10 min), audience size (3 / 6 / 9), deck (two samples,
-or type your own outline on the AR keyboard), then Start rehearsal.
+- **Look:** a half circle of glassy silhouettes stands 2.5 m ahead. Whoever you look at lights up in cyan within a second.
+- **Nudge:** ignore one side for 8 seconds and a soft chime plays from that side while an amber double chevron appears at the edge of your view.
+- **Notes:** your next talking point floats above the audience for 4 seconds, then shrinks to a three-word tag. Look at it for a second and it opens again.
+- **Podium:** look down like a wristwatch for Prev, Next, Finish, a section counter and the talk timer.
+- **Summary:** the audience applauds, then you see your left / center / right split, a gaze timeline, your longest look-away, how often you used the cards and a one-line tip.
+
+### How you learn from it
+
+Rehearse, see the split on the Summary, press Again (it keeps your settings) and run the talk once
+more, then compare the Balance score between runs. The one-line tip ("Next time, look left more.")
+is the feedback to carry into the next run. We have not measured learning outcomes; this is the
+loop the Lens is built around.
+
+### Why only on glasses
+
+- **It shares your view.** The Lens knows where you look, so it can light up the person you face and time the side you ignored.
+- **It draws in your room.** The audience and the cue card sit at real scale (2.5 m ahead, 10 cm above heads), so your eyes stay up instead of dropping to a screen.
+- **It leaves your body free.** You stand, walk and gesture while you rehearse. Nothing is held or typed.
+
+### Gallery order
+
+1. `devpost/screenshots/08-halo-cyan.png` (the halo, the hook)
+2. `devpost/screenshots/02-audience-lit-halo.png`
+3. `devpost/screenshots/03-nudge-chevron.png`
+4. `devpost/screenshots/04-cue-card.png`
+5. `devpost/screenshots/05-podium.png`
+6. `devpost/screenshots/06-summary.png`
+7. `devpost/screenshots/01-setup-panel.png`
 
 ## Who it is for
 
@@ -37,14 +62,11 @@ card, stage-line timer, session stats, panel view models, deck import parser) is
 with no Lens Studio dependency, so Node tests it: 139 unit and integration tests, typecheck and
 lint all pass. Eight LEAF scenarios pass in the Interactive Preview (start places the audience,
 gaze fills the halo, neglect triggers a nudge, card then pill, dwell expands the pill, finish shows
-the summary, repeated nudge, the Finish button pulses once the talk length is reached). The nudge
-chevron follows a placement rule: it keeps its spot at the edge of the view, and each frame the
-podium and cue card are projected into the same plane so it slides aside, or is hidden (the chime
-still plays), instead of ever covering a panel (unit tested).
+the summary, repeated nudge, the Finish button pulses once the talk length is reached). The nudge chevron never covers a panel (placement rule in `devpost/build-notes.md`, unit tested).
 
 ## What we learned
 
-- Design for the glasses first. The 40 x 30 cm Setup panel, 10 cm below eye level, is the only
+- Design for the glasses first. The 40 x 30 cm Setup panel, 10 cm above eye level, is the only
   thing on screen during setup. Keeping the world uncluttered mattered more than adding features.
 - Additive displays punish pale colors. A cyan-white halo washed out to a grey disc on the
   preview, so the lit state is now saturated cyan (red channel kept low) and reads in seconds.

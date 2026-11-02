@@ -801,3 +801,9 @@ first.
 - **F14 Deck import:** `core/DeckImport.ts` parses a typed outline; the Setup "Import text" button
   opens the AR keyboard (`TextInputSystem`, device only, not shown in preview).
 - **R3:** `devpost/submission.md`. Tests: 129 pass; all six LEAF scenarios re-run PASSED.
+
+## Chevron placement rule (moved from submission.md)
+
+The nudge chevron keeps its spot at the edge of the view. Each frame the podium and cue card are
+projected into the same plane, so the chevron slides aside, or is hidden (the chime still plays),
+instead of ever covering a panel. Unit tested.

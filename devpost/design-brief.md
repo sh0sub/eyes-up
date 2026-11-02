@@ -32,7 +32,7 @@ virtual room. The floor is 160 cm below the head, and a Re-place button re-seats
 
 | Element | Placement |
 |---|---|
-| Setup panel (40×30 cm) | 1.1 m ahead, 10 cm below eye level, shown only in Setup |
+| Setup panel (40×30 cm) | 1.1 m ahead, 10 cm above eye level, shown only in Setup |
 | Audience ×6 (3/6/9) | Half circle 2.5 m ahead on the floor, 0.6 m apart, centered on start yaw |
 | Cue card / pill | 10 cm above the audience heads at stage center, billboarded |
 | Podium (Prev / Next / Finish, Re-place) | 55 cm ahead, 30 cm below the head, visible only when you look down about 12° |

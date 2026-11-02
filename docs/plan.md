@@ -310,7 +310,7 @@ specs-ai-remote-service프리뷰 ⚠️난도 상
 
 플로우 A · 착용 → 시작
 
-1. **착용/실행**프리뷰: Preview 패널 Interactive, 가상 방. 1.1 m 앞·눈높이 -10 cm에 Setup 패널(40×30 cm)만 등장(습관②)→ S1 Setup
+1. **착용/실행**프리뷰: Preview 패널 Interactive, 가상 방. 1.1 m 앞·눈높이 +10 cm(R6에서 위로 이동)에 Setup 패널(40×30 cm)만 등장(습관②)→ S1 Setup
 1. **핀치로 설정**길이 슬라이더 3분, 청중 6, 덱 "Eyes Up pitch". 음성 대안 없음(단순 유지)→ S1
 1. **Start rehearsal 핀치**패널 0.3 s 축소 후 사라짐, 틱 SFX→ Placing
 1. **스테이지 배치**머리 yaw 기준 정면 2.5 m 바닥에 청중 6명이 0.6 m 간격 반원으로 0.5 s 페이드인. 55 cm 앞·30 cm 아래 포디움. 0:00에 큐카드 1이 4 s 후 꼬리표로→ S2
