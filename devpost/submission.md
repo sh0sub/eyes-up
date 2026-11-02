@@ -90,7 +90,7 @@ the summary, repeated nudge, the Finish button pulses once the talk length is re
 ## Links
 
 - Repository: this repository (MIT).
-- Demo video (2:52, under 3 min, narrated and captioned, built by `scripts/video/build-video.mjs`). It opens with a cold open of the halo and the nudge chevron. Live clips are zoomed in on the Setup and podium panels, four clips play at x1.2-1.3 speed (shown as a badge on screen), and the Summary is a still capture:
+- Demo video (2:14, under 3 min, narrated and captioned, built by `scripts/video/build-video.mjs`). It opens straight on live preview footage (Setup panel, pinch Start, audience appears by about 0:12, halo) with a lower-third and the line that a test harness turns the head. Live clips run in real time or at x1.2-1.3 (badged on screen), the badge reads PREVIEW, and the Summary is a still capture with a slow zoom on the bars, the red longest look-away block and the tip:
   YouTube URL: **TODO_PASTE_PUBLIC_YOUTUBE_URL_HERE** (upload needs the entrant's YouTube account;
   set it to Public or Unlisted before submitting).
 - Walkthrough: `devpost/walkthrough/` (01-setup to 06-summary). Learnings: `devpost/learnings.md`. LEAF log: `devpost/leaf-results.md`. Screenshots: `devpost/screenshots/`. Build log: `devpost/build-notes.md`. Design brief:

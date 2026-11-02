@@ -28,66 +28,31 @@ const BAND = [0, 470, 475, 700]; // starts below the LEAF result line (y ≈ 445
 
 export const SEGMENTS = [
   {
-    // 5-8 s cold open: the halo lighting up, then the nudge chevron, full-bleed live footage, before any title.
-    id: '00-cold',
+    // Merged opening (hook + title) over live footage: Setup panel -> pinch Start (06:20:07) -> audience -> halo.
+    // Preview crop is 16:9; `zoom` keys are [t, zoom, centre x, centre y] in that crop. Pinch lands at ~7 s, audience by ~12 s.
+    id: '00-open',
     type: 'cold',
-    speed: 1.3,
-    crop: [150, 185, 720, 405],
-    footage: [{ from: 106, to: 137 }],
-    lines: [
-      'Look at someone, and they light up.',
-      'Ignore a side, and it taps you on the shoulder.',
-    ],
-  },
-  {
-    id: '01-hook',
-    type: 'card',
-    card: 'hook',
-    lines: [
-      'When you rehearse a talk at your laptop, your eyes drop to the screen.',
-      'On stage, the habit stays. You read your notes, or you lock onto one side of the room.',
-    ],
-  },
-  {
-    id: '02-title',
-    type: 'card',
-    card: 'title',
-    lines: [
-      'Eyes Up is a rehearsal coach for Snap Spectacles.',
-      'It seats a small virtual audience in your own room, so you practice looking at people, not at notes.',
-      'It is for students, founders, and anyone giving a talk in a second language.',
-    ],
-  },
-  {
-    id: '03-setup',
-    type: 'media',
-    kicker: 'Start',
-    heading: 'An audience in your room',
-    // Live real-camera capture 2026-11-01 06:20: Setup panel → pinch Start (06:20:07) → audience → card "The problem" → pill.
+    speed: 1,
+    crop: [142, 195, 876, 493],
+    zoom: [[0, 1.5, 438, 250], [5.2, 1.5, 438, 250], [7.8, 1, 438, 246.5]],
+    lowerThird: 'Eyes Up - rehearsal coach for Spectacles',
     footage: [{ from: '06:20:02', to: '06:20:15' }],
-    // Zoom on the Setup panel (preview px), then ease out to the whole room when the audience appears.
-    zoom: [[0, 2.1, 438, 300], [4.2, 2.1, 438, 300], [5.8, 1, 438, 305]],
     lines: [
-      'You pick a length and a deck, then press Start with a pinch.',
-      'Six audience members appear on the floor, two and a half meters ahead.',
-      'Your first point floats above them, then shrinks to a three word pill.',
-    ],
-    stills: [
-      { file: `${S}/01-setup-panel.png`, crop: BAND },
-      { file: `${S}/07-preview-landscape.png`, note: 'Landscape preview, cue card shrunk to its pill' },
+      'Rehearse at a laptop and your eyes drop.',
+      'Eyes Up seats a virtual audience in your room and lights up whoever you turn toward.',
+      'In this preview, a test harness turns the head for us.',
     ],
   },
   {
     id: '04-halo',
     type: 'media',
     kicker: 'Gaze',
-    heading: 'Whoever you look at lights up',
-    speed: 1.3,
-    footage: [{ from: '06:20:14', to: '06:20:26' }],
+    heading: 'Turn toward someone, they light up',
+    footage: [{ from: '06:20:15', to: '06:20:26' }],
     gallery: 0.8,
     lines: [
-      'Whoever you look at lights up. Their halo fills in about a second, and slowly cools when you look away.',
-      'It is a simple mirror of where your attention actually goes.',
+      'Turn toward someone and they light up. Their halo fills in about a second, and slowly cools when you turn away.',
+      'Here the head direction stands in for your gaze.',
     ],
     stills: [{ file: `${S}/02-audience-lit-halo.png`, crop: BAND }],
   },
@@ -96,12 +61,13 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Nudge',
     heading: 'Ignore a side, get a tap',
-    // Live: the head turns to the right side, the left chevron appears and clears when the head turns back; later the right one.
-    footage: [{ from: '06:20:24', to: '06:20:43' }],
+    // Live, real time: the head turns to the right side, the left chevron appears and clears when the head turns back; later the right one.
+    footage: [{ from: '06:20:26', to: '06:20:47' }],
     gallery: 2.2,
     lines: [
       'Stare at one side for eight seconds, and you hear a soft chime, and a pulsing amber chevron appears at the edge of your view.',
-      'No pop-up in your face. Keep ignoring that side and it taps you again, until you look over.',
+      'No pop-up in your face. When you turn toward that side, the chevron clears.',
+      'Keep ignoring a side and it taps you again, until you turn over.',
     ],
     stills: [
       {
@@ -150,14 +116,32 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Finish',
     heading: 'Where your eyes went',
-    // Clean scripted Summary capture (0:45 run: Balance 87, Cards 1 of 5, Nudges 1): large still, read at full size.
-    gallery: 2,
+    // Scripted Summary capture (0:45 run: Balance 87, L 26 / C 32 / R 42, longest look-away 11 s, tip "look left more").
+    // Slow zoom/pan over the still. Keys [t, zoom, centre x, centre y] in `base` px (image px minus the base origin);
+    // t is seconds or 'cN+s' / 'cN-s' (seconds after narration line N starts). Callouts show while their line plays.
+    gallery: 1,
+    pan: {
+      file: `${S}/06-summary.png`,
+      base: [285, 195, 969, 675],
+      keys: [
+        [0, 1, 485, 368],
+        ['c0+1.2', 1.15, 485, 330],
+        ['c1+0.2', 1.7, 505, 245],
+        ['c1+3.2', 1.8, 505, 262],
+        ['c2-0.25', 2.5, 410, 358],
+        ['c2+3.6', 2.55, 410, 358],
+        ['c3+0.1', 2.1, 505, 555],
+      ],
+      callouts: [
+        { cue: 2, rect: [613, 546, 105, 23], label: 'Longest look-away: 11 s' },
+      ],
+    },
     lines: [
-      'Finish, and the audience applauds. Then you see where your eyes went.',
-      'A balance score, the split between left, center and right, and a timeline of your gaze, with every nudge marked.',
-      'This forty five second run scored a balance of eighty seven, with forty two percent on the right and twenty six on the left. One nudge, one card, and the tip says it plainly: next time, look left more.',
+      'Finish, applause, then where your eyes went.',
+      'Balance eighty seven. Left twenty six, center thirty two, right forty two percent.',
+      'The red block is your longest look-away, eleven seconds.',
+      'Next time, look left more.',
     ],
-    stills: [{ file: `${S}/06-summary.png`, crop: [445, 195, 650, 675] }],
   },
   {
     id: '09-built',

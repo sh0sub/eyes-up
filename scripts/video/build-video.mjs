@@ -151,6 +151,34 @@ function pickFootage(foot, seg) {
   return { speed, frames, length: offset };
 }
 
+/* ── zoom keyframes ───────────────────────────────────────────────────────── */
+// Keys [t, zoom, cx, cy]; t is seconds or 'cN+s' / 'cN-s' (s after/before narration line N starts). Returns numeric times.
+function resolveKeys(seg, keys) {
+  const out = keys.map(([t, ...r]) => {
+    const m = typeof t === 'string' && /^c(\d+)([+-])([\d.]+)$/.exec(t);
+    return [m ? seg.cues[Number(m[1])].start + (m[2] === '-' ? -1 : 1) * Number(m[3]) : t, ...r];
+  });
+  out.forEach((k, i) => {
+    if (i && !(k[0] > out[i - 1][0])) throw new Error(`${seg.id}: zoom key times must increase (${k[0]})`);
+  });
+  return out;
+}
+const lerpKeys = (keys, idx) => {
+  const f = (i) => (i === keys.length - 1 ? `${keys[i][idx]}` : `if(lt(t,${keys[i + 1][0].toFixed(3)}),${keys[i][idx]}+(${keys[i + 1][idx]}-${keys[i][idx]})*(t-${keys[i][0].toFixed(3)})/${(keys[i + 1][0] - keys[i][0]).toFixed(3)},${f(i + 1)})`);
+  return f(0);
+};
+const keyAt = (keys, t, idx) => {
+  if (t <= keys[0][0]) return keys[0][idx];
+  for (let i = 0; i + 1 < keys.length; i++) if (t < keys[i + 1][0]) return keys[i][idx] + ((keys[i + 1][idx] - keys[i][idx]) * (t - keys[i][0])) / (keys[i + 1][0] - keys[i][0]);
+  return keys.at(-1)[idx];
+};
+// Zoom/pan on a stream already cropped to the output aspect: scale by Z (per frame), crop around the centre key (source px).
+function zoomFilter(inL, keys, srcW, outW, outH, outL) {
+  const sc = outW / srcW;
+  const Z = lerpKeys(keys, 1);
+  return `[${inL}]scale=w='${outW}*(${Z})':h='${outH}*(${Z})':eval=frame:flags=bicubic,crop=${outW}:${outH}:x='clip((${lerpKeys(keys, 2)})*${sc}*(${Z})-${outW / 2},0,${outW}*((${Z})-1))':y='clip((${lerpKeys(keys, 3)})*${sc}*(${Z})-${outH / 2},0,${outH}*((${Z})-1))',setsar=1,fps=${FPS}[${outL}]`;
+}
+
 /* ── 3. graphics ──────────────────────────────────────────────────────────── */
 const CSS = `
 :root{--canvas:#eef2ff;--panel:#ffffff;--ink:#20232d;--muted:#5e6372;--primary:#3864ed;--primary-ink:#2952d8;--line:#d9def0;--media:#151a26;--amber:#f2a33a;--ok:#1f8a5b}
@@ -159,9 +187,9 @@ html,body{margin:0;width:${W}px;height:${H}px;overflow:hidden;background:transpa
 .hole{position:absolute;left:${MB.x}px;top:${MB.y}px;width:${MB.w}px;height:${MB.h}px;border-radius:16px;box-shadow:0 0 0 3000px var(--canvas)}
 .box{position:absolute;left:${MB.x}px;top:${MB.y}px;width:${MB.w}px;height:${MB.h}px;border-radius:16px;overflow:hidden;background:var(--media)}
 .img{position:absolute;background-repeat:no-repeat}
-.chip{position:absolute;left:${MB.x}px;top:${MB.y - 50}px;background:#20232d;color:#fff;border-radius:9px;padding:8px 14px;font-size:19px;font-weight:600;letter-spacing:.01em;z-index:5}
+.chip{position:absolute;left:${MB.x}px;top:${MB.y - 50}px;background:#20232d;color:#fff;border-radius:9px;padding:8px 14px;font-size:21px;font-weight:600;letter-spacing:.01em;z-index:5}
 .chip b{color:#9fb6ff;font-weight:700;margin-right:8px}
-.note{position:absolute;left:${MB.x}px;top:${MB.y + MB.h + 14}px;color:var(--muted);font-size:19px;z-index:5}
+.note{position:absolute;left:${MB.x}px;top:${MB.y + MB.h + 14}px;color:var(--muted);font-size:21px;z-index:5}
 .mark{position:absolute;border:3px solid var(--amber);border-radius:6px;box-shadow:0 0 0 2px rgba(0,0,0,.35)}
 .inset{position:absolute;border:3px solid var(--amber);border-radius:12px;overflow:hidden;background:#000;box-shadow:0 12px 40px rgba(0,0,0,.45)}
 .inset-label{position:absolute;color:#fff;font-size:22px;font-weight:700}
@@ -169,11 +197,13 @@ html,body{margin:0;width:${W}px;height:${H}px;overflow:hidden;background:transpa
 .kick{font-size:20px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--primary-ink)}
 .col h1{margin:14px 0 0;font-size:44px;line-height:1.1;font-weight:800;letter-spacing:-.01em}
 .cap{margin-top:auto;margin-bottom:auto;font-size:34px;line-height:1.34;font-weight:600;border-left:5px solid var(--primary);padding-left:20px}
+.lower{position:absolute;left:48px;top:104px;background:rgba(32,35,45,.92);color:#fff;border-left:8px solid var(--primary);border-radius:6px 14px 14px 6px;padding:16px 28px;font-size:38px;font-weight:700;letter-spacing:-.005em;z-index:6}
+.lower i{font-style:normal;color:#9fb6ff}
 .prog{height:6px;border-radius:3px;background:var(--line)}.prog i{display:block;height:6px;border-radius:3px;background:var(--primary)}
-.foot{margin-top:14px;font-size:17px;line-height:1.35;color:var(--muted)}
+.foot{margin-top:14px;font-size:21px;line-height:1.35;color:var(--muted)}
 .card{position:absolute;inset:0;background:var(--canvas)}
 .capbar{position:absolute;left:50%;transform:translateX(-50%);bottom:56px;max-width:1500px;background:var(--panel);border-radius:16px;padding:22px 34px;font-size:32px;line-height:1.36;font-weight:600;text-align:center;box-shadow:0 1px 0 var(--line)}
-.cfoot{position:absolute;left:64px;right:64px;top:40px;display:flex;justify-content:space-between;font-size:18px;color:var(--muted)}
+.cfoot{position:absolute;left:64px;right:64px;top:40px;display:flex;justify-content:space-between;font-size:21px;color:var(--muted)}
 `;
 
 function stillHtml(st, label) {
@@ -207,12 +237,29 @@ function stillHtml(st, label) {
 function mediaHtml(seg, si, ci, cue) {
   const total = SEGMENTS.length;
   let media;
-  if (seg.live) {
+  if (seg.pan) {
+    const { base, keys } = seg.pan;
+    const sc = MB.w / base[2];
+    const callouts = (seg.pan.callouts ?? [])
+      .filter((c) => c.cue === ci)
+      .map(({ rect: [x, y, w, h], label }) => {
+        const t = cue.start + 0.6;
+        const Z = keyAt(keys, t, 1), cx = keyAt(keys, t, 2), cy = keyAt(keys, t, 3);
+        const vx = Math.min(Math.max(cx * sc * Z - MB.w / 2, 0), MB.w * (Z - 1));
+        const vy = Math.min(Math.max(cy * sc * Z - MB.h / 2, 0), MB.h * (Z - 1));
+        const sx = MB.x + (x - base[0]) * sc * Z - vx, sy = MB.y + (y - base[1]) * sc * Z - vy;
+        const sw = w * sc * Z, sh = h * sc * Z;
+        const ly = Math.max(sy - 74, MB.y + 12);
+        return `<div class="mark" style="border-style:dashed;border-color:#ff5d4d;left:${sx - 6}px;top:${sy - 6}px;width:${sw + 6}px;height:${sh + 6}px"></div><div style="position:absolute;left:${Math.max(sx - 6, MB.x + 12)}px;top:${ly}px;background:#fff;color:#20232d;border:3px solid #ff5d4d;border-radius:10px;padding:8px 16px;font-size:28px;font-weight:800;z-index:6">${esc(label)}</div>`;
+      })
+      .join('');
+    media = `<div class="hole"></div>${callouts}<div class="chip"><b>STILL</b>Lens Studio preview capture · slow zoom · no device</div><div class="note">Scripted 45 s run, shown as a still</div>`;
+  } else if (seg.live) {
     const sc = MB.w / CROP.w;
     const marks = (seg.marks ?? [])
       .map(({ rect: [x, y, w, h], label }) => `<div class="mark" style="border-style:dashed;left:${MB.x + x * sc}px;top:${MB.y + y * sc}px;width:${w * sc}px;height:${h * sc}px"></div><div class="inset-label" style="left:${MB.x + x * sc}px;top:${MB.y + y * sc - 36}px;text-shadow:0 1px 3px rgba(0,0,0,.8)">${esc(label)}</div>`)
       .join('');
-    media = `<div class="hole"></div>${marks}<div class="chip"><b>LIVE</b>Lens Studio Interactive Preview · no device${seg.live.speed > 1.01 ? ` · ×${seg.live.speed.toFixed(2).replace(/0$/, '')} speed` : ''}${seg.zoom ? ' · zoomed in' : ''}</div><div class="note">Head turns and pinches driven through Lens Studio preview tools</div>`;
+    media = `<div class="hole"></div>${marks}<div class="chip"><b>PREVIEW</b>Lens Studio Interactive Preview · no device${seg.live.speed > 1.01 ? ` · ×${seg.live.speed.toFixed(2).replace(/0$/, '')} speed` : ''}${seg.zoom ? ' · zoomed in' : ''}</div><div class="note">A test harness turns the head and pinches in this preview</div>`;
   } else {
     const st = seg.stills[Math.min(ci, seg.stills.length - 1)];
     media = `<div class="bg"></div>${stillHtml(st, 'Lens Studio Interactive Preview capture · no device')}`;
@@ -221,14 +268,16 @@ function mediaHtml(seg, si, ci, cue) {
   <div class="col"><div class="kick">${esc(seg.kicker)}</div><h1>${esc(seg.heading)}</h1>
   <div class="cap">${esc(cue.text)}</div>
   <div class="prog"><i style="width:${(((si + 1) / total) * 100).toFixed(1)}%"></i></div>
-  <div class="foot">Eyes Up · a Lens for Snap Spectacles<br>Sounds synthesized locally</div></div>`;
+  <div class="foot">Eyes Up · a Lens for Snap Spectacles<br>Preview only, not on a device<br>Sounds synthesized locally</div></div>`;
 }
 
 function coldHtml(seg, cue) {
   const speed = seg.live?.speed > 1.01 ? ` · ×${seg.live.speed.toFixed(2).replace(/0$/, '')} speed` : '';
-  return `<div class="chip" style="left:48px;top:40px"><b>LIVE</b>Lens Studio Interactive Preview · no device${speed} · zoomed in</div>
-  <div class="chip" style="left:auto;right:48px;top:40px;background:#fff;color:#20232d">Eyes Up · a Lens for Snap Spectacles</div>
-  <div class="capbar" style="font-size:44px;padding:26px 44px">${esc(cue.text)}</div>`;
+  const lower = seg.lowerThird ? `<div class="lower"><span>${esc(seg.lowerThird.split(' - ')[0])}</span> <i>-</i> ${esc(seg.lowerThird.split(' - ')[1])}</div>` : '';
+  return `<div class="chip" style="left:48px;top:40px"><b>PREVIEW</b>Lens Studio Interactive Preview · no device${speed}</div>
+  <div class="chip" style="left:auto;right:48px;top:40px;background:#fff;color:#20232d">A test harness turns the head · sounds synthesized locally</div>
+  ${lower}
+  <div class="capbar" style="font-size:40px;padding:22px 40px">${esc(cue.text)}</div>`;
 }
 
 function cardHtml(seg, ci, cue) {
@@ -380,44 +429,39 @@ function encode() {
     concatList(stageList, seg.stage.map((f, i) => ({ file: f, start: i === 0 ? 0 : seg.cues[i].start - 0.15 })), dur);
     const out = path.join(dir, `${seg.id}.mp4`);
     const enc = ['-t', dur.toFixed(3), '-r', String(FPS), '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '160k', '-ar', '48000', '-ac', '2', out];
-    if (seg.live) {
-      const ticks = [];
-      let j = 0, cur = seg.live.frames[0];
-      for (let i = 0; i < Math.round(dur * FPS); i++) {
-        const t = i / FPS;
-        while (j < seg.live.frames.length && seg.live.frames[j].v <= t) cur = seg.live.frames[j++];
-        if (!ticks.length || ticks.at(-1).file !== cur.file) ticks.push({ file: cur.file, start: t });
+    if (seg.live || seg.pan) {
+      let in1;
+      if (seg.pan) {
+        in1 = ['-loop', '1', '-framerate', String(FPS), '-i', path.resolve(ROOT, seg.pan.file)];
+      } else {
+        const ticks = [];
+        let j = 0, cur = seg.live.frames[0];
+        for (let i = 0; i < Math.round(dur * FPS); i++) {
+          const t = i / FPS;
+          while (j < seg.live.frames.length && seg.live.frames[j].v <= t) cur = seg.live.frames[j++];
+          if (!ticks.length || ticks.at(-1).file !== cur.file) ticks.push({ file: cur.file, start: t });
+        }
+        const footList = path.join(dir, `${seg.id}-footage.txt`);
+        concatList(footList, ticks, dur);
+        in1 = ['-f', 'concat', '-safe', '0', '-i', footList];
       }
-      const footList = path.join(dir, `${seg.id}-footage.txt`);
-      concatList(footList, ticks, dur);
       let screen;
+      const overlayBox = (inL) => [`color=c=0x151a26:s=${W}x${H}:r=${FPS}:d=${dur.toFixed(3)}[base]`, `[base][${inL}]overlay=${MB.x}:${MB.y}:eof_action=repeat[b1]`];
       if (seg.type === 'cold') {
         const [cx, cy, cw, ch] = seg.crop;
-        screen = [`[1:v]crop=${cw}:${ch}:${cx}:${cy},scale=${W}:${H}:flags=lanczos,setsar=1,fps=${FPS}[b1]`];
+        if (seg.zoom) {
+          screen = [`[1:v]crop=${cw}:${ch}:${cx}:${cy}[c0]`, zoomFilter('c0', resolveKeys(seg, seg.zoom), cw, W, H, 'b1')];
+        } else {
+          screen = [`[1:v]crop=${cw}:${ch}:${cx}:${cy},scale=${W}:${H}:flags=lanczos,setsar=1,fps=${FPS}[b1]`];
+        }
+      } else if (seg.pan) {
+        const [bx, by, bw, bh] = seg.pan.base;
+        screen = [`[1:v]crop=${bw}:${bh}:${bx}:${by}[c0]`, zoomFilter('c0', seg.pan.keys, bw, MB.w, MB.h, 'scr'), ...overlayBox('scr')];
       } else if (seg.zoom) {
         // Keyframes [t, zoom, centre x, centre y] (preview px), linear in between; crop follows the centre.
-        const lerp = (k) => {
-          const f = (i) => (i === k.length - 1 ? `${k[i][1]}` : `if(lt(t,${k[i + 1][0]}),${k[i][1]}+(${k[i + 1][1]}-${k[i][1]})*(t-${k[i][0]})/${k[i + 1][0] - k[i][0]},${f(i + 1)})`);
-          return f(0);
-        };
-        const pick = (idx) => {
-          const f = (i) => (i === seg.zoom.length - 1 ? `${seg.zoom[i][idx]}` : `if(lt(t,${seg.zoom[i + 1][0]}),${seg.zoom[i][idx]}+(${seg.zoom[i + 1][idx]}-${seg.zoom[i][idx]})*(t-${seg.zoom[i][0]})/${seg.zoom[i + 1][0] - seg.zoom[i][0]},${f(i + 1)})`);
-          return f(0);
-        };
-        const sc = MB.w / CROP.w;
-        const Z = lerp(seg.zoom.map((k) => [k[0], k[1]]));
-        screen = [
-          `[1:v]crop=${CROP.w}:${CROP.h}:${CROP.x}:${CROP.y},scale=w='${MB.w}*(${Z})':h='${MB.h}*(${Z})':eval=frame:flags=bicubic,` +
-            `crop=${MB.w}:${MB.h}:x='clip((${pick(2)})*${sc}*(${Z})-${MB.w / 2},0,${MB.w}*((${Z})-1))':y='clip((${pick(3)})*${sc}*(${Z})-${MB.h / 2},0,${MB.h}*((${Z})-1))',setsar=1,fps=${FPS}[scr]`,
-          `color=c=0x151a26:s=${W}x${H}:r=${FPS}:d=${dur.toFixed(3)}[base]`,
-          `[base][scr]overlay=${MB.x}:${MB.y}:eof_action=repeat[b1]`,
-        ];
+        screen = [`[1:v]crop=${CROP.w}:${CROP.h}:${CROP.x}:${CROP.y}[c0]`, zoomFilter('c0', seg.zoom, CROP.w, MB.w, MB.h, 'scr'), ...overlayBox('scr')];
       } else {
-        screen = [
-          `[1:v]crop=${CROP.w}:${CROP.h}:${CROP.x}:${CROP.y},scale=${MB.w}:${MB.h}:flags=lanczos,setsar=1,fps=${FPS}[scr]`,
-          `color=c=0x151a26:s=${W}x${H}:r=${FPS}:d=${dur.toFixed(3)}[base]`,
-          `[base][scr]overlay=${MB.x}:${MB.y}:eof_action=repeat[b1]`,
-        ];
+        screen = [`[1:v]crop=${CROP.w}:${CROP.h}:${CROP.x}:${CROP.y},scale=${MB.w}:${MB.h}:flags=lanczos,setsar=1,fps=${FPS}[scr]`, ...overlayBox('scr')];
       }
       const filter = [
         ...screen,
@@ -425,14 +469,14 @@ function encode() {
         `[b1][stage]overlay=0:0:eof_action=repeat,format=yuv420p[v]`,
         `[2:a]apad[a]`,
       ].join(';');
-      run(FFMPEG, ['-y', '-v', 'error', '-f', 'concat', '-safe', '0', '-i', stageList, '-f', 'concat', '-safe', '0', '-i', footList, '-i', seg.audio, '-filter_complex', filter, '-map', '[v]', '-map', '[a]', ...enc]);
+      run(FFMPEG, ['-y', '-v', 'error', '-f', 'concat', '-safe', '0', '-i', stageList, ...in1, '-i', seg.audio, '-filter_complex', filter, '-map', '[v]', '-map', '[a]', ...enc]);
     } else {
       const filter = [`[0:v]fps=${FPS},format=yuv420p[v]`, `[1:a]apad[a]`].join(';');
       run(FFMPEG, ['-y', '-v', 'error', '-f', 'concat', '-safe', '0', '-i', stageList, '-i', seg.audio, '-filter_complex', filter, '-map', '[v]', '-map', '[a]', ...enc]);
     }
     seg.encoded = probe(out);
     outs.push(out);
-    log(`encoded ${seg.id} (${seg.encoded.toFixed(2)}s, ${seg.live ? 'live footage' : seg.type === 'card' ? 'card' : 'stills'})`);
+    log(`encoded ${seg.id} (${seg.encoded.toFixed(2)}s, ${seg.live ? 'live footage' : seg.pan ? 'pan' : seg.type === 'card' ? 'card' : 'stills'})`);
   }
   mkdirSync(path.dirname(OUT), { recursive: true });
   const list = path.join(dir, 'all.txt');
@@ -464,6 +508,10 @@ try {
   buildAudio();
   const foot = loadFootage();
   for (const seg of SEGMENTS) {
+    if (seg.pan) {
+      seg.pan.keys = resolveKeys(seg, seg.pan.keys);
+      continue;
+    }
     if (seg.type !== 'media' && seg.type !== 'cold') continue;
     seg.live = pickFootage(foot, seg);
     if (seg.live && seg.live.length > seg.duration) seg.duration = seg.live.length; // narration padded with silence
@@ -477,7 +525,7 @@ try {
     out: OUT,
     totalSeconds: Number(total.toFixed(2)),
     footage: FOOTAGE ? { dir: FOOTAGE, frames: foot.frames.length, distinct: foot.unique } : null,
-    segments: SEGMENTS.map((s) => ({ id: s.id, seconds: Number(s.encoded.toFixed(2)), visual: s.live ? 'live' : s.type === 'card' ? 'card' : 'stills' })),
+    segments: SEGMENTS.map((s) => ({ id: s.id, seconds: Number(s.encoded.toFixed(2)), visual: s.live ? 'live' : s.pan ? 'pan' : s.type === 'card' ? 'card' : 'stills' })),
   };
   writeFileSync(path.join(WORK, 'summary.json'), JSON.stringify(summary, null, 2));
   log(`done: ${OUT} (${total.toFixed(2)}s)`);
