@@ -69,9 +69,10 @@ function buildAudio() {
   for (const seg of SEGMENTS) {
     const parts = [];
     const cues = [];
-    let t = LEAD;
+    const leadS = seg.lead ?? LEAD, gapS = seg.gap ?? GAP, tailS = seg.tail ?? TAIL;
+    let t = leadS;
     const lead = path.join(dir, `${seg.id}-lead.wav`);
-    silence(LEAD, lead);
+    silence(leadS, lead);
     parts.push(lead);
     seg.lines.forEach((line, i) => {
       const aiff = path.join(dir, `${seg.id}-${i}.aiff`);
@@ -84,20 +85,20 @@ function buildAudio() {
       t += d;
       if (i < seg.lines.length - 1) {
         const g = path.join(dir, `${seg.id}-gap${i}.wav`);
-        silence(GAP, g);
+        silence(gapS, g);
         parts.push(g);
-        t += GAP;
+        t += gapS;
       }
     });
     const tail = path.join(dir, `${seg.id}-tail.wav`);
-    silence(TAIL, tail);
+    silence(tailS, tail);
     parts.push(tail);
     const list = path.join(dir, `${seg.id}-list.txt`);
     writeFileSync(list, parts.map((p) => `file '${p}'`).join('\n'));
     seg.audio = path.join(dir, `${seg.id}.wav`);
     run(FFMPEG, ['-y', '-v', 'error', '-f', 'concat', '-safe', '0', '-i', list, '-c:a', 'pcm_s16le', seg.audio]);
     seg.cues = cues;
-    seg.duration = probe(seg.audio);
+    seg.duration = Math.max(probe(seg.audio), seg.minDuration ?? 0);
     log(`audio ${seg.id}: ${seg.duration.toFixed(2)}s`);
   }
 }
@@ -134,6 +135,7 @@ function pickFootage(foot, seg) {
   if (!foot || !seg.footage) return null;
   const speed = Math.min(seg.speed ?? 1, MAX_SPEED);
   const frames = [];
+  const junctions = [];
   let offset = 0;
   for (const clip of seg.footage) {
     const i0 = resolve(foot, clip.from, 'from'), i1 = resolve(foot, clip.to, 'to');
@@ -143,20 +145,35 @@ function pickFootage(foot, seg) {
       log(`  ${seg.id}: clip ${clip.from}–${clip.to} has ${fr.length} frames, ${distinct} distinct → stills`);
       return null;
     }
+    if (clip.dissolve && frames.length) {
+      // Cross-dissolve: blend the last frame so far into this clip's first frame over `dissolve` seconds.
+      const n = Math.round(clip.dissolve * FPS);
+      const dir = path.join(WORK, 'dissolve');
+      mkdirSync(dir, { recursive: true });
+      junctions.push(offset);
+      for (let k = 1; k <= n; k++) {
+        const a = k / (n + 1);
+        const out = path.join(dir, `${seg.id}-${junctions.length - 1}-${String(k).padStart(2, '0')}.jpg`);
+        run(FFMPEG, ['-y', '-v', 'error', '-i', frames.at(-1).file, '-i', fr[0].file, '-filter_complex', `[0][1]blend=all_expr='A*(1-${a.toFixed(4)})+B*${a.toFixed(4)}'`, '-frames:v', '1', '-q:v', '2', out]);
+        frames.push({ file: out, v: offset + (k - 1) / FPS });
+      }
+      offset += n / FPS;
+    }
     for (const f of fr) frames.push({ file: f.file, v: offset + (f.ms - fr[0].ms) / 1000 / speed });
     const step = (fr.at(-1).ms - fr[0].ms) / (fr.length - 1);
     offset += (fr.at(-1).ms - fr[0].ms + step) / 1000 / speed;
     log(`  ${seg.id}: clip ${path.basename(fr[0].file)}–${path.basename(fr.at(-1).file)} (${((fr.at(-1).ms - fr[0].ms) / 1000).toFixed(1)}s)`);
   }
-  return { speed, frames, length: offset };
+  return { speed, frames, length: offset, junctions };
 }
 
 /* ── zoom keyframes ───────────────────────────────────────────────────────── */
 // Keys [t, zoom, cx, cy]; t is seconds or 'cN+s' / 'cN-s' (s after/before narration line N starts). Returns numeric times.
 function resolveKeys(seg, keys) {
   const out = keys.map(([t, ...r]) => {
-    const m = typeof t === 'string' && /^c(\d+)([+-])([\d.]+)$/.exec(t);
-    return [m ? seg.cues[Number(m[1])].start + (m[2] === '-' ? -1 : 1) * Number(m[3]) : t, ...r];
+    const m = typeof t === 'string' && /^([cj])(\d+)([+-])([\d.]+)$/.exec(t);
+    const base = m ? (m[1] === 'c' ? seg.cues[Number(m[2])].start : seg.live.junctions[Number(m[2])]) : 0;
+    return [m ? base + (m[3] === '-' ? -1 : 1) * Number(m[4]) : t, ...r];
   });
   out.forEach((k, i) => {
     if (i && !(k[0] > out[i - 1][0])) throw new Error(`${seg.id}: zoom key times must increase (${k[0]})`);
@@ -249,8 +266,10 @@ function mediaHtml(seg, si, ci, cue) {
         const vy = Math.min(Math.max(cy * sc * Z - MB.h / 2, 0), MB.h * (Z - 1));
         const sx = MB.x + (x - base[0]) * sc * Z - vx, sy = MB.y + (y - base[1]) * sc * Z - vy;
         const sw = w * sc * Z, sh = h * sc * Z;
-        const ly = Math.max(sy - 74, MB.y + 12);
-        return `<div class="mark" style="border-style:dashed;border-color:#ff5d4d;left:${sx - 6}px;top:${sy - 6}px;width:${sw + 6}px;height:${sh + 6}px"></div><div style="position:absolute;left:${Math.max(sx - 6, MB.x + 12)}px;top:${ly}px;background:#fff;color:#20232d;border:3px solid #ff5d4d;border-radius:10px;padding:8px 16px;font-size:28px;font-weight:800;z-index:6">${esc(label)}</div>`;
+        // Label (28 px) above the red block with an arrow pointing down onto it.
+        const lx = Math.max(sx + 90, MB.x + 12), ly = Math.max(sy - 235, MB.y + 12);
+        const ax = lx + 58, ay0 = ly + 58, ay1 = sy - 10;
+        return `<div class="mark" style="border-style:dashed;border-color:#ff5d4d;left:${sx - 6}px;top:${sy - 6}px;width:${sw + 6}px;height:${sh + 6}px"></div><div style="position:absolute;left:${lx}px;top:${ly}px;background:#fff;color:#20232d;border:3px solid #ff5d4d;border-radius:10px;padding:8px 16px;font-size:28px;font-weight:800;z-index:6">${esc(label)}</div><div style="position:absolute;left:${ax - 6}px;top:${ay0}px;width:12px;height:${Math.max(ay1 - ay0 - 28, 10)}px;background:#ff5d4d;z-index:6"></div><div style="position:absolute;left:${ax - 22}px;top:${ay1 - 30}px;width:0;height:0;border-left:22px solid transparent;border-right:22px solid transparent;border-top:32px solid #ff5d4d;z-index:6"></div>`;
       })
       .join('');
     media = `<div class="hole"></div>${callouts}<div class="chip"><b>STILL</b>preview capture · slow zoom</div><div class="note">Scripted 45 s run, shown as a still</div>`;
@@ -271,25 +290,95 @@ function mediaHtml(seg, si, ci, cue) {
   <div class="foot">Eyes Up · a Lens for Snap Spectacles</div></div>`;
 }
 
+const disclosureHtml = () => `<div class="chip" style="left:50%;transform:translateX(-50%);top:36px;background:#fff;color:#20232d;font-size:28px;padding:10px 22px;white-space:nowrap;z-index:7"><b style="color:var(--primary-ink)">PREVIEW</b> - test harness turns the head</div>`;
+
 function coldHtml(seg, cue, st = {}) {
   const speed = seg.live?.speed > 1.01 ? ` · ×${seg.live.speed.toFixed(2).replace(/0$/, '')} speed` : '';
   const lower = st.lower && seg.lowerThird ? `<div class="lower"><span>${esc(seg.lowerThird.split(' - ')[0])}</span> <i>-</i> ${esc(seg.lowerThird.split(' - ')[1])}</div>` : '';
-  // The disclosure is shown once, at the start; afterwards only the persistent PREVIEW pill stays.
-  const disclosure = st.disclosure
-    ? `<div class="chip" style="left:50%;transform:translateX(-50%);top:40px;background:#fff;color:#20232d;font-size:25px;padding:10px 20px;white-space:nowrap">Lens Studio Interactive Preview, no device · a test harness turns the head · sounds synthesized locally</div>`
-    : '';
+  // The disclosure is shown once, in the first 2 s (see disclosureHtml); afterwards only the persistent PREVIEW pill stays.
+  const disclosure = st.disclosure ? disclosureHtml() : '';
+  const chip = st.chip ? `<div style="position:absolute;left:50%;transform:translateX(-50%);top:34px;background:#20232d;color:#fff;border-radius:18px;padding:16px 38px;font-size:54px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:6">${esc(st.chip)}</div>` : '';
   const tag = st.tag ? `<div style="position:absolute;left:1160px;top:470px;background:var(--primary);color:#fff;border-radius:16px;padding:18px 30px;font-size:46px;font-weight:800;letter-spacing:-.005em;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:6">${esc(st.tag)}</div>` : '';
   const pill = `<div class="chip" style="left:48px;top:40px;font-size:24px"><b>PREVIEW</b>live${speed}</div>`;
   if (seg.hero) {
     return `${pill}<div style="position:absolute;left:50%;transform:translateX(-50%);bottom:48px;background:rgba(32,35,45,.9);color:#fff;border-radius:24px;padding:22px 64px;text-align:center;white-space:nowrap"><div style="font-size:92px;font-weight:800;letter-spacing:-.03em;line-height:1">Eyes Up</div><div style="font-size:46px;font-weight:600;margin-top:14px;color:#cfdcff">Rehearse with your eyes on the room.</div><div style="font-size:34px;font-weight:600;margin-top:18px;padding-top:16px;border-top:2px solid rgba(255,255,255,.25);color:#fff">github.com/sh0sub/eyes-up <span style="color:#9fb6ff">&nbsp;·&nbsp;</span> Preview only, LEAF 8/8</div></div>`;
   }
-  return `${pill}${disclosure}${lower}${tag}
-  <div class="capbar" style="font-size:40px;padding:22px 40px">${esc(cue.text)}</div>`;
+  return `${pill}${disclosure}${chip}${lower}${tag}
+  <div class="capbar" style="font-size:40px;padding:22px 40px;width:max-content">${esc(cue.text)}</div>`;
 }
 
-function cardHtml(seg, ci, cue) {
+
+// Background-image crop: shows the [x, y, w, h] part of a local image in a box of width dw.
+function cropBox(file, [x, y, w, h], dw, extra = '') {
+  const { w: iw, h: ih } = pngSize(path.resolve(ROOT, file));
+  const sc = dw / w;
+  return `<div style="position:relative;width:${dw}px;height:${Math.round(h * sc)}px;border-radius:14px;overflow:hidden;background-image:url('${fileUrl(file)}');background-repeat:no-repeat;background-size:${iw * sc}px ${ih * sc}px;background-position:${-x * sc}px ${-y * sc}px;${extra}"></div>`;
+}
+
+// Opening card: hero cyan-halo frame with the title, then a drawn (own illustration) laptop + down arrow.
+function openHtml(seg, cap0, top, st) {
+  const cap = cap0.replace('class="capbar"', 'class="capbar" style="width:max-content"');
+  if (st.stage === 'drawn') {
+    return `<div class="card">${top}
+    <svg style="position:absolute;inset:0" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(0,-60)"><g fill="#fff" stroke="#20232d" stroke-width="9">
+        <ellipse cx="780" cy="230" rx="110" ry="62"/><ellipse cx="1060" cy="230" rx="110" ry="62"/>
+      </g>
+      <g fill="#20232d"><circle cx="780" cy="258" r="36"/><circle cx="1060" cy="258" r="36"/></g>
+      <g fill="#3864ed"><rect x="893" y="330" width="34" height="130" rx="8"/><polygon points="840,450 980,450 910,540"/></g>
+      <rect x="610" y="580" width="620" height="330" rx="26" fill="#fff" stroke="#20232d" stroke-width="10"/>
+      <rect x="650" y="620" width="260" height="34" rx="8" fill="#3864ed"/>
+      <g fill="#d9def0"><rect x="650" y="690" width="520" height="22" rx="8"/><rect x="650" y="736" width="460" height="22" rx="8"/><rect x="650" y="782" width="500" height="22" rx="8"/><rect x="650" y="828" width="380" height="22" rx="8"/></g>
+      <path d="M520 930 H1320 L1270 970 H570 Z" fill="#20232d"/>
+      <text x="1330" y="720" font-family="-apple-system,Helvetica Neue,Arial,sans-serif" font-size="120" font-weight="800" fill="#20232d" letter-spacing="-2">Eyes</text>
+      <text x="1330" y="850" font-family="-apple-system,Helvetica Neue,Arial,sans-serif" font-size="120" font-weight="800" fill="#3864ed" letter-spacing="-2">drop</text>
+    </g></svg>${cap}</div>`;
+  }
+  const hero = 'devpost/screenshots/08-halo-cyan.png';
+  const sc = W / 1024;
+  return `<div class="card" style="background-image:url('${fileUrl(hero)}');background-repeat:no-repeat;background-size:${W}px ${Math.round(713 * sc)}px;background-position:0 ${-50 * sc}px"></div>
+  ${st.disclosure ? disclosureHtml() : ''}
+  <div style="position:absolute;left:50%;transform:translateX(-50%);top:130px;background:rgba(32,35,45,.9);color:#fff;border-radius:24px;padding:20px 64px 26px;text-align:center;white-space:nowrap"><div style="font-size:40px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#9fb6ff">Eyes Up</div><div style="font-size:104px;font-weight:800;letter-spacing:-.03em;line-height:1.05;margin-top:6px">Rehearse with your eyes <span style="color:#6fe3ff">UP</span></div></div>
+  ${cap}`;
+}
+
+// Pairs card: overview of three before/after pairs, one focus view each, then the real Summary still with Again highlighted.
+function pairsHtml(seg, ci, cap0, top) {
+  const cap = cap0.replace('class="capbar"', 'class="capbar" style="width:max-content"');
+  const tagChip = (t, n) => `<div style="position:absolute;left:96px;top:92px;font-size:34px;font-weight:800;color:var(--primary-ink);letter-spacing:.04em;text-transform:uppercase">${n} of 3 · ${esc(t)}</div>`;
+  const duo = (p, h) => {
+    const bw = Math.round((h * p.before.crop[2]) / p.before.crop[3]);
+    const aw = Math.round((h * p.after.crop[2]) / p.after.crop[3]);
+    const side = (b, w, lab, hot) => `<div style="position:relative">${cropBox(b.file, b.crop, w, hot ? 'box-shadow:0 0 0 6px var(--primary)' : '')}<div style="position:absolute;left:12px;bottom:12px;background:#20232d;color:#fff;border-radius:8px;padding:6px 14px;font-size:${Math.max(22, Math.round(h / 14))}px;font-weight:700">${esc(lab)}</div></div>`;
+    return `<div style="display:flex;gap:36px;align-items:center">${side(p.before, bw, p.before.label)}<div style="font-size:${Math.round(h / 5)}px;color:var(--primary);font-weight:800">→</div>${side(p.after, aw, p.after.label, true)}</div>`;
+  };
+  if (ci === 0) {
+    const w = 560;
+    const item = (p) => (p.file ? cropBox(p.file, p.crop, w) : `<div style="width:${w}px;height:300px;display:flex;align-items:center;justify-content:center">${duo(p, 190)}</div>`);
+    return `<div class="card">${top}
+    <div style="position:absolute;left:0;right:0;top:150px;text-align:center;font-size:96px;font-weight:800;letter-spacing:-.025em">Three things glasses taught us</div>
+    <div style="position:absolute;left:80px;right:80px;top:450px;display:flex;justify-content:space-between;align-items:flex-start">${seg.pairs.map((p) => `<div><div style="font-size:30px;font-weight:800;color:var(--primary-ink);margin-bottom:14px;text-transform:uppercase;letter-spacing:.05em">${esc(p.tag)}</div>${item(p)}</div>`).join('')}</div>${cap}</div>`;
+  }
+  if (ci <= 3) {
+    const p = seg.pairs[ci - 1];
+    const body = p.file ? cropBox(p.file, p.crop, 1180, 'box-shadow:0 8px 30px rgba(32,35,45,.18)') : duo(p, 560);
+    return `<div class="card">${top}${tagChip(p.tag, ci)}<div style="position:absolute;left:0;right:0;top:170px;display:flex;justify-content:center">${body}</div>${cap}</div>`;
+  }
+  const { file, crop, again } = seg.summary;
+  const dw = 700, sc = dw / crop[2];
+  const [ax, ay, aw, ah] = again;
+  const bx = (ax - crop[0]) * sc, by = (ay - crop[1]) * sc;
+  return `<div class="card">${top}
+  <div style="position:absolute;left:50%;top:84px;transform:translateX(-50%);width:${dw}px">${cropBox(file, crop, dw, 'box-shadow:0 8px 30px rgba(32,35,45,.18)')}
+    <div style="position:absolute;left:${bx - 8}px;top:${by - 8}px;width:${aw * sc + 16}px;height:${ah * sc + 16}px;border:6px solid #ff9f1c;border-radius:12px;box-shadow:0 0 0 4px rgba(255,255,255,.7)"></div>
+    <div style="position:absolute;left:${bx}px;top:${by + ah * sc + 32}px;background:#ff9f1c;color:#20232d;border-radius:12px;padding:6px 20px;font-size:32px;font-weight:800;white-space:nowrap">\u2191 Again</div></div></div>${cap}</div>`;
+}
+
+function cardHtml(seg, ci, cue, st = {}) {
   const cap = `<div class="capbar">${esc(cue.text)}</div>`;
   const top = `<div class="cfoot"><span>Eyes Up · a Lens for Snap Spectacles</span><span>Learn AR with SPECS</span></div>`;
+  if (seg.card === 'open') return openHtml(seg, cap, top, st);
+  if (seg.card === 'pairs') return pairsHtml(seg, ci, cap, top);
   if (seg.card === 'hook') {
     return `<div class="card">${top}
     <div style="position:absolute;left:160px;right:160px;top:200px">
@@ -396,7 +485,9 @@ async function renderStage(cdp) {
     seg.stage = [];
     // One graphic per caption; cold segments may add timed states (disclosure, caption tag) between captions.
     const shots = seg.cues.map((cue, ci) => ({ ci, cue, start: ci === 0 ? 0 : cue.start - 0.15, st: {} }));
-    if (seg.type === 'cold' && seg.states) {
+    if ((seg.type === 'cold' || seg.type === 'card') && seg.states) {
+      // state times: seconds, 'jN' (Nth dissolve start of the footage) or 'eN' (end of narration line N)
+      for (const e of seg.states) if (typeof e.at === 'string') e.at = e.at[0] === 'j' ? seg.live.junctions[Number(e.at.slice(1))] : seg.cues[Number(e.at.slice(1))].end;
       for (const e of seg.states) if (e.at > 0) shots.push({ ci: -1, start: e.at, st: {} });
       shots.sort((a, b) => a.start - b.start);
       shots.forEach((sh, i) => {
@@ -406,7 +497,7 @@ async function renderStage(cdp) {
       });
     }
     for (const [k, { ci, cue, start, st }] of shots.entries()) {
-      const body = seg.type === 'card' ? cardHtml(seg, ci, cue) : seg.type === 'cold' ? coldHtml(seg, cue, st) : mediaHtml(seg, si, ci, cue);
+      const body = seg.type === 'card' ? cardHtml(seg, ci, cue, st) : seg.type === 'cold' ? coldHtml(seg, cue, st) : mediaHtml(seg, si, ci, cue);
       const html = path.join(dir, `${seg.id}-${k}.html`);
       const png = path.join(dir, `${seg.id}-${k}.png`);
       writeFileSync(html, `<!doctype html><html><head><meta charset="utf-8"><style>${CSS}</style></head><body>${body}</body></html>`);

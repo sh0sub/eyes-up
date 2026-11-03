@@ -28,26 +28,37 @@ const BAND = [0, 470, 475, 700]; // starts below the LEAF result line (y ≈ 445
 
 export const SEGMENTS = [
   {
-    // Merged opening over live footage (frame numbers of the r9 capture).
-    // Clip A: Setup panel -> pinch Start -> audience appears (cue card "The problem" cut out: its text is clipped inside the Lens).
-    // Clip B: audience with the halo already lit and the pill "Screens pull eyes" (complete) from ~4.1 s, so the line
-    // "lights up whoever you turn toward" and the caption "You look -> they light up" sit on the halo frame, before 0:08.
-    // Disclosure banner only for the first ~2 s; after that only the PREVIEW pill. Zoom keys are [t, zoom, centre x, centre y].
-    id: '00-open',
-    type: 'cold',
-    speed: 1,
-    crop: [142, 195, 876, 493],
-    zoom: [[0, 1.5, 438, 250], [2.5, 1.5, 438, 250], [3.9, 1, 438, 246.5]],
+    // Cycle 3 opening, part 1 (stills): hero cyan-halo frame with the title, then a 1.5 s drawn card (own illustration).
+    // The disclosure is shown only for the first 2 s (28 px). Drawn card from 2.0 s, segment held to 3.5 s.
+    id: '00a-open',
+    type: 'card',
+    card: 'open',
+    tail: 0.2,
+    minDuration: 3.5,
     states: [
-      { at: 0, disclosure: true, lower: true },
-      { at: 2.2, lower: true },
-      { at: 2.5 },
-      { at: 4.3, tag: 'You look \u2192 they light up' },
+      { at: 0, stage: 'hero', disclosure: true },
+      { at: 2.0, stage: 'drawn' },
     ],
-    lowerThird: 'Eyes Up - rehearsal coach for Spectacles',
-    footage: [{ from: 70, to: 89 }, { from: 111, to: 131 }],
+    lines: ['Rehearse at a laptop and your eyes drop.'],
+  },
+  {
+    // Part 2 (live): Setup panel, pinch Start (frames 70-89 of the r9 capture, 1.5x into Talk length / Audience / Start),
+    // then a 0.3 s cross-dissolve from the unlit audience to the lit halo (frames 111-119). The tag starts at the cut,
+    // after the second caption has ended. Zoom keys are [t, zoom, centre x, centre y]; 'j0+s' = s after the first dissolve starts.
+    id: '00b-open',
+    type: 'cold',
+    speed: 1.15,
+    lead: 0.15,
+    tail: 0.5,
+    crop: [142, 195, 876, 493],
+    zoom: [[0, 1.5, 438, 250], ['j0+0', 1.5, 438, 250], ['j0+0.9', 1, 438, 246.5]],
+    states: [
+      { at: 0, chip: 'Pick time, audience, Start' },
+      { at: 3.0 }, // chip gone as the panel collapses after the pinch
+      { at: 'j0', tag: 'You look \u2192 they light up' },
+    ],
+    footage: [{ from: 70, to: 89 }, { from: 111, to: 119, dissolve: 0.3 }],
     lines: [
-      'Rehearse at a laptop and your eyes drop.',
       'Eyes Up seats a virtual audience in your room,',
       'and lights up whoever you turn toward.',
     ],
@@ -71,13 +82,15 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Nudge',
     heading: 'Ignore a side, get a tap',
-    // Clip A: left chevron appears, clears, appears again. Clip B: right chevron. Frames with the clipped pill ("Sc") are cut.
-    footage: [{ from: 213, to: 256 }, { from: 299, to: 319 }],
-    speed: 1.2,
-    gallery: 2.2,
+    // Cycle 3: one clean nudge-then-clear (frames 226-256: left chevron appears at ~3 s, clears at ~5.7 s),
+    // then a ~2 s "again" cut-away (frames 306-316: the right chevron taps in). Frames with the clipped pill ("Sc") are cut.
+    footage: [{ from: 226, to: 256 }, { from: 306, to: 316 }],
+    speed: 1,
+    tail: 0.5,
+    gallery: 0.9,
     lines: [
-      'Ignore one side for eight seconds: a chime and an amber chevron.',
-      'No pop-up. Turn toward that side and the chevron clears.',
+      'Ignore one side: a chime, then an amber chevron.',
+      'Turn toward it and the chevron clears.',
       'Keep ignoring it and it taps you again.',
     ],
     stills: [
@@ -94,13 +107,14 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Controls',
     heading: 'A podium only when you look down',
-    // Live: head pitched down shows the podium; pinch Next. The right chevron appears beside it, never on it.
-    footage: [{ from: '06:21:00', to: '06:21:15' }],
-    speed: 1.2,
-    zoom: [[0, 1.45, 440, 350]],
+    // Cycle 3: only the Next-pinch beat (frames 355-391, ~8 s). The crop window (preview px y 0-395) ends above the
+    // right chevron (it appears below the podium, y > 400), so the chevron stays outside the zoom.
+    footage: [{ from: 355, to: 391 }],
+    speed: 1,
+    zoom: [[0, 1.55, 440, 198]],
     lines: [
       'Controls appear only when you look down, like a real podium.',
-      'Your slide count, the time against your target, and a big Next button live there, and nowhere else.',
+      'Slide count, timer, and a big Next button live there.',
     ],
     stills: [{ file: `${S}/05-podium.png`, zoom: { rect: [480, 780, 1330, 430], label: 'Podium: Prev, Next, Finish, timer' } }],
   },
@@ -109,8 +123,8 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Notes',
     heading: 'Notes only when you need them',
-    // Pinch Next → card "Why glasses" → pill "Eyes stay up" → dwell → card again with its countdown line.
-    footage: [{ from: '06:21:19', to: '06:21:41' }],
+    // Cycle 3: pill "Eyes stay up" -> card "Why glasses" -> pill -> dwell -> card again with its countdown line (frames 426-476).
+    footage: [{ from: 426, to: 476 }],
     speed: 1.3,
     gallery: 6.5,
     lines: [
@@ -134,14 +148,14 @@ export const SEGMENTS = [
     pan: {
       file: `${S}/06-summary.png`,
       base: [285, 195, 969, 675],
+      // Cycle 3: full panel at zoom 1.0 (header visible) for the first 2 s, then the timeline only (window is image y 281-645: header and
+      // timeline, above the bottom tiles), back to the full panel for the tip.
       keys: [
         [0, 1, 485, 368],
-        ['c0+1.2', 1.15, 485, 330],
-        ['c1+0.2', 1.7, 505, 245],
-        ['c1+3.2', 1.8, 505, 262],
-        ['c2-0.25', 2.5, 410, 358],
-        ['c2+3.6', 2.55, 410, 358],
-        ['c3+0.1', 2.1, 505, 555],
+        [2, 1, 485, 368],
+        [2.9, 1.85, 520, 268],
+        ['c3-0.5', 1.85, 520, 268],
+        ['c3+0.5', 1, 485, 368],
       ],
       callouts: [
         { cue: 2, rect: [613, 546, 105, 23], label: 'Longest look-away: 11 s' },
@@ -150,19 +164,50 @@ export const SEGMENTS = [
     lines: [
       'Finish, applause, then where your eyes went.',
       'Balance eighty seven. Left twenty six, center thirty two, right forty two percent.',
-      'The red block is your longest look-away, eleven seconds.',
+      'The red block is your longest look-away.',
       'Next time, look left more.',
+    ],
+  },
+  {
+    // Cycle 3: three real before/after pairs, then the real Summary still with Again highlighted.
+    // Pairs 1 and 2 are crops of devpost/screenshots/09-process-at-a-glance.png; pair 3 compares the first-build Setup
+    // capture (01-setup-panel-first-build.png, committed at dd6d471) with the current 01-setup-panel.png.
+    // No second-run numbers and no outcome claims. Each caption is six words.
+    id: '08b-pairs',
+    type: 'card',
+    card: 'pairs',
+    lead: 0.3,
+    gap: 0.2,
+    tail: 0.6,
+    pairs: [
+      { tag: 'Halo', file: `${S}/09-process-at-a-glance.png`, crop: [78, 279, 542, 290] },
+      { tag: 'Gaze hit area', file: `${S}/09-process-at-a-glance.png`, crop: [688, 246, 540, 290] },
+      {
+        tag: 'Setup panel',
+        before: { file: `${S}/01-setup-panel-first-build.png`, crop: [88, 662, 299, 225], label: 'First build' },
+        after: { file: `${S}/01-setup-panel.png`, crop: [493, 175, 613, 458], label: 'Now' },
+      },
+    ],
+    summary: { file: `${S}/06-summary.png`, crop: [500, 215, 600, 650], again: [572, 792, 136, 48] },
+    lines: [
+      'Three things glasses taught us.',
+      'Pale halo became bold saturated cyan.',
+      'Wide cone became exact pill rectangle.',
+      'Faint panel became clear readable controls.',
+      'Press Again and compare your balance.',
     ],
   },
   {
     id: '09-built',
     type: 'card',
-    gallery: 8,
+    lead: 0.4,
+    tail: 0.4,
+    gallery: 5,
     card: 'built',
     lines: [
-      'Built by an AI agent with CLAD skills and Lens Studio MCP tools.',
-      'Eight LEAF scenarios pass in the Interactive Preview.',
-      'One hundred thirty nine Node tests cover the core logic.',
+      'Built with CLAD and Lens Studio MCP.',
+      'Eight LEAF scenarios pass.',
+      '139 Node tests pass.',
     ],
   },
   {

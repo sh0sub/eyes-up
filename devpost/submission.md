@@ -15,8 +15,8 @@ Rehearse your talk with your eyes on the room, not on your notes.
 - **Proof:** LEAF 8/8 scenarios pass in the Lens Studio Interactive Preview and 139 tests pass. Preview only, gaze driven by the LEAF harness, not tested on a device. Gaze = head direction in this build.
 
 > **Judge in 60 seconds**
-> 1. Video 0:00-0:16: live Setup panel, pinch Start, audience appears, halo lights up (`devpost/screenshots/08-halo-cyan.png`, the hero image above).
-> 2. Video 1:00-1:16, Summary segment: left / center / right split, longest look-away, tip. Closing frame at 1:37 carries the repo link and "Preview only, LEAF 8/8".
+> 1. Video 0:00-0:17: hero halo frame, live Setup panel, pinch Start, audience appears, halo lights up (`devpost/screenshots/08-halo-cyan.png`, the hero image above).
+> 2. Video 0:45-1:00, Summary segment: left / center / right split, longest look-away, tip. Video 1:00-1:13: three before/after pairs. Closing frame at 1:29 carries the repo link and "Preview only, LEAF 8/8".
 > 3. `devpost/leaf-results.md`: 8/8 scenarios PASSED, plus `devpost/screenshots/09-process-at-a-glance.png`.
 
 ## What it does
@@ -107,7 +107,7 @@ We have not measured learning outcomes. These are open questions, not results.
 ## Links
 
 - Repository: this repository (MIT).
-- Demo video (1:41, under 3 min, narrated and captioned, opens on live preview footage; a PREVIEW pill stays on screen; closes on a Shown / Not yet tested card, then the halo hero frame with the repo link and "Preview only, LEAF 8/8"):
+- Demo video (1:33, under 3 min, narrated and captioned; opens on the hero halo frame and a drawn "Eyes drop" card, then live preview footage with a PREVIEW pill; a card with three real before/after pairs follows the Summary; closes on a Shown / Not yet tested card, then the halo hero frame with the repo link and "Preview only, LEAF 8/8"):
   YouTube URL: **TODO_PASTE_PUBLIC_YOUTUBE_URL_HERE** (upload needs the entrant's YouTube account;
   set it to Public or Unlisted before submitting).
 - Walkthrough: `devpost/walkthrough/` (01-setup to 06-summary). Learnings: `devpost/learnings.md`. LEAF log: `devpost/leaf-results.md`. Screenshots: `devpost/screenshots/`. Build log: `devpost/build-notes.md`. Design brief:
