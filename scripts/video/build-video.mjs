@@ -281,7 +281,7 @@ function coldHtml(seg, cue, st = {}) {
   const tag = st.tag ? `<div style="position:absolute;left:1160px;top:470px;background:var(--primary);color:#fff;border-radius:16px;padding:18px 30px;font-size:46px;font-weight:800;letter-spacing:-.005em;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:6">${esc(st.tag)}</div>` : '';
   const pill = `<div class="chip" style="left:48px;top:40px;font-size:24px"><b>PREVIEW</b>live${speed}</div>`;
   if (seg.hero) {
-    return `${pill}<div style="position:absolute;left:50%;transform:translateX(-50%);bottom:48px;background:rgba(32,35,45,.9);color:#fff;border-radius:24px;padding:22px 64px;text-align:center;white-space:nowrap"><div style="font-size:92px;font-weight:800;letter-spacing:-.03em;line-height:1">Eyes Up</div><div style="font-size:46px;font-weight:600;margin-top:14px;color:#cfdcff">Rehearse with your eyes on the room.</div></div>`;
+    return `${pill}<div style="position:absolute;left:50%;transform:translateX(-50%);bottom:48px;background:rgba(32,35,45,.9);color:#fff;border-radius:24px;padding:22px 64px;text-align:center;white-space:nowrap"><div style="font-size:92px;font-weight:800;letter-spacing:-.03em;line-height:1">Eyes Up</div><div style="font-size:46px;font-weight:600;margin-top:14px;color:#cfdcff">Rehearse with your eyes on the room.</div><div style="font-size:34px;font-weight:600;margin-top:18px;padding-top:16px;border-top:2px solid rgba(255,255,255,.25);color:#fff">github.com/sh0sub/eyes-up <span style="color:#9fb6ff">&nbsp;·&nbsp;</span> Preview only, LEAF 8/8</div></div>`;
   }
   return `${pill}${disclosure}${lower}${tag}
   <div class="capbar" style="font-size:40px;padding:22px 40px">${esc(cue.text)}</div>`;

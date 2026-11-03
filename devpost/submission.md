@@ -2,6 +2,12 @@
 
 Hackathon: Learn AR with SPECS. Deadline 2026-11-09 PST.
 
+## Tagline
+
+Rehearse your talk with your eyes on the room, not on your notes.
+
+![Eyes Up: the watched audience member lights up in cyan](screenshots/08-halo-cyan.png)
+
 ## Pitch
 
 - **Problem:** people rehearse talks staring at slides, a phone or a script, so the room never gets practice.
@@ -9,15 +15,9 @@ Hackathon: Learn AR with SPECS. Deadline 2026-11-09 PST.
 - **Proof:** LEAF 8/8 scenarios pass in the Lens Studio Interactive Preview and 139 tests pass. Preview only, gaze driven by the LEAF harness, not tested on a device. Gaze = head direction in this build.
 
 > **Judge in 60 seconds**
-> 1. Video, first 20 s: live Setup panel, pinch Start, audience appears, halo lights up.
-> 2. Video, Summary segment (last part): left / center / right split, longest look-away, tip.
+> 1. Video 0:00-0:16: live Setup panel, pinch Start, audience appears, halo lights up (`devpost/screenshots/08-halo-cyan.png`, the hero image above).
+> 2. Video 1:00-1:16, Summary segment: left / center / right split, longest look-away, tip. Closing frame at 1:37 carries the repo link and "Preview only, LEAF 8/8".
 > 3. `devpost/leaf-results.md`: 8/8 scenarios PASSED, plus `devpost/screenshots/09-process-at-a-glance.png`.
-
-## Tagline
-
-Rehearse your talk with your eyes on the room, not on your notes.
-
-![Eyes Up: the watched audience member lights up in cyan](screenshots/08-halo-cyan.png)
 
 ## What it does
 
@@ -74,6 +74,7 @@ the summary, repeated nudge, the Finish button pulses once the talk length is re
 
 ## What we learned
 
+- For a learner, feedback only helps when it becomes one action. One gaze number is easy to ignore, so the Summary ends with a single tip ("Next time, look left more.") that you can carry into the next run.
 - Design for the glasses first. The 40 x 30 cm Setup panel, 10 cm above eye level, is the only
   thing on screen during setup. Keeping the world uncluttered mattered more than adding features.
 - Additive displays punish pale colors. A cyan-white halo washed out to a grey disc on the
@@ -84,6 +85,14 @@ the summary, repeated nudge, the Finish button pulses once the talk length is re
   surfaces while UIKit keeps layout, colliders and pinch input. Documented in build-notes.md.
 - Test the logic away from the editor. The pure TypeScript core let us iterate on timing rules
   (8 s nudge, 4 s card, 1 s dwell) in milliseconds, and LEAF scenarios checked the real Lens.
+
+## What we would test next
+
+- Does the nudge change your gaze balance between a first and a second run of the same talk?
+- Is an audience 2.5 m ahead legible and comfortable on real Spectacles optics?
+- Does head direction match where the eyes actually look when you face a room?
+
+We have not measured learning outcomes. These are open questions, not results.
 
 ## What is not done (honest list)
 
@@ -98,7 +107,7 @@ the summary, repeated nudge, the Finish button pulses once the talk length is re
 ## Links
 
 - Repository: this repository (MIT).
-- Demo video (1:41, under 3 min, narrated and captioned, opens on live preview footage; a PREVIEW pill stays on screen; closes on a Shown / Not yet tested card and the halo hero frame):
+- Demo video (1:41, under 3 min, narrated and captioned, opens on live preview footage; a PREVIEW pill stays on screen; closes on a Shown / Not yet tested card, then the halo hero frame with the repo link and "Preview only, LEAF 8/8"):
   YouTube URL: **TODO_PASTE_PUBLIC_YOUTUBE_URL_HERE** (upload needs the entrant's YouTube account;
   set it to Public or Unlisted before submitting).
 - Walkthrough: `devpost/walkthrough/` (01-setup to 06-summary). Learnings: `devpost/learnings.md`. LEAF log: `devpost/leaf-results.md`. Screenshots: `devpost/screenshots/`. Build log: `devpost/build-notes.md`. Design brief:
