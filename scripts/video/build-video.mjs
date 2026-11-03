@@ -197,7 +197,7 @@ html,body{margin:0;width:${W}px;height:${H}px;overflow:hidden;background:transpa
 .kick{font-size:20px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--primary-ink)}
 .col h1{margin:14px 0 0;font-size:44px;line-height:1.1;font-weight:800;letter-spacing:-.01em}
 .cap{margin-top:auto;margin-bottom:auto;font-size:34px;line-height:1.34;font-weight:600;border-left:5px solid var(--primary);padding-left:20px}
-.lower{position:absolute;left:48px;top:104px;background:rgba(32,35,45,.92);color:#fff;border-left:8px solid var(--primary);border-radius:6px 14px 14px 6px;padding:16px 28px;font-size:38px;font-weight:700;letter-spacing:-.005em;z-index:6}
+.lower{position:absolute;left:48px;top:112px;background:rgba(32,35,45,.92);color:#fff;border-left:8px solid var(--primary);border-radius:6px 14px 14px 6px;padding:16px 28px;font-size:38px;font-weight:700;letter-spacing:-.005em;z-index:6}
 .lower i{font-style:normal;color:#9fb6ff}
 .prog{height:6px;border-radius:3px;background:var(--line)}.prog i{display:block;height:6px;border-radius:3px;background:var(--primary)}
 .foot{margin-top:14px;font-size:21px;line-height:1.35;color:var(--muted)}
@@ -253,30 +253,37 @@ function mediaHtml(seg, si, ci, cue) {
         return `<div class="mark" style="border-style:dashed;border-color:#ff5d4d;left:${sx - 6}px;top:${sy - 6}px;width:${sw + 6}px;height:${sh + 6}px"></div><div style="position:absolute;left:${Math.max(sx - 6, MB.x + 12)}px;top:${ly}px;background:#fff;color:#20232d;border:3px solid #ff5d4d;border-radius:10px;padding:8px 16px;font-size:28px;font-weight:800;z-index:6">${esc(label)}</div>`;
       })
       .join('');
-    media = `<div class="hole"></div>${callouts}<div class="chip"><b>STILL</b>Lens Studio preview capture · slow zoom · no device</div><div class="note">Scripted 45 s run, shown as a still</div>`;
+    media = `<div class="hole"></div>${callouts}<div class="chip"><b>STILL</b>preview capture · slow zoom</div><div class="note">Scripted 45 s run, shown as a still</div>`;
   } else if (seg.live) {
     const sc = MB.w / CROP.w;
     const marks = (seg.marks ?? [])
       .map(({ rect: [x, y, w, h], label }) => `<div class="mark" style="border-style:dashed;left:${MB.x + x * sc}px;top:${MB.y + y * sc}px;width:${w * sc}px;height:${h * sc}px"></div><div class="inset-label" style="left:${MB.x + x * sc}px;top:${MB.y + y * sc - 36}px;text-shadow:0 1px 3px rgba(0,0,0,.8)">${esc(label)}</div>`)
       .join('');
-    media = `<div class="hole"></div>${marks}<div class="chip"><b>PREVIEW</b>Lens Studio Interactive Preview · no device${seg.live.speed > 1.01 ? ` · ×${seg.live.speed.toFixed(2).replace(/0$/, '')} speed` : ''}${seg.zoom ? ' · zoomed in' : ''}</div><div class="note">A test harness turns the head and pinches in this preview</div>`;
+    media = `<div class="hole"></div>${marks}<div class="chip"><b>PREVIEW</b>${seg.live.speed > 1.01 ? `×${seg.live.speed.toFixed(2).replace(/0$/, '')} speed` : 'live'}${seg.zoom ? ' · zoomed' : ''}</div>`;
   } else {
     const st = seg.stills[Math.min(ci, seg.stills.length - 1)];
-    media = `<div class="bg"></div>${stillHtml(st, 'Lens Studio Interactive Preview capture · no device')}`;
+    media = `<div class="bg"></div>${stillHtml(st, 'preview capture')}`;
   }
   return `${media}
   <div class="col"><div class="kick">${esc(seg.kicker)}</div><h1>${esc(seg.heading)}</h1>
   <div class="cap">${esc(cue.text)}</div>
   <div class="prog"><i style="width:${(((si + 1) / total) * 100).toFixed(1)}%"></i></div>
-  <div class="foot">Eyes Up · a Lens for Snap Spectacles<br>Preview only, not on a device<br>Sounds synthesized locally</div></div>`;
+  <div class="foot">Eyes Up · a Lens for Snap Spectacles</div></div>`;
 }
 
-function coldHtml(seg, cue) {
+function coldHtml(seg, cue, st = {}) {
   const speed = seg.live?.speed > 1.01 ? ` · ×${seg.live.speed.toFixed(2).replace(/0$/, '')} speed` : '';
-  const lower = seg.lowerThird ? `<div class="lower"><span>${esc(seg.lowerThird.split(' - ')[0])}</span> <i>-</i> ${esc(seg.lowerThird.split(' - ')[1])}</div>` : '';
-  return `<div class="chip" style="left:48px;top:40px"><b>PREVIEW</b>Lens Studio Interactive Preview · no device${speed}</div>
-  <div class="chip" style="left:auto;right:48px;top:40px;background:#fff;color:#20232d">A test harness turns the head · sounds synthesized locally</div>
-  ${lower}
+  const lower = st.lower && seg.lowerThird ? `<div class="lower"><span>${esc(seg.lowerThird.split(' - ')[0])}</span> <i>-</i> ${esc(seg.lowerThird.split(' - ')[1])}</div>` : '';
+  // The disclosure is shown once, at the start; afterwards only the persistent PREVIEW pill stays.
+  const disclosure = st.disclosure
+    ? `<div class="chip" style="left:50%;transform:translateX(-50%);top:40px;background:#fff;color:#20232d;font-size:25px;padding:10px 20px;white-space:nowrap">Lens Studio Interactive Preview, no device · a test harness turns the head · sounds synthesized locally</div>`
+    : '';
+  const tag = st.tag ? `<div style="position:absolute;left:1160px;top:470px;background:var(--primary);color:#fff;border-radius:16px;padding:18px 30px;font-size:46px;font-weight:800;letter-spacing:-.005em;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:6">${esc(st.tag)}</div>` : '';
+  const pill = `<div class="chip" style="left:48px;top:40px;font-size:24px"><b>PREVIEW</b>live${speed}</div>`;
+  if (seg.hero) {
+    return `${pill}<div style="position:absolute;left:50%;transform:translateX(-50%);bottom:48px;background:rgba(32,35,45,.9);color:#fff;border-radius:24px;padding:22px 64px;text-align:center;white-space:nowrap"><div style="font-size:92px;font-weight:800;letter-spacing:-.03em;line-height:1">Eyes Up</div><div style="font-size:46px;font-weight:600;margin-top:14px;color:#cfdcff">Rehearse with your eyes on the room.</div></div>`;
+  }
+  return `${pill}${disclosure}${lower}${tag}
   <div class="capbar" style="font-size:40px;padding:22px 40px">${esc(cue.text)}</div>`;
 }
 
@@ -306,42 +313,37 @@ function cardHtml(seg, ci, cue) {
     </div>${cap}</div>`;
   }
   if (seg.card === 'built') {
-    const rows = LEAF_ROWS.map(
-      ([id, what]) =>
-        `<tr><td style="font-family:ui-monospace,Menlo,monospace;font-size:21px;padding:9px 14px">${id}</td><td style="font-size:20px;color:var(--muted);padding:9px 14px">${esc(what)}</td><td style="font-size:20px;font-weight:800;color:var(--ok);padding:9px 14px">PASSED</td></tr>`,
-    ).join('');
-    const box = (o) => `background:#fff;border-radius:16px;padding:26px 30px;opacity:${o}`;
+    const on = (cond) => (cond ? 'border:4px solid var(--primary);' : 'border:4px solid transparent;');
+    const box = (extra = '') => `background:#fff;border-radius:20px;padding:24px 30px;${extra}`;
+    const step = (n, title, sub, hot) => `<div style="${box(on(hot))}flex:1"><div style="display:flex;align-items:center;gap:18px"><span style="width:56px;height:56px;border-radius:50%;background:var(--primary);color:#fff;font-size:34px;font-weight:800;display:flex;align-items:center;justify-content:center">${n}</span><span style="font-size:42px;font-weight:800">${title}</span></div><div style="font-size:26px;line-height:1.4;color:var(--muted);margin-top:12px">${sub}</div></div>`;
+    const arrow = '<div style="font-size:54px;color:var(--primary);align-self:center;font-weight:800">\u2192</div>';
+    const ids = LEAF_ROWS.map(([id]) => `<span style="font-family:ui-monospace,Menlo,monospace;font-size:21px;color:var(--ink)"><b style="color:var(--ok)">\u2713</b> ${id}</span>`).join('');
     return `<div class="card">${top}
-    <div style="position:absolute;left:64px;right:64px;top:96px">
-      <div class="kick">How it was built</div>
-      <div style="font-size:52px;font-weight:800;margin-top:10px;letter-spacing:-.01em">Lens Studio + MCP tools + CLAD skills, checked by tests</div>
-      <div style="display:grid;grid-template-columns:520px 1fr;gap:24px;margin-top:28px">
-        <div style="display:flex;flex-direction:column;gap:24px">
-          <div style="${box(1)}"><div style="font-size:26px;font-weight:800">Lens Studio MCP tools</div>
-            <div style="font-size:20px;line-height:1.5;color:var(--muted);margin-top:8px">VirtualScene, ExecuteEditorCode, PreviewPanelTool, MovePreviewCamera, PreviewInteractTool, CapturePanelScreenshotTool, RunAndCollectLogsTool, run_leaf_scenario …</div></div>
-          <div style="${box(1)}"><div style="font-size:26px;font-weight:800">CLAD skills followed</div>
-            <div style="font-size:20px;line-height:1.5;color:var(--muted);margin-top:8px">specs-experience-builder, specs-build-ui, build-sfx, specs-audio, specs-leaf-write-scenarios, specs-leaf-run-in-preview, verify-preview</div></div>
-          <div style="${box(ci >= 2 ? 1 : 0.35)}"><div style="font-size:54px;font-weight:800;color:var(--primary-ink);line-height:1">139 / 139</div>
-            <div style="font-size:22px;color:var(--muted);margin-top:8px">Node unit + integration tests (vitest) for the core rehearsal logic</div></div>
-        </div>
-        <div style="${box(ci >= 1 ? 1 : 0.35)}">
-          <div style="font-size:26px;font-weight:800">LEAF scenarios · Interactive Preview · 8 / 8</div>
-          <table style="border-collapse:collapse;margin-top:10px;width:100%">${rows}</table>
-          <div style="margin-top:14px;display:flex;align-items:center;gap:16px">
-            <div style="width:400px;height:40px;border-radius:8px;background-color:#6b665f;background-image:url('${fileUrl('devpost/screenshots/02-audience-lit-halo.png')}');background-size:${475 * 1.4}px ${1400 * 1.4}px;background-position:${-6 * 1.4}px ${-430 * 1.4}px"></div>
-            <span style="font-size:18px;color:var(--muted)">LEAF result overlay in the preview (editor capture)</span></div>
-        </div>
+    <div style="position:absolute;left:64px;right:64px;top:84px">
+      <div class="kick" style="font-size:24px">How it was built</div>
+      <div style="font-size:60px;font-weight:800;margin-top:6px;letter-spacing:-.015em">Built with CLAD and Lens Studio MCP, checked by LEAF</div>
+      <div style="display:flex;gap:18px;margin-top:34px">
+        ${step(1, 'CLAD', 'Snap skills for Lens building, UI, audio and testing', ci === 0)}${arrow}
+        ${step(2, 'Lens Studio MCP', 'Agent edits the scene, runs and captures the Preview', ci === 0)}${arrow}
+        ${step(3, 'LEAF', 'Scripted scenarios check the done criteria in the Preview', ci === 1)}
+      </div>
+      <div style="display:flex;gap:24px;margin-top:34px">
+        <div style="${box(on(ci === 1))}flex:1.15;padding:20px 34px"><div style="display:flex;align-items:baseline;gap:22px"><span style="font-size:210px;font-weight:800;color:var(--primary-ink);line-height:1;letter-spacing:-.03em">8/8</span><span style="font-size:36px;font-weight:700;line-height:1.25">LEAF scenarios<br>passed</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;margin-top:12px">${ids}</div></div>
+        <div style="${box(on(ci === 2))}flex:1;padding:20px 34px"><div style="display:flex;align-items:baseline;gap:22px"><span style="font-size:210px;font-weight:800;color:var(--primary-ink);line-height:1;letter-spacing:-.03em">139</span><span style="font-size:36px;font-weight:700;line-height:1.25">Node tests<br>passing</span></div>
+          <div style="font-size:26px;line-height:1.4;color:var(--muted);margin-top:14px">Unit and integration tests for the core rehearsal logic: gaze, halos, nudges, cue cards.</div></div>
       </div></div>${cap}</div>`;
   }
-  // close
+  // close: both boxes visible from the start
+  const cbox = 'background:#fff;border-radius:20px;padding:30px 36px;font-size:36px;line-height:1.4;width:820px';
   return `<div class="card">${top}
-  <div style="position:absolute;left:160px;right:160px;top:170px">
-    <div style="font-size:120px;font-weight:800;letter-spacing:-.03em;line-height:1">Eyes Up</div>
-    <div style="font-size:42px;font-weight:600;color:var(--muted);margin-top:16px">Rehearse with your eyes on the room.</div>
-    <div style="font-size:40px;font-weight:700;color:var(--primary-ink);margin-top:40px;font-family:ui-monospace,Menlo,monospace">github.com/sh0sub/eyes-up</div>
-    <div style="display:flex;gap:20px;margin-top:44px">
-      <div style="background:#fff;border-radius:16px;padding:22px 26px;font-size:24px;line-height:1.45;width:560px"><b>Shown:</b> Lens Studio Interactive Preview, no device. Sounds synthesized locally.</div>
-      <div style="background:#fff;border-radius:16px;padding:22px 26px;font-size:24px;line-height:1.45;width:560px;opacity:${ci >= 1 ? 1 : 0.35}"><b>Not yet tested:</b> spatial audio direction, feel and legibility on real glasses.</div>
+  <div style="position:absolute;left:100px;right:100px;top:150px">
+    <div style="font-size:130px;font-weight:800;letter-spacing:-.03em;line-height:1">Eyes Up</div>
+    <div style="font-size:48px;font-weight:600;color:var(--muted);margin-top:14px">Rehearse with your eyes on the room.</div>
+    <div style="font-size:44px;font-weight:700;color:var(--primary-ink);margin-top:36px;font-family:ui-monospace,Menlo,monospace">github.com/sh0sub/eyes-up</div>
+    <div style="display:flex;gap:28px;margin-top:44px">
+      <div style="${cbox}"><b>Shown:</b> Lens Studio Interactive Preview, no device. A test harness drives the head and pinches. Sounds synthesized locally.</div>
+      <div style="${cbox}"><b>Not yet tested:</b> spatial audio direction, and the feel and legibility on real glasses.</div>
     </div></div>${cap}</div>`;
 }
 
@@ -392,16 +394,27 @@ async function renderStage(cdp) {
   await cdp.send('Emulation.setDefaultBackgroundColorOverride', { color: { r: 0, g: 0, b: 0, a: 0 } });
   for (const [si, seg] of SEGMENTS.entries()) {
     seg.stage = [];
-    for (const [ci, cue] of seg.cues.entries()) {
-      const body = seg.type === 'card' ? cardHtml(seg, ci, cue) : seg.type === 'cold' ? coldHtml(seg, cue) : mediaHtml(seg, si, ci, cue);
-      const html = path.join(dir, `${seg.id}-${ci}.html`);
-      const png = path.join(dir, `${seg.id}-${ci}.png`);
+    // One graphic per caption; cold segments may add timed states (disclosure, caption tag) between captions.
+    const shots = seg.cues.map((cue, ci) => ({ ci, cue, start: ci === 0 ? 0 : cue.start - 0.15, st: {} }));
+    if (seg.type === 'cold' && seg.states) {
+      for (const e of seg.states) if (e.at > 0) shots.push({ ci: -1, start: e.at, st: {} });
+      shots.sort((a, b) => a.start - b.start);
+      shots.forEach((sh, i) => {
+        sh.ci = sh.ci >= 0 ? sh.ci : shots[i - 1].ci;
+        sh.cue = seg.cues[sh.ci];
+        sh.st = [...seg.states].reverse().find((e) => e.at <= sh.start + 1e-6) ?? {};
+      });
+    }
+    for (const [k, { ci, cue, start, st }] of shots.entries()) {
+      const body = seg.type === 'card' ? cardHtml(seg, ci, cue) : seg.type === 'cold' ? coldHtml(seg, cue, st) : mediaHtml(seg, si, ci, cue);
+      const html = path.join(dir, `${seg.id}-${k}.html`);
+      const png = path.join(dir, `${seg.id}-${k}.png`);
       writeFileSync(html, `<!doctype html><html><head><meta charset="utf-8"><style>${CSS}</style></head><body>${body}</body></html>`);
       await cdp.send('Page.navigate', { url: `file://${html}` });
       await sleep(450);
       const shot = await cdp.send('Page.captureScreenshot', { format: 'png' });
       writeFileSync(png, Buffer.from(shot.data, 'base64'));
-      seg.stage.push(png);
+      seg.stage.push({ file: png, start });
     }
   }
   log(`graphics: ${SEGMENTS.reduce((n, s) => n + s.stage.length, 0)} PNGs`);
@@ -426,7 +439,7 @@ function encode() {
   for (const seg of SEGMENTS) {
     const dur = seg.duration;
     const stageList = path.join(dir, `${seg.id}-stage.txt`);
-    concatList(stageList, seg.stage.map((f, i) => ({ file: f, start: i === 0 ? 0 : seg.cues[i].start - 0.15 })), dur);
+    concatList(stageList, seg.stage, dur);
     const out = path.join(dir, `${seg.id}.mp4`);
     const enc = ['-t', dur.toFixed(3), '-r', String(FPS), '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '160k', '-ar', '48000', '-ac', '2', out];
     if (seg.live || seg.pan) {

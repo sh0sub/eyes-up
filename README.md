@@ -23,7 +23,7 @@ Built for Learn AR with SPECS (deadline 2026-11-09 PST). New Lens built with CLA
 - **Nudge chevron placement rule** (`Assets/Scripts/core/ChevronPlacement.ts`): the chevron keeps its
   edge-of-view spot, and panels (podium, cue card) are projected into its view plane each frame so it
   slides aside or hides rather than covering one. Unit tested.
-- **Demo video:** 2:14, narrated and captioned, opening on live preview footage (Setup, pinch, audience, halo). Gaze and nudge clips play in real time, the podium and cue clips at x1.2-1.3 (badged on screen), and the Summary is a still capture with a slow zoom. `scripts/video/build-video.mjs` builds it from Lens Studio preview footage. YouTube: **TODO_PASTE_PUBLIC_YOUTUBE_URL_HERE**
+- **Demo video:** 1:41, narrated and captioned, opening on live preview footage (Setup, pinch, audience, halo; the disclosure shows once, then a PREVIEW pill stays on screen). Gaze clips play in real time, the nudge, podium and cue clips at x1.2-1.3 (badged on screen), and the Summary is a still capture with a slow zoom. `scripts/video/build-video.mjs` builds it from Lens Studio preview footage. YouTube: **TODO_PASTE_PUBLIC_YOUTUBE_URL_HERE**
   (the upload needs the entrant's account).
 - Setup: segmented 3/5/10 min and 3/6/9 audience buttons (selected = cyan), deck list, optional
   "Import text" deck typed on the AR keyboard. The summary has Again / Done / Re-place.

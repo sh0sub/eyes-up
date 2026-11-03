@@ -1,6 +1,6 @@
 # Spec matrix (artifact "specs" section vs running product)
 
-Current state (2026-11-03): `npm run check` 139 tests pass, typecheck and lint clean; 8 LEAF scenarios PASSED live in the Interactive Preview; demo video 2:14 (`.local/video/eyes-up-demo.mp4`, not committed). Preview only, not tested on a Spectacles device.
+Current state (2026-11-03): `npm run check` 139 tests pass, typecheck and lint clean; 8 LEAF scenarios PASSED live in the Interactive Preview; demo video 1:41 (`.local/video/eyes-up-demo.mp4`, not committed; cycle-2 rebuild: disclosure once then PREVIEW pill, "You look -> they light up" caption on the halo frame by 0:08, clipped cue/pill footage trimmed out, CLAD/MCP/LEAF card with 8/8 and 139, close card with 36 px Shown / Not yet tested boxes and a halo end frame). Preview only, not tested on a Spectacles device.
 
 Historical note, dated audit round 1 (2026-11-01, superseded): Evidence: live Lens Studio 5.24.1 preview via MCP (screenshots in the audit scratchpad `converge/eyes-up/live-*.png`), `npm run check` (123 tests pass, typecheck and lint clean), 6 LEAF scenarios PASSED live.
 

@@ -28,19 +28,28 @@ const BAND = [0, 470, 475, 700]; // starts below the LEAF result line (y ≈ 445
 
 export const SEGMENTS = [
   {
-    // Merged opening (hook + title) over live footage: Setup panel -> pinch Start (06:20:07) -> audience -> halo.
-    // Preview crop is 16:9; `zoom` keys are [t, zoom, centre x, centre y] in that crop. Pinch lands at ~7 s, audience by ~12 s.
+    // Merged opening over live footage (frame numbers of the r9 capture).
+    // Clip A: Setup panel -> pinch Start -> audience appears (cue card "The problem" cut out: its text is clipped inside the Lens).
+    // Clip B: audience with the halo already lit and the pill "Screens pull eyes" (complete) from ~4.1 s, so the line
+    // "lights up whoever you turn toward" and the caption "You look -> they light up" sit on the halo frame, before 0:08.
+    // Disclosure banner only for the first ~2 s; after that only the PREVIEW pill. Zoom keys are [t, zoom, centre x, centre y].
     id: '00-open',
     type: 'cold',
     speed: 1,
     crop: [142, 195, 876, 493],
-    zoom: [[0, 1.5, 438, 250], [5.2, 1.5, 438, 250], [7.8, 1, 438, 246.5]],
+    zoom: [[0, 1.5, 438, 250], [2.5, 1.5, 438, 250], [3.9, 1, 438, 246.5]],
+    states: [
+      { at: 0, disclosure: true, lower: true },
+      { at: 2.2, lower: true },
+      { at: 2.5 },
+      { at: 4.3, tag: 'You look \u2192 they light up' },
+    ],
     lowerThird: 'Eyes Up - rehearsal coach for Spectacles',
-    footage: [{ from: '06:20:02', to: '06:20:15' }],
+    footage: [{ from: 70, to: 89 }, { from: 111, to: 131 }],
     lines: [
       'Rehearse at a laptop and your eyes drop.',
-      'Eyes Up seats a virtual audience in your room and lights up whoever you turn toward.',
-      'In this preview, a test harness turns the head for us.',
+      'Eyes Up seats a virtual audience in your room,',
+      'and lights up whoever you turn toward.',
     ],
   },
   {
@@ -48,11 +57,12 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Gaze',
     heading: 'Turn toward someone, they light up',
-    footage: [{ from: '06:20:15', to: '06:20:26' }],
+    // Frames 177-212 of the capture: starts after the pill ("es") has left the view, so no clipped text.
+    footage: [{ from: 177, to: 212 }],
     gallery: 0.8,
     lines: [
-      'Turn toward someone and they light up. Their halo fills in about a second, and slowly cools when you turn away.',
-      'Here the head direction stands in for your gaze.',
+      'A halo fills in about a second, then slowly cools.',
+      'Here, head direction stands in for your gaze.',
     ],
     stills: [{ file: `${S}/02-audience-lit-halo.png`, crop: BAND }],
   },
@@ -61,13 +71,14 @@ export const SEGMENTS = [
     type: 'media',
     kicker: 'Nudge',
     heading: 'Ignore a side, get a tap',
-    // Live, real time: the head turns to the right side, the left chevron appears and clears when the head turns back; later the right one.
-    footage: [{ from: '06:20:26', to: '06:20:47' }],
+    // Clip A: left chevron appears, clears, appears again. Clip B: right chevron. Frames with the clipped pill ("Sc") are cut.
+    footage: [{ from: 213, to: 256 }, { from: 299, to: 319 }],
+    speed: 1.2,
     gallery: 2.2,
     lines: [
-      'Stare at one side for eight seconds, and you hear a soft chime, and a pulsing amber chevron appears at the edge of your view.',
-      'No pop-up in your face. When you turn toward that side, the chevron clears.',
-      'Keep ignoring a side and it taps you again, until you turn over.',
+      'Ignore one side for eight seconds: a chime and an amber chevron.',
+      'No pop-up. Turn toward that side and the chevron clears.',
+      'Keep ignoring it and it taps you again.',
     ],
     stills: [
       {
@@ -146,12 +157,12 @@ export const SEGMENTS = [
   {
     id: '09-built',
     type: 'card',
-    gallery: 19,
+    gallery: 8,
     card: 'built',
     lines: [
-      'Eyes Up was built in Lens Studio by an AI coding agent, through the Lens Studio MCP tools, following the CLAD skills.',
-      'Eight scripted LEAF scenarios check the done criteria in the Interactive Preview. All eight pass.',
-      'The core logic, gaze, halos, nudges and cue cards, is covered by one hundred thirty nine unit and integration tests in Node.',
+      'Built by an AI agent with CLAD skills and Lens Studio MCP tools.',
+      'Eight LEAF scenarios pass in the Interactive Preview.',
+      'One hundred thirty nine Node tests cover the core logic.',
     ],
   },
   {
@@ -159,10 +170,19 @@ export const SEGMENTS = [
     type: 'card',
     card: 'close',
     lines: [
-      'Everything shown here runs in the Lens Studio Interactive Preview, not on a device yet, and the sounds are synthesized locally.',
-      'Spatial audio direction and the feel on real glasses are still untested.',
-      'Eyes Up. Rehearse with your eyes on the room.',
+      'Everything here ran in the Lens Studio preview, not on a device.',
+      'Spatial audio and the feel on real glasses are untested.',
     ],
+  },
+  {
+    // Hero end frame: the cyan halo over the audience (same live frames as the opening) plus the tagline, held >= 2 s.
+    id: '11-end',
+    type: 'cold',
+    hero: true,
+    speed: 1,
+    crop: [142, 195, 876, 493],
+    footage: [{ from: 111, to: 131 }],
+    lines: ['Eyes Up. Rehearse with your eyes on the room.'],
   },
 ];
 
