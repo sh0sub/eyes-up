@@ -10,7 +10,7 @@ import { boxTextOf, lookAtMember, lookDownAtPodium, setUp, startAndWaitForRehear
 @component
 export class FinishGivesGrade extends Scenario {
   async run(): Promise<void> {
-    const rig = await setUp();
+    const rig = await setUp(6); // six people: these checks use members in every zone
     await startAndWaitForRehearsal(rig);
     for (const i of [0, 2, 4, 1, 3, 5]) {
       lookAtMember(rig, i);

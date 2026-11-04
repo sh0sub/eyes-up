@@ -15,6 +15,7 @@ function rig() {
   const session = new EyesUpSession(gaze, {}, scene.views());
   session.onEvent((e) => scene.events.push(e));
   session.launch();
+  session.configure({ audienceCount: 6 }); // the default is 3 (Cycle 3); these zone rules need 2 members per zone
   session.start();
   let t = 0;
   const shows: Array<{ t: number; side: string; zone: number }> = [];

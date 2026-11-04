@@ -17,6 +17,7 @@ function harness() {
 function toRehearsal() {
   const h = harness();
   h.s.launch();
+  h.s.configure({ audienceCount: 6 }); // the default audience is 3 (Cycle 3); these rules use two members per zone
   h.s.start();
   h.tick(0.6);
   return h;

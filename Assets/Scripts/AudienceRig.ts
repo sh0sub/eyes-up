@@ -27,7 +27,7 @@ const PHONE_H = 14;
 const PHONE_CORNER = 1.6;
 const CONE_STEPS = 4;
 const PHONE_RGB: [number, number, number] = [1.0, 0.8, 0.3];
-/** 'zzz' marker: lavender, above-right of the sunk head. Title2 at 420 cm is about 7 cm tall in the silhouette's space. */
+/** 'zzz' marker: lavender, above the sunk head and clear of the head (and of the nudge chevron on its side). Title2 at 420 cm is about 7 cm tall in the silhouette's space. */
 const ZZZ_RGB = new vec4(0.85, 0.85, 1.0, 1);
 const ZZZ_DIST = 420;
 /** Perk-up ring pulse: a thin cyan ring of short bars (the display has no hollow disc), radius 20 cm at scale 1. */
@@ -98,7 +98,7 @@ export class AudienceRig {
       }
       cone.getTransform().setLocalRotation(quat.angleAxis(-Math.PI / 10, new vec3(1, 0, 0)));
       phoneRig.enabled = false;
-      const zzz = child(root, 'Zzz', new vec3(16, 170, 20));
+      const zzz = child(root, 'Zzz', new vec3(14, 170, 20));
       const zzzText = addText(zzz, 'ZzzText', 'zzz', 'Title2', 14, 8, ZZZ_DIST, ZZZ_RGB, new vec3(0, 0, 0));
       zzz.enabled = false;
       const ring = child(root, 'PerkRing', new vec3(0, HEAD_REST_Y, 14));
@@ -180,7 +180,7 @@ export class AudienceRig {
     const z = look.zzz * fade;
     if (m.zzz.enabled !== z > 0.01) m.zzz.enabled = z > 0.01;
     if (z > 0.01) {
-      m.zzz.getTransform().setLocalPosition(new vec3(headPos.x + 18, headPos.y + 26, headPos.z + 6));
+      m.zzz.getTransform().setLocalPosition(new vec3(headPos.x + 14, headPos.y + 32, headPos.z + 6));
       m.zzzText.textFill.color = new vec4(ZZZ_RGB.x, ZZZ_RGB.y, ZZZ_RGB.z, z);
     }
   }

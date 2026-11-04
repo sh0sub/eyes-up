@@ -64,7 +64,7 @@ virtual room. The floor is 160 cm below the head, and a Re-place button re-seats
 
 All of these can be checked in Interactive Preview with mouse look and clicks. Each one maps 1:1 to a LEAF scenario.
 
-1. `start_places_audience`: 0.6 s after Start, 6 audience members are active at 250 ± 5 cm.
+1. `start_places_audience`: 0.6 s after Start, the Setup default of 3 audience members (cycle 3; was 6) are active at 250 ± 5 cm.
 2. `gaze_fills_halo`: after 1.2 s of scripted gaze on #3, attention[3] ≥ 0.95 and #1 ≤ 0.1.
 3. `neglect_triggers_nudge`: after 8.5 s of gaze on the right zone, the EdgeHint is active and says "left", with nudge count 1. After 0.5 s of gaze on the left, it is inactive.
 4. `next_shows_card_then_pill`: Next shows "Why glasses", and 4.3 s later it is a pill.

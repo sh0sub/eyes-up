@@ -1,6 +1,6 @@
 /**
  * Setup panel state (plan S1): talk length slider 3/5/10 min, audience 3/6/9, sample deck (2), Start.
- * Defaults: 3 min / 6 people / "Eyes Up pitch". SetupPanel.ts binds UIKit widgets to this.
+ * Defaults: 3 min / 3 people (Cycle 3: the whole room fits the lens viewport) / "Eyes Up pitch". SetupPanel.ts binds UIKit widgets to this.
  */
 import { DECKS, IMPORTED_DECK_ID, getDeck, getImportedDeck } from '../DeckData';
 import { DEFAULT_CONFIG, SessionConfig } from './EyesUpSession';

@@ -10,7 +10,7 @@ import { lookAtMember, setUp, startAndWaitForRehearsal, textOf } from './EyesUpL
 @component
 export class NeglectTriggersNudge extends Scenario {
   async run(): Promise<void> {
-    const rig = await setUp();
+    const rig = await setUp(6); // six people: these checks use members in every zone
     await startAndWaitForRehearsal(rig);
     lookAtMember(rig, 5); // right zone (members 4–5 of 6)
     await sleep(8500);

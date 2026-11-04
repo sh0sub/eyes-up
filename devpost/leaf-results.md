@@ -2,14 +2,15 @@
 
 Run in Lens Studio 5.24.1 Interactive Preview, driven through the Lens Studio MCP. Gaze is injected
 with `ScriptedGazeProvider`. The first six are the done criteria of `design-brief.md`, one to one.
-Final run (2026-11-04, game layer): `npm run check` passes (166 tests, typecheck, lint); the 10 LEAF scenarios
+Final run (2026-11-04, game layer): `npm run check` passes (168 tests, typecheck, lint); the 10 LEAF scenarios
 (rows 1 to 8, 13, 14) pass live with no runtime errors in the Logger. Rows 9 to 12 and 15 are capture helpers.
 Cycle 2 re-run (2026-11-04, after the 3-member spacing, Summary and chevron changes): all 10 scenarios PASSED again one at a time, no E/F lines from project scripts.
+Cycle 3 re-run (2026-11-04, default audience 3, stage 6 cm higher, backdrop plate, zzz moved): all 10 scenarios PASSED again one at a time, no E/F lines from project scripts. Scenarios that use members in every zone pick the 6-person Setup button first.
 Preview only, not tested on a Spectacles device.
 
 | # | Scenario | Checks | Result |
 |---|---|---|---|
-| 1 | `start_places_audience` | 0.6 s after Start, 6 members active at 250 ± 5 cm | PASSED |
+| 1 | `start_places_audience` | 0.6 s after Start with the Setup default (3 people since cycle 3), 3 members active at 250 ± 5 cm | PASSED |
 | 2 | `gaze_fills_halo` | 1.2 s of gaze on #3: attention[3] ≥ 0.95, #1 ≤ 0.1 | PASSED |
 | 3 | `neglect_triggers_nudge` | 8.5 s on the right: EdgeHint says "left", nudges 1. 0.5 s on the left: inactive | PASSED |
 | 4 | `next_shows_card_then_pill` | Next shows "Why glasses", 4.3 s later it is a pill | PASSED |
@@ -33,7 +34,7 @@ Preview only, not tested on a Spectacles device.
 
 ## Node tests
 
-`npm run check`: typecheck, ESLint and 166 Vitest tests (state machine, gaze zones, halo attention,
+`npm run check`: typecheck, ESLint and 168 Vitest tests (state machine, gaze zones, halo attention,
 nudge rules, chevron placement, cue card, stage line, session stats, panel view models, deck import,
 engagement decay and recovery, silhouette look, room meter tone, score, grade, best-previous compare,
 applause strength).

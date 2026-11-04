@@ -33,7 +33,7 @@ export interface SessionConfig {
 
 export const DEFAULT_CONFIG: Readonly<SessionConfig> = Object.freeze({
   lengthMinutes: 3,
-  audienceCount: 6,
+  audienceCount: 3,
   deckId: DEFAULT_DECK_ID,
 });
 

@@ -18,8 +18,11 @@ export interface Rig {
   interactor: DefaultLeafInteractor;
 }
 
-/** Wait for the lens to initialize, switch to scripted gaze looking straight ahead (level). */
-export async function setUp(): Promise<Rig> {
+/**
+ * Wait for the lens to initialize, switch to scripted gaze looking straight ahead (level).
+ * `audience`: pinch that Setup segment (3, 6 or 9). Leave it out to keep the Setup default (3 people since Cycle 3, so the whole room fits the lens viewport).
+ */
+export async function setUp(audience?: 3 | 6 | 9): Promise<Rig> {
   await sleep(1500);
   const root = findSceneObjectByName('EyesUp');
   if (!root) throw new Error('EyesUp root not found');
@@ -29,7 +32,12 @@ export async function setUp(): Promise<Rig> {
   const f = gaze.forward;
   const flat = new vec3(f.x, 0, f.z);
   gaze.setForward(flat.length > 1e-4 ? { x: flat.x, y: 0, z: flat.z } : { x: 0, y: 0, z: -1 });
-  return { app, session: app.getSession(), gaze, interactor: new DefaultLeafInteractor() };
+  const rig = { app, session: app.getSession(), gaze, interactor: new DefaultLeafInteractor() };
+  if (audience !== undefined) {
+    await tap(rig, `Audience_${audience}`);
+    await sleep(300);
+  }
+  return rig;
 }
 
 export async function tap(rig: Rig, name: string): Promise<void> {

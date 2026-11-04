@@ -25,10 +25,11 @@ describe('Eyes Up rehearsal — simulated end-to-end (LEAF scenarios 1-6)', () =
   const lookAt = (i: number) => gaze.lookAt(session.layout!.eyeTargets[i]);
   const count = (type: string) => scene.events.filter((e) => e.type === type).length;
 
-  it('setup: lens start lands on Setup with defaults 3 min / 6 / Eyes Up pitch', () => {
+  it('setup: lens start lands on Setup with defaults 3 min / 3 people (whole room in view) / Eyes Up pitch', () => {
     session.launch();
     expect(session.phase).toBe('Setup');
-    expect(session.config).toEqual({ lengthMinutes: 3, audienceCount: 6, deckId: 'eyes-up-pitch' });
+    expect(session.config).toEqual({ lengthMinutes: 3, audienceCount: 3, deckId: 'eyes-up-pitch' });
+    expect(session.configure({ audienceCount: 6 })).toBe(true); // the scenarios below run the 6-person room
   });
 
   it('1 start_places_audience: Start -> after 0.6 s, 6 audience members active at 250±5 cm', () => {

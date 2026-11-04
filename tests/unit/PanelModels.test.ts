@@ -16,10 +16,10 @@ import { v3 } from '../../Assets/Scripts/core/math';
 import { DEFAULT_TUNABLES } from '../../Assets/Scripts/core/Tunables';
 
 describe('SetupModel (#28 SetupPanel logic, S1 #22)', () => {
-  it('defaults 3 min / 6 people / Eyes Up pitch', () => {
+  it('defaults 3 min / 3 people / Eyes Up pitch', () => {
     const m = new SetupModel();
-    expect(m.config).toEqual({ lengthMinutes: 3, audienceCount: 6, deckId: 'eyes-up-pitch' });
-    expect(m.labels).toEqual({ length: '3 min', audience: '6 people', deck: 'Eyes Up pitch', deckCards: '5 cards' });
+    expect(m.config).toEqual({ lengthMinutes: 3, audienceCount: 3, deckId: 'eyes-up-pitch' });
+    expect(m.labels).toEqual({ length: '3 min', audience: '3 people', deck: 'Eyes Up pitch', deckCards: '5 cards' });
   });
 
   it('artifact S1: deck card counts, SETUP pill and caption wording', () => {

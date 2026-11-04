@@ -43,7 +43,7 @@ export interface Tunables {
 
   /** plan: stage distance in front of the head (2.5 m). */
   stageDistanceCm: number;
-  /** plan: floor is this far below the head (머리 -160 cm). */
+  /** plan: floor is this far below the head (머리 -160 cm). Cycle 3 (S4): 154, the stage stands 6 cm higher so slumped heads (which sink 30 cm) stay inside the preview frame. */
   floorOffsetCm: number;
   /** plan: spacing between audience members along the arc (0.6 m). */
   audienceSpacingCm: number;
@@ -93,7 +93,7 @@ export const DEFAULT_TUNABLES: Readonly<Tunables> = Object.freeze({
   burstSeconds: 0.7,
 
   stageDistanceCm: 250,
-  floorOffsetCm: 160,
+  floorOffsetCm: 154,
   audienceSpacingCm: 60,
   smallAudienceSpacingCm: 42,
   smallAudienceMax: 3,

@@ -35,7 +35,7 @@ more.") close the loop: look, get feedback, adjust, run it again (Again keeps th
 | Does Next show the card, then a tag after 4 s, and does a 1 s dwell reopen it? | Logic proven | LEAF `next_shows_card_then_pill`, `dwell_expands_pill` |
 | Does Finish show a Summary whose zones sum to 100 and whose time reads m:ss? | Logic proven | LEAF `finish_shows_summary` |
 | Does a neglected member slump, recover when looked at, and does Finish show a grade? | Logic proven | LEAF `neglect_disengages_then_recovers`, `finish_gives_grade` |
-| Do the timing rules hold under edge cases (gaps, ties, no gaze at all)? | Logic proven | 166 Node tests, typecheck and lint clean |
+| Do the timing rules hold under edge cases (gaps, ties, no gaze at all)? | Logic proven | 168 Node tests, typecheck and lint clean |
 | Is the attention score a fair measure of speaking skill? | **Unproven** | A design heuristic (balance x engagement), not validated |
 | Are panels legible and comfortable at real distance on Spectacles optics? | **Feel unproven** | Preview only, tuned from preview screenshots |
 | Does the spatial chime clearly come from the left or right? | **Feel unproven** | Cannot be judged in the editor |

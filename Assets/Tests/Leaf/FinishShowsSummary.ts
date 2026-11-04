@@ -7,7 +7,7 @@ import { lookAtMember, lookDownAtPodium, setUp, startAndWaitForRehearsal, tap, t
 @component
 export class FinishShowsSummary extends Scenario {
   async run(): Promise<void> {
-    const rig = await setUp();
+    const rig = await setUp(6); // six people: these checks use members in every zone
     await startAndWaitForRehearsal(rig);
     lookAtMember(rig, 0);
     await sleep(1000);

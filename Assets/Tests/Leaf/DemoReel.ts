@@ -142,6 +142,8 @@ export class DemoReel extends Scenario {
     await sleep(1700);
     reticle.look(worldPos('Audience_6'));
     this.mark('gaze: Audience');
+    // Since Cycle 3 the Setup default is 3 people; this reel still choreographs six (members 0 to 5), so pick 6 here.
+    await tap(rig, 'Audience_6');
     await sleep(1700);
     reticle.look(worldPos('Deck_eyes-up-pitch'));
     this.mark('gaze: Deck');

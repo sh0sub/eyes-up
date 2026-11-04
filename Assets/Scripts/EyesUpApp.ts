@@ -106,8 +106,18 @@ const PILL_Y = 11;
  * The room meter floats between the heads and the card. Raised 6 cm (was 4 cm below the anchor, now 6 cm above; Cycle 2: with 3 members 42 cm apart the outer halos reached the label) so lit halos
  * (burst ring up to 1.6x) no longer cover it; the card is lifted by the same amount so the two never overlap.
  */
-const METER_BELOW_ANCHOR_CM = -6;
-const CARD_LIFT_CM = 10;
+const METER_BELOW_ANCHOR_CM = -10;
+const CARD_LIFT_CM = 14;
+/**
+ * Cycle 3 (S4): a faint dark rounded plate stands 40 cm behind the audience so the busy wall frames do not sit behind heads and bodies.
+ * It is an alpha-blended plate for the Preview; on an additive display a dark plate adds nothing (black is clear), so it costs nothing there.
+ */
+const SCRIM_BEHIND_CM = 40;
+const SCRIM_PAD_CM = 40;
+const SCRIM_HEIGHT_CM = 205;
+const SCRIM_CENTER_ABOVE_FLOOR_CM = 78;
+const SCRIM_CORNER_CM = 9;
+const SCRIM_COLOR = new vec4(0.03, 0.05, 0.16, 0.35);
 /** Room meter plate extents about its centre (cm, local): track 52 + label 28 + padding, 3 + padding tall (RoomMeter.ts). */
 const METER_HALF_W_CM = 42;
 const METER_HALF_H_CM = 3.6;
@@ -162,6 +172,7 @@ export class EyesUpApp extends BaseScriptComponent {
   private views!: SessionViews;
   private rig: AudienceRig | null = null;
   private meter: RoomMeter | null = null;
+  private scrim: SceneObject | null = null;
   private cardBg: SceneObject | null = null;
   private pillBg: SceneObject | null = null;
   /** Width (cm, before world scale) of the current pill backing. */
@@ -203,6 +214,7 @@ export class EyesUpApp extends BaseScriptComponent {
 
     this.rig = new AudienceRig(this.audience);
     this.meter = new RoomMeter();
+    this.scrim = this.buildScrim();
 
     this.cameraGaze = new CameraGazeProvider(this.camera.getTransform());
     this.gaze = new SwitchableGazeProvider(this.cameraGaze);
@@ -531,6 +543,7 @@ export class EyesUpApp extends BaseScriptComponent {
     const onStage = phase === 'Placing' || phase === 'Rehearsal' || phase === 'Finishing';
     this.stageLine.enabled = onStage;
     this.meter?.setVisible(onStage);
+    if (this.scrim) this.scrim.enabled = onStage;
     if (!onStage) this.cueCard.enabled = false;
     if (phase === 'Summary') {
       // Pass 3: the Summary panel is translucent (and the display additive), so lit halos behind it
@@ -545,6 +558,41 @@ export class EyesUpApp extends BaseScriptComponent {
     }
   }
 
+  /** Cycle 3 (S4): a rounded, faint dark plate (three non-overlapping quads, so the alpha does not double up) behind the audience. */
+  private buildScrim(): SceneObject {
+    const root = global.scene.createSceneObject('AudienceScrim');
+    root.enabled = false;
+    return root;
+  }
+
+  private placeScrim(layout: StageLayout, count: number, head: vec3): void {
+    const root = this.scrim;
+    if (!root) return;
+    while (root.getChildrenCount() > 0) root.getChild(0).destroy();
+    const first = layout.seats[0];
+    const last = layout.seats[count - 1];
+    const span = Math.hypot(last.x - first.x, last.z - first.z);
+    const w = span + 80 + 2 * SCRIM_PAD_CM;
+    const h = SCRIM_HEIGHT_CM;
+    const c = SCRIM_CORNER_CM;
+    const parts: [string, number, number, number][] = [
+      ['Mid', 0, w - 2 * c, h],
+      ['Left', -(w - c) / 2, c, h - 2 * c],
+      ['Right', (w - c) / 2, c, h - 2 * c],
+    ];
+    parts.forEach(([name, x, pw, ph]) => {
+      const v = addSurface(child(root, name, new vec3(x, 0, 0)), pw, ph, 0, SCRIM_COLOR, null);
+      v.setRenderOrder(-5);
+    });
+    const floorY = layout.stageCenter.y;
+    const fx = layout.facing.x;
+    const fz = layout.facing.z;
+    root.getTransform().setWorldPosition(
+      new vec3(layout.stageCenter.x + fx * SCRIM_BEHIND_CM, floorY + SCRIM_CENTER_ABOVE_FLOOR_CM, layout.stageCenter.z + fz * SCRIM_BEHIND_CM),
+    );
+    faceTowards(root, head, true);
+  }
+
   private hideStage(): void {
     this.audience.forEach((a) => (a.enabled = false));
     this.cueCard.enabled = false;
@@ -552,6 +600,7 @@ export class EyesUpApp extends BaseScriptComponent {
     this.edgeHintRight.enabled = false;
     this.stageLine.enabled = false;
     this.meter?.setVisible(false);
+    if (this.scrim) this.scrim.enabled = false;
     this.summaryPanel.show(null);
   }
 
@@ -597,6 +646,7 @@ export class EyesUpApp extends BaseScriptComponent {
         );
         setPos(this.stageLine, layout.stageCenter);
         faceTowards(this.stageLine, head, true);
+        this.placeScrim(layout, count, head);
       },
       setVisible: (v) => this.audience.forEach((so, i) => (so.enabled = v && i < (this.session ? this.session.config.audienceCount : 0))),
       setFade: (a) => {

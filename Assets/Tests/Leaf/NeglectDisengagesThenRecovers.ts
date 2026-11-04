@@ -11,7 +11,7 @@ import { headYOf, lookAtMember, setUp, startAndWaitForRehearsal, textOf } from '
 @component
 export class NeglectDisengagesThenRecovers extends Scenario {
   async run(): Promise<void> {
-    const rig = await setUp();
+    const rig = await setUp(6); // six people: these checks use members in every zone
     await startAndWaitForRehearsal(rig);
     const restY = headYOf(rig, 4);
     lookAtMember(rig, 0);

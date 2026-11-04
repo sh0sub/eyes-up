@@ -8,17 +8,14 @@
  */
 import { Scenario } from 'Leaf.lspkg/Scenarios/scenario/Scenario';
 import { sleep } from 'Leaf.lspkg/Utils/common/Utils';
-import { lookAtMember, muteLeafOverlay, setUp, startAndWaitForRehearsal, tap } from './EyesUpLeafHelpers';
+import { lookAtMember, muteLeafOverlay, setUp, startAndWaitForRehearsal } from './EyesUpLeafHelpers';
 
 @component
 export class CaptureGame extends Scenario {
   async run(): Promise<void> {
     const release = muteLeafOverlay(90);
     try {
-      const rig = await setUp();
-      // Three people (not six): the whole audience fits the preview frame, so a slumped member and a lit one share a still.
-      await tap(rig, 'Audience_3');
-      await sleep(300);
+      const rig = await setUp(3);
       await startAndWaitForRehearsal(rig);
       lookAtMember(rig, 2);
       await sleep(19000);

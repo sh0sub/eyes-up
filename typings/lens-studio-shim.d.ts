@@ -162,6 +162,7 @@ declare class RenderMeshVisual extends Component {
   mesh: RenderMesh;
   mainPass: Pass;
   mainMaterial: Material;
+  setRenderOrder(value: number): void;
 }
 declare class Image extends Component {
   mainPass: Pass;
