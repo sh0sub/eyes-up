@@ -1,7 +1,7 @@
 /**
  * Capture helper, NOT a done-criterion test (game layer): `capture_game` picks a 3-person audience, looks at
  * member 2 (right) while members 0 and 1 slump (~19 s, held 4 s: the slump still, camera aimed so 1 and 2 share the frame), then looks at
- * member 1 so the next frames show it perking up in a cyan burst beside the lit member 2 with the room meter amber.
+ * member 0 (it recovers, room meter climbs), then member 1 so the next frames show it perking up mid-burst with a ring pulse beside two lit members and a higher room meter.
  * The LEAF overlay is hidden during the run and for 60 s after.
  *
  * Stages are marked in the Logger ("[capture_game] slumped" / "perk"), the scenario returns at "perk".
@@ -24,9 +24,15 @@ export class CaptureGame extends Scenario {
       await sleep(19000);
       print(`[capture_game] slumped room ${rig.session.roomAttention.toFixed(2)} eng ${rig.session.engagementValues.map((v) => v.toFixed(2)).join(',')}`);
       await sleep(4000); // hold: slumped member 1 beside the lit member 2
+      // Member 0 perks up and recovers first, so the room meter climbs well above the slump still (10).
+      lookAtMember(rig, 0);
+      await sleep(2200);
+      // Then member 1: the burst is stretched from 0.7 s to 3 s for this capture only (look unchanged), so a screenshot taken
+      // after the scenario returns still lands mid-burst with the ring pulse (11-perk-up).
+      rig.session.t.burstSeconds = 3;
       lookAtMember(rig, 1);
       await sleep(450);
-      print(`[capture_game] perk eng[1] ${rig.session.engagementValues[1].toFixed(2)}`);
+      print(`[capture_game] perk eng[1] ${rig.session.engagementValues[1].toFixed(2)} room ${rig.session.roomAttention.toFixed(2)}`);
     } finally {
       release();
     }

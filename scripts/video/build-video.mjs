@@ -419,7 +419,7 @@ function cardHtml(seg, ci, cue, st = {}) {
       <div style="display:flex;gap:24px;margin-top:34px">
         <div style="${box(on(ci === 1))}flex:1.15;padding:20px 34px"><div style="display:flex;align-items:baseline;gap:22px"><span style="font-size:210px;font-weight:800;color:var(--primary-ink);line-height:1;letter-spacing:-.03em">10/10</span><span style="font-size:36px;font-weight:700;line-height:1.25">LEAF scenarios<br>passed</span></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;margin-top:12px">${ids}</div></div>
-        <div style="${box(on(ci === 2))}flex:1;padding:20px 34px"><div style="display:flex;align-items:baseline;gap:22px"><span style="font-size:210px;font-weight:800;color:var(--primary-ink);line-height:1;letter-spacing:-.03em">164</span><span style="font-size:36px;font-weight:700;line-height:1.25">Node tests<br>passing</span></div>
+        <div style="${box(on(ci === 2))}flex:1;padding:20px 34px"><div style="display:flex;align-items:baseline;gap:22px"><span style="font-size:210px;font-weight:800;color:var(--primary-ink);line-height:1;letter-spacing:-.03em">166</span><span style="font-size:36px;font-weight:700;line-height:1.25">Node tests<br>passing</span></div>
           <div style="font-size:26px;line-height:1.4;color:var(--muted);margin-top:14px">Unit and integration tests for the core rehearsal logic: gaze, halos, nudges, cue cards.</div></div>
       </div></div>${cap}</div>`;
   }

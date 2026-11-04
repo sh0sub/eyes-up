@@ -22,6 +22,15 @@ describe('StagePlacer layout (M2 #4 math, used by LEAF start_places_audience)', 
     expect(l.seats[0].z).toBeLessThan(0);
   });
 
+  it('seats 3 or fewer closer (42 cm) so the whole arc fits the lens viewport, 4 and more keep 60 cm', () => {
+    const three = defaultLayout(3);
+    expect(length(sub(three.seats[1], three.seats[0]))).toBeCloseTo(42, 0);
+    expect(length(sub(three.seats[2], three.seats[1]))).toBeCloseTo(42, 0);
+    // outer members stay within +-28 cm of the arc's chord half-span, well inside the +-72 cm viewport at 2.5 m
+    expect(Math.abs(three.seats[2].z - three.seats[0].z)).toBeLessThan(90);
+    expect(length(sub(defaultLayout(4).seats[1], defaultLayout(4).seats[0]))).toBeCloseTo(60, 0);
+  });
+
   it('is centered on the head yaw and ignores head pitch', () => {
     const pitched = computeStageLayout(HEAD, v3(1, -0.5, 0), 3, DEFAULT_TUNABLES);
     expect(pitched.stageCenter.x).toBeCloseTo(250, 6);

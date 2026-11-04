@@ -135,6 +135,9 @@ describe('SummaryModel (#28 SummaryPanel logic, M8 #20)', () => {
     const withDeck = summaryState(snap, 1, { targetSeconds: 180, deckName: 'x', cardCount: 5 });
     expect(withDeck.cardsLabel).toBe('2 of 5');
     expect(withDeck.nudgesLabel).toBe('3');
+    // Cycle 2 M2: the three tiles are one line.
+    expect(withDeck.statsLine).toBe('Look-away 11 s left · Cards 2 of 5 · Nudges 3');
+    expect(summaryState(snap, 1).statsLine).toBe('Look-away 11 s left · Cards 2 · Nudges 3');
   });
   it('zone range is 15 < share < 35 (artifact S5); amber outside', () => {
     expect([14, 15, 16, 34, 35, 36].map(zoneOutOfRange)).toEqual([true, true, false, false, true, true]);

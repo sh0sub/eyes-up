@@ -1,6 +1,6 @@
 # Spec matrix (artifact "specs" section vs running product)
 
-Current state (2026-11-04, cycle 4 game layer): `npm run check` 164 tests pass, typecheck and lint clean; 10 LEAF scenarios PASSED live in the Interactive Preview (8 earlier + `neglect_disengages_then_recovers`, `finish_gives_grade`); game layer rows are in the last section below; walkthrough and screenshots retaken (02 to 06, new 10 and 11). The demo video below was cut before the game layer and is unchanged. Earlier state (2026-11-03): `npm run check` 139 tests pass, typecheck and lint clean; 8 LEAF scenarios PASSED live in the Interactive Preview; demo video 1:33 (`.local/video/eyes-up-demo.mp4`, not committed; cycle-3 rebuild 2026-11-03: opening is the hero halo frame with the title, a 1.5 s drawn "Eyes drop" card, the live Setup pinch zoomed 1.5x with one chip and a 0.3 s cross-dissolve to the lit halo; one clean nudge plus a 2 s "again"; podium trimmed to the Next pinch with the chevron outside the crop; Notes shortened; Summary holds the full panel 2 s then zooms to the timeline with an arrow label; new card with three real before/after pairs and the Summary Again line; shorter build card; cycle-2 rebuild: disclosure once then PREVIEW pill, "You look -> they light up" caption on the halo frame by 0:08, clipped cue/pill footage trimmed out, CLAD/MCP/LEAF card with 8/8 and 139, close card with 36 px Shown / Not yet tested boxes and a halo end frame; cycle-3: end frame lower-third carries the repo link and "Preview only, LEAF 8/8"; submission.md reordered tagline, hero image, pitch, Judge box with real video times, plus a "What we would test next" list). Preview only, not tested on a Spectacles device.
+Current state (2026-11-04, cycle 4 game layer): `npm run check` 166 tests pass, typecheck and lint clean; 10 LEAF scenarios PASSED live in the Interactive Preview (8 earlier + `neglect_disengages_then_recovers`, `finish_gives_grade`); game layer rows are in the last section below; walkthrough and screenshots retaken (02 to 06, new 10 and 11). The demo video below was cut before the game layer and is unchanged. Earlier state (2026-11-03): `npm run check` 139 tests pass, typecheck and lint clean; 8 LEAF scenarios PASSED live in the Interactive Preview; demo video 1:33 (`.local/video/eyes-up-demo.mp4`, not committed; cycle-3 rebuild 2026-11-03: opening is the hero halo frame with the title, a 1.5 s drawn "Eyes drop" card, the live Setup pinch zoomed 1.5x with one chip and a 0.3 s cross-dissolve to the lit halo; one clean nudge plus a 2 s "again"; podium trimmed to the Next pinch with the chevron outside the crop; Notes shortened; Summary holds the full panel 2 s then zooms to the timeline with an arrow label; new card with three real before/after pairs and the Summary Again line; shorter build card; cycle-2 rebuild: disclosure once then PREVIEW pill, "You look -> they light up" caption on the halo frame by 0:08, clipped cue/pill footage trimmed out, CLAD/MCP/LEAF card with 8/8 and 139, close card with 36 px Shown / Not yet tested boxes and a halo end frame; cycle-3: end frame lower-third carries the repo link and "Preview only, LEAF 8/8"; submission.md reordered tagline, hero image, pitch, Judge box with real video times, plus a "What we would test next" list). Preview only, not tested on a Spectacles device.
 
 Historical note, dated audit round 1 (2026-11-01, superseded): Evidence: live Lens Studio 5.24.1 preview via MCP (screenshots in the audit scratchpad `converge/eyes-up/live-*.png`), `npm run check` (123 tests pass, typecheck and lint clean), 6 LEAF scenarios PASSED live.
 
@@ -122,7 +122,7 @@ Live headless MCP: 6 done-criteria LEAF scenarios PASSED (2.6, 4.3, 11.8, 7.6, 7
 
 ## Polish round 6 (2026-11-01, judge-visible gaps)
 
-Live headless MCP: 8 LEAF scenarios PASSED (the 6 done criteria plus repeated_nudge and finish_pulses_at_time), no E/F lines. `npm run check`: 130/130 tests, typecheck and lint clean. Screenshots retaken: devpost/screenshots 01, 02, 03, 05, 06 and devpost/walkthrough 01, 02, 03, 05, 06. The demo video was rebuilt in round 7 (below).
+Earlier state (before the game layer; now 166 tests and 10 LEAF scenarios): live headless MCP: 8 LEAF scenarios PASSED (the 6 done criteria plus repeated_nudge and finish_pulses_at_time), no E/F lines. `npm run check`: 130/130 tests, typecheck and lint clean. Screenshots retaken: devpost/screenshots 01, 02, 03, 05, 06 and devpost/walkthrough 01, 02, 03, 05, 06. The demo video was rebuilt in round 7 (below).
 
 | id | artifact section | expected | status | evidence |
 |---|---|---|---|---|
@@ -134,7 +134,7 @@ Live headless MCP: 8 LEAF scenarios PASSED (the 6 done criteria plus repeated_nu
 
 ## Polish round 7 (2026-11-01, verifier follow-ups)
 
-Live headless MCP: 8 LEAF scenarios PASSED, no E/F lines. `npm run check`: 130/130 tests, typecheck and lint clean.
+Earlier state (before the game layer; now 166 tests and 10 LEAF scenarios): live headless MCP: 8 LEAF scenarios PASSED, no E/F lines. `npm run check`: 130/130 tests, typecheck and lint clean.
 
 | id | artifact section | expected | status | evidence |
 |---|---|---|---|---|
@@ -146,7 +146,7 @@ Live headless MCP: 8 LEAF scenarios PASSED, no E/F lines. `npm run check`: 130/1
 
 ## Polish round 8 (2026-11-01, chevron never covers a panel)
 
-Live headless MCP: 8 LEAF scenarios PASSED, no E/F lines. `npm run check`: 139/139 tests, typecheck and lint clean.
+Earlier state (2026-11-01, before the game layer; now 166 tests and 10 LEAF scenarios): live headless MCP, 8 LEAF scenarios PASSED, no E/F lines. `npm run check`: 139/139 tests, typecheck and lint clean.
 
 | id | artifact section | expected | status | evidence |
 |---|---|---|---|---|
@@ -157,7 +157,7 @@ Live headless MCP: 8 LEAF scenarios PASSED, no E/F lines. `npm run check`: 139/1
 
 ## Cycle 4: game layer (2026-11-04)
 
-Verified live in the Lens Studio 5.24.1 Interactive Preview: `npm run check` 158/158, 10 LEAF scenarios PASSED, no E/F lines from project scripts. Captures reviewed: `devpost/screenshots/02`, `03`, `04`, `05`, `06`, `10`, `11`. Preview only, gaze driven by LEAF, not tested on a device.
+Verified live in the Lens Studio 5.24.1 Interactive Preview: `npm run check` 166/166 (158 when this round was first verified), 10 LEAF scenarios PASSED, no E/F lines from project scripts. Captures reviewed: `devpost/screenshots/02`, `03`, `04`, `05`, `06`, `10`, `11`. Preview only, gaze driven by LEAF, not tested on a device.
 
 | id | source | expected | status | evidence |
 |---|---|---|---|---|
@@ -173,13 +173,26 @@ Verified live in the Lens Studio 5.24.1 Interactive Preview: `npm run check` 158
 
 ## Cycle 5: judge-facing polish (2026-11-04)
 
-Verified live in the Lens Studio 5.24.1 Interactive Preview with fresh window captures that were looked at: `npm run check` 164/164, 10 LEAF scenarios PASSED. Preview only, gaze driven by LEAF, not tested on a device. The demo video is not re-recorded in this cycle.
+Verified live in the Lens Studio 5.24.1 Interactive Preview with fresh window captures that were looked at: `npm run check` 166/166, 10 LEAF scenarios PASSED. Preview only, gaze driven by LEAF, not tested on a device. The demo video is not re-recorded in this cycle.
 
 | id | source | expected | status | evidence |
 |---|---|---|---|---|
 | C1-1 | judge: slump unreadable in stills | Slump readable next to an engaged member in one frame | match (preview) | `core/AudienceLook.ts` (body desaturated to 0.66, 0.66, 0.74 @ 0.42, sink 22 to 30 cm, head roll 25 deg, `zzz` marker), `AudienceRig.ts` (rounded phone screen, stepped light cone, zzz text); 3-person capture in `capture_game`; `screenshots/10`, `11`; Node tests for tilt, zzz, desaturation |
 | C1-2 | judge: Summary text too small, clipped | Grade is the hero, tip second, no sub-legible text, panel fits the frame | match (preview) | `SummaryPanel.ts`: target line, axis ticks and "nudge" word removed, Balance folded into the score tile, grade tile 14 x 13 cm at size 520 (was 260), tip Title2, panel scale 0.85; `screenshots/06`; `engagementShort` unit tested |
-| C1-3 | judge: stale numbers and images | 10/10, 164 tests everywhere, no log text in the process card | match | `scripts/gallery/process-image.html` rebuilt (three fixes, no LEAF text); 07-preview-landscape, 01-setup-panel-first-build, 08-halo-cyan moved to `screenshots/archive/`; `shots.mjs` and `build-video.mjs` numbers and paths updated |
+| C1-3 | judge: stale numbers and images | 10/10, 166 tests everywhere, no log text in the process card | match | `scripts/gallery/process-image.html` rebuilt (three fixes, no LEAF text); 07-preview-landscape, 01-setup-panel-first-build, 08-halo-cyan moved to `screenshots/archive/`; `shots.mjs` and `build-video.mjs` numbers and paths updated |
 | C1-4 | judge: hero is a grey debug capture | New hero, 1800 px, no LEAF text, game hook visible | match | `scripts/gallery/hero.html` to `screenshots/00-hero-eyes-up.png`; README and `submission.md` point at it |
 | C1-5 | judge: headline features buried | Hero, slump, perk-up, summary first, one truthful caption each | match | `submission.md` "Gallery order" |
 | C1-6 | judge: meter covered, chevron overlaps | Meter readable, chevron an outline clear of heads | match (preview) | `RoomMeter.ts` label at the left end on a dark plate, meter 6 cm higher with the card lifted 6 cm; chevron is four outline bars plus a 12 % fill; `ChevronPlacement.ts` scans for free pockets; `EyesUpApp.ts` passes heads and the meter as obstacles with fallbacks; 3 new placement tests; `screenshots/02`, `03`, `04`. Limit: in the narrow preview view there is no free wall above the heads, so the chevron can still sit over a body |
+
+
+## Cycle 2 (2026-11-04): fit the frame, readable Summary
+
+Verified live in the Lens Studio 5.24.1 Interactive Preview with window captures that were looked at: `npm run check` 166/166, 10 LEAF scenarios PASSED. Preview only, gaze driven by LEAF, not tested on a device. Lens viewport and chevron rules: see `devpost/build-notes.md` "Cycle 2".
+
+| id | source | expected | status | evidence |
+|---|---|---|---|---|
+| M1 | jury: right member hard-clipped | All members inside the frame with margin; 10 vs 11 readable | match (preview) | cause: the preview draws the lens in a viewport about 537 of 870 px wide (about +-72 cm at 2.5 m). `StagePlacer.ts` seats 3 or fewer 42 cm apart (`smallAudienceSpacingCm`, unit tested). `screenshots/02, 03, 04, 10, 11` and `walkthrough/02 to 08` retaken. 10: Room 43 %, two slumped. 11: mid-burst ring pulse, Room 83 % |
+| M2 | jury: Summary unreadable at gallery size | Panel about 1.4x, one stats line, bigger zones, buttons on an opaque plate | match (preview) | `SummaryPanel.ts` scale 1.2, zone text 92, `statsLine` (unit tested), button plate, panel 29 cm above eyes; `screenshots/06-summary.png`, `06b-summary-grade-zones.png`, `walkthrough/06-summary.png`. The Again / Done row now sits about 15 px over the top of the picture frames in the capture, on its own opaque plate |
+| M5 | jury: ghosts, capsule phone, boxed chevron | Muted blue slump, no chevron box, ring pulse | match (preview) | `core/AudienceLook.ts` BODY_DISENGAGED 0.44, 0.50, 0.82 @ 0.50 (about 58 % of engaged saturation), `pulseScale` / `pulseAlpha`; `AudienceRig.ts` ring of 24 bars; chevron box removed and silhouettes kept clear in `EyesUpApp.ts`; the phone was already a rounded rectangle with a light cone |
+| M4 | jury: learning angle buried | Three-line opener, lessons, how it was built | match | `devpost/submission.md` top, `README.md` top |
+| M6 | repo: stale numbers | 166 tests, 10/10 everywhere, history marked | match | grep of README, devpost, docs; earlier 130 / 139 / 8-scenario lines carry "Earlier state" |

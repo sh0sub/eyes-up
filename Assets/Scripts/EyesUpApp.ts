@@ -33,7 +33,7 @@ import { PillRect } from './core/PillHit';
 import { ChevronBox, PlaneRect, placeChevron } from './core/ChevronPlacement';
 import { podiumState } from './core/PodiumModel';
 import { Vec3Like } from './core/math';
-import { ACCENT_CYAN, BOX_AMBER, addIcon, addSurface, child, faceTowards } from './EyesUpUI';
+import { ACCENT_CYAN, addIcon, addSurface, child, faceTowards } from './EyesUpUI';
 
 /**
  * Pass 5 nudge chevron (artifact S3): a 6 × 6 cm amber double chevron ("‹‹" / "››", Material
@@ -42,10 +42,12 @@ import { ACCENT_CYAN, BOX_AMBER, addIcon, addSurface, child, faceTowards } from 
  */
 const CHEVRON_CM = 10;
 const CHEVRON_ICON_Y = 6.5;
-/** Round 6: solid backing behind icon + caption (the additive display washes out thin amber on a bright wall). */
-const CHEVRON_BACK_W = 15;
-const CHEVRON_BACK_H = 19;
-const CHEVRON_BACK_Y = 4.2;
+/** Cycle 2 (M5): no box around the chevron; it is the icon plus caption. These are their extents about the hint origin (cm), used for placement only. */
+const CHEVRON_EXT_HALF_W = 5.5;
+const CHEVRON_EXT_BELOW = 1.5;
+const CHEVRON_EXT_ABOVE = 11.5;
+/** A member's body is about this wide (half, cm in the stage) for the chevron's keep-clear rects. */
+const MEMBER_BODY_HALF_W_CM = 26;
 /** Round 7: hint x offset (was 20) and drop so the backing clears the opening pill's corner in the nudge still. */
 const CHEVRON_X_CM = 21;
 /** Round 7: hint dropped this far so the backing's top edge sits below the pill's bottom edge. */
@@ -56,13 +58,11 @@ const CHEVRON_PLANE_CM = 100;
 const CHEVRON_PANEL_MARGIN_CM = 1.5;
 /** Backing extents about the hint origin at the largest pulse scale (1.05). */
 const CHEVRON_BOX: ChevronBox = {
-  halfW: (CHEVRON_BACK_W / 2) * 1.05,
-  below: (CHEVRON_BACK_H / 2 - CHEVRON_BACK_Y) * 1.05,
-  above: (CHEVRON_BACK_H / 2 + CHEVRON_BACK_Y) * 1.05,
+  halfW: CHEVRON_EXT_HALF_W * 1.05,
+  below: CHEVRON_EXT_BELOW * 1.05,
+  above: CHEVRON_EXT_ABOVE * 1.05,
 };
 const CHEVRON_TEXT = new vec4(1.0, 0.82, 0.35, 1);
-const CHEVRON_FILL = new vec4(0.34, 0.26, 0.1, 0.12);
-const CHEVRON_OUTLINE_CM = 0.6;
 /** ≈ 1.5 cm caption at 100 cm (S3: "left" 1.5 cm). */
 const CHEVRON_CAPTION_SIZE = 150;
 
@@ -76,7 +76,7 @@ const SETUP_DISTANCE_CM = 110;
 const SETUP_BELOW_EYES_CM = -10;
 const SUMMARY_DISTANCE_CM = 150;
 /** Round 6: raised so the stat tiles and tip clear the room's wall art (additive display: art shows through any fill). */
-const SUMMARY_ABOVE_EYES_CM = 16;
+const SUMMARY_ABOVE_EYES_CM = 29;
 /** design: panels follow the head only while the preview/device pose settles, then stay put. */
 const PANEL_SETTLE_SECONDS = 1.0;
 
@@ -103,11 +103,11 @@ const PILL_SCALE = 1.2;
 const PILL_H = 12;
 const PILL_Y = 11;
 /**
- * The room meter floats between the heads and the card. Raised 6 cm (was 4 cm below the anchor, now 2 cm above) so lit halos
+ * The room meter floats between the heads and the card. Raised 6 cm (was 4 cm below the anchor, now 6 cm above; Cycle 2: with 3 members 42 cm apart the outer halos reached the label) so lit halos
  * (burst ring up to 1.6x) no longer cover it; the card is lifted by the same amount so the two never overlap.
  */
-const METER_BELOW_ANCHOR_CM = -2;
-const CARD_LIFT_CM = 6;
+const METER_BELOW_ANCHOR_CM = -6;
+const CARD_LIFT_CM = 10;
 /** Room meter plate extents about its centre (cm, local): track 52 + label 28 + padding, 3 + padding tall (RoomMeter.ts). */
 const METER_HALF_W_CM = 42;
 const METER_HALF_H_CM = 3.6;
@@ -192,15 +192,6 @@ export class EyesUpApp extends BaseScriptComponent {
         this.hintColors[i] = CHEVRON_TEXT;
       }
       this.hintTexts[i] = t;
-      // Outline only: four thin bars and a faint fill (addSurface's frame is a solid quad, which made the old box cover whichever member it landed on).
-      const back = child(so, 'ChevronBack', new vec3(0, CHEVRON_BACK_Y, -0.3));
-      addSurface(back, CHEVRON_BACK_W, CHEVRON_BACK_H, 0, CHEVRON_FILL, null);
-      const bar = BOX_AMBER[1];
-      const ot = CHEVRON_OUTLINE_CM;
-      addSurface(child(back, 'Top', new vec3(0, (CHEVRON_BACK_H - ot) / 2, 0.05)), CHEVRON_BACK_W, ot, 0, bar, null);
-      addSurface(child(back, 'Bottom', new vec3(0, -(CHEVRON_BACK_H - ot) / 2, 0.05)), CHEVRON_BACK_W, ot, 0, bar, null);
-      addSurface(child(back, 'Left', new vec3(-(CHEVRON_BACK_W - ot) / 2, 0, 0.05)), ot, CHEVRON_BACK_H, 0, bar, null);
-      addSurface(child(back, 'Right', new vec3((CHEVRON_BACK_W - ot) / 2, 0, 0.05)), ot, CHEVRON_BACK_H, 0, bar, null);
       const icon = addIcon(so, i === 0 ? 'double_arrow_left' : 'double_arrow_right', CHEVRON_CM, new vec3(0, CHEVRON_ICON_Y, 0));
       this.hintIcons[i] = icon;
     });
@@ -391,7 +382,7 @@ export class EyesUpApp extends BaseScriptComponent {
     return r;
   }
 
-  /** View-plane rect of each member's head and halo ring (only lit ones when `litOnly`), skipping members behind the camera. */
+  /** View-plane rect of each member's silhouette (head and halo ring down to the floor) (only lit ones when `litOnly`), skipping members behind the camera. */
   private headRects(litOnly: boolean): PlaneRect[] {
     const inv = this.camera.getTransform().getInvertedWorldTransform();
     const rects: PlaneRect[] = [];
@@ -402,8 +393,11 @@ export class EyesUpApp extends BaseScriptComponent {
       const p = inv.multiplyPoint(headWorld);
       if (p.z > -5) return;
       const k = CHEVRON_PLANE_CM / -p.z;
-      const r = LIT_HALO_RADIUS_CM * k * so.getTransform().getWorldScale().x;
-      rects.push({ minX: p.x * k - r, maxX: p.x * k + r, minY: p.y * k - r, maxY: p.y * k + r });
+      const sc = so.getTransform().getWorldScale().x;
+      const r = LIT_HALO_RADIUS_CM * k * sc;
+      // The whole silhouette (head to floor) is kept clear, not just the head: the chevron belongs on the wall above it.
+      const half = Math.max(r, MEMBER_BODY_HALF_W_CM * k * sc);
+      rects.push({ minX: p.x * k - half, maxX: p.x * k + half, minY: -1000, maxY: p.y * k + r });
     });
     return rects;
   }

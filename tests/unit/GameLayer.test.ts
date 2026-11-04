@@ -95,9 +95,22 @@ describe('audienceLook', () => {
     expect(audienceLook(0.2, 1).headTiltDeg).toBe(0);
   });
 
-  it('a slumped body is desaturated next to an engaged one', () => {
-    const sat = (c: number[]) => Math.max(c[0], c[1], c[2]) - Math.min(c[0], c[1], c[2]);
-    expect(sat(audienceLook(0).bodyColor)).toBeLessThan(0.5 * sat(audienceLook(1).bodyColor));
+  it('a slumped body keeps about 60 % of the engaged saturation (muted, not a pale ghost) and is dimmer', () => {
+    const hsvSat = (c: number[]) => (Math.max(c[0], c[1], c[2]) - Math.min(c[0], c[1], c[2])) / Math.max(c[0], c[1], c[2]);
+    const ratio = hsvSat(audienceLook(0).bodyColor) / hsvSat(audienceLook(1).bodyColor);
+    expect(ratio).toBeGreaterThan(0.5);
+    expect(ratio).toBeLessThan(0.7);
+    expect(audienceLook(0).bodyColor[3]).toBeLessThan(audienceLook(1).bodyColor[3]);
+  });
+
+  it('the perk-up ring pulse expands and fades over the burst, and is off without one', () => {
+    expect(audienceLook(0.2, 0).pulseAlpha).toBe(0);
+    const start = audienceLook(0.2, 1);
+    const end = audienceLook(0.2, 0.05);
+    expect(start.pulseScale).toBeCloseTo(1, 6);
+    expect(end.pulseScale).toBeGreaterThan(2.2);
+    expect(start.pulseAlpha).toBeGreaterThan(0.8);
+    expect(end.pulseAlpha).toBeLessThan(0.2);
   });
 
   it('colors are saturated blue when engaged (not grey) and never black', () => {

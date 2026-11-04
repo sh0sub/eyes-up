@@ -2,11 +2,17 @@
 
 ![Eyes Up: ignored audience members slump and light a phone, the one you look at perks up in cyan, the room meter drops](devpost/screenshots/00-hero-eyes-up.png)
 
-**Eyes Up** is a presentation rehearsal coach for Spectacles. It seats a small virtual audience in your room, lights up whoever you look at, nudges you toward the side you ignore, and hides your notes until you need them.
+**Eyes Up** is a presentation rehearsal coach for Spectacles, built for Devpost "Learn AR with SPECS".
 
-**Pitch:** people rehearse staring at slides, so the room never gets practice. On Spectacles a virtual audience sits 2.5 m ahead, lights up where you look, and chimes and points when you ignore one side for 8 seconds. Members you ignore slump and light a phone, members you look at perk up, a room meter and an S/A/B/C grade close the run. LEAF 10/10 and 164 tests pass in the Interactive Preview; gaze = head direction, driven by the LEAF harness, not tested on a device. Process at a glance: `devpost/screenshots/09-process-at-a-glance.png`.
+1. **Problem:** people rehearse staring at slides, a phone or a script, so the room never gets practice.
+2. **Spatial moment:** a virtual audience sits 2.5 m ahead and reacts to where you look: the member you face lights up and perks up, the ones you ignore slump and light a phone, and after 8 s a chime and chevron point to the side you forgot.
+3. **Proof:** built with CLAD and the Lens Studio MCP. LEAF 10/10 and 166 tests pass in the Interactive Preview; gaze = head direction, driven by the LEAF harness. **Preview only, not tested on a device.**
 
-Built for Learn AR with SPECS (deadline 2026-11-09 PST). New Lens built with CLAD and the Lens Studio MCP skill pack; preview-only is acceptable, no device required.
+**What I learned building AR** (details in `devpost/learnings.md` and `devpost/screenshots/09-process-at-a-glance.png`): additive displays wash out pale colours; gaze is a head ray, so hit areas must be exact and the scene must fit a narrow view; test the logic in Node and drive the Lens with CLAD and MCP.
+
+**How it was built:** a pure-TypeScript core (state machine, gaze, engagement, nudge, score, view models; Node-tested), CLAD skills for the scene and UIKit panels, Lens Studio MCP tools for edits, camera moves, LEAF runs and captures. Build log: `devpost/build-notes.md`.
+
+Built for Learn AR with SPECS (deadline 2026-11-09 PST). Preview-only is acceptable, no device required.
 
 - Audience placement with camera transform, gaze via head rotation
 - Halo on the watched audience member, chime plus arrow for the neglected side
@@ -19,11 +25,11 @@ Built for Learn AR with SPECS (deadline 2026-11-09 PST). New Lens built with CLA
 - **10 LEAF scenarios pass** in the Interactive Preview: `start_places_audience`, `gaze_fills_halo`,
   `neglect_triggers_nudge`, `next_shows_card_then_pill`, `dwell_expands_pill`, `finish_shows_summary`,
   `repeated_nudge`, `finish_pulses_at_time`, `neglect_disengages_then_recovers`, `finish_gives_grade` (results: `devpost/leaf-results.md`). Node checks:
-  `npm run check` (typecheck, lint, 164 vitest tests).
+  `npm run check` (typecheck, lint, 166 vitest tests).
 - **Preview only, not tested on a Spectacles device.** Gaze is head rotation, simulated by LEAF in tests.
-- **Nudge chevron placement rule** (`Assets/Scripts/core/ChevronPlacement.ts`): the chevron is an outline that keeps its
-  edge-of-view spot; panels (podium, cue card), the room meter and every member's head are projected into its view
-  plane each frame so it slides into free space (or, if there is none, avoids what it can) rather than covering them. Unit tested.
+- **Nudge chevron placement rule** (`Assets/Scripts/core/ChevronPlacement.ts`): the chevron is a bold double chevron with a caption and no box; it keeps its
+  edge-of-view spot; panels (podium, cue card), the room meter and every member's whole silhouette are projected into its view
+  plane each frame so it slides onto free wall (or, if there is none, avoids what it can) rather than covering them. Unit tested.
 - **Demo video:** 1:33, narrated and captioned, opening on the hero halo frame and a drawn "Eyes drop" card, then live preview footage (Setup, pinch, audience, halo; the disclosure shows for the first 2 s, then a PREVIEW pill stays on screen). Gaze, nudge and podium clips play in real time, the cue clip at x1.3 (badged on screen), the Summary is a still capture with a zoom to the timeline, and a card shows three real before/after pairs. `scripts/video/build-video.mjs` builds it from Lens Studio preview footage. YouTube: **TODO_PASTE_PUBLIC_YOUTUBE_URL_HERE**
   (the upload needs the entrant's account).
 - Setup: segmented 3/5/10 min and 3/6/9 audience buttons (selected = cyan), deck list, optional

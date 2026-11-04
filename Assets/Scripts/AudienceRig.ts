@@ -30,6 +30,12 @@ const PHONE_RGB: [number, number, number] = [1.0, 0.8, 0.3];
 /** 'zzz' marker: lavender, above-right of the sunk head. Title2 at 420 cm is about 7 cm tall in the silhouette's space. */
 const ZZZ_RGB = new vec4(0.85, 0.85, 1.0, 1);
 const ZZZ_DIST = 420;
+/** Perk-up ring pulse: a thin cyan ring of short bars (the display has no hollow disc), radius 20 cm at scale 1. */
+const RING_SEGMENTS = 24;
+const RING_RADIUS = 20;
+const RING_BAR_LEN = 6;
+const RING_BAR_THICK = 1.5;
+const RING_RGB: [number, number, number] = [0.35, 0.95, 1.0];
 
 interface Member {
   body: SceneObject | null;
@@ -44,6 +50,8 @@ interface Member {
   coneVisuals: RenderMeshVisual[];
   zzz: SceneObject;
   zzzText: Text;
+  ring: SceneObject;
+  ringVisuals: RenderMeshVisual[];
 }
 
 function byName(parent: SceneObject, name: string): SceneObject | null {
@@ -93,6 +101,15 @@ export class AudienceRig {
       const zzz = child(root, 'Zzz', new vec3(16, 170, 20));
       const zzzText = addText(zzz, 'ZzzText', 'zzz', 'Title2', 14, 8, ZZZ_DIST, ZZZ_RGB, new vec3(0, 0, 0));
       zzz.enabled = false;
+      const ring = child(root, 'PerkRing', new vec3(0, HEAD_REST_Y, 14));
+      const ringVisuals: RenderMeshVisual[] = [];
+      for (let k = 0; k < RING_SEGMENTS; k++) {
+        const a = (k / RING_SEGMENTS) * 2 * Math.PI;
+        const bar = child(ring, `Seg${k}`, new vec3(Math.cos(a) * RING_RADIUS, Math.sin(a) * RING_RADIUS, 0));
+        bar.getTransform().setLocalRotation(quat.angleAxis(a + Math.PI / 2, new vec3(0, 0, 1)));
+        ringVisuals.push(addSurface(bar, RING_BAR_LEN, RING_BAR_THICK, 0, new vec4(RING_RGB[0], RING_RGB[1], RING_RGB[2], 0), null));
+      }
+      ring.enabled = false;
       return {
         body,
         head,
@@ -106,6 +123,8 @@ export class AudienceRig {
         coneVisuals,
         zzz,
         zzzText,
+        ring,
+        ringVisuals,
       };
     });
   }
@@ -143,6 +162,14 @@ export class AudienceRig {
       t.setLocalPosition(headPos);
       t.setLocalScale(new vec3(m.haloRestScale.x * s, m.haloRestScale.y * s, m.haloRestScale.z * s));
     }
+    const pa = look.pulseAlpha * fade;
+    if (m.ring.enabled !== pa > 0.01) m.ring.enabled = pa > 0.01;
+    if (pa > 0.01) {
+      const rt = m.ring.getTransform();
+      rt.setLocalPosition(new vec3(headPos.x, headPos.y, headPos.z + 14));
+      rt.setLocalScale(new vec3(look.pulseScale, look.pulseScale, 1));
+      m.ringVisuals.forEach((v) => (v.mainPass.baseColor = new vec4(RING_RGB[0], RING_RGB[1], RING_RGB[2], pa)));
+    }
     const glow = look.phoneGlow * fade;
     if (m.phone.enabled !== glow > 0.01) m.phone.enabled = glow > 0.01;
     if (glow > 0.01) {
@@ -163,6 +190,7 @@ export class AudienceRig {
     this.members.forEach((m) => {
       m.phone.enabled = false;
       m.zzz.enabled = false;
+      m.ring.enabled = false;
     });
   }
 }

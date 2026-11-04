@@ -47,6 +47,9 @@ export interface Tunables {
   floorOffsetCm: number;
   /** plan: spacing between audience members along the arc (0.6 m). */
   audienceSpacingCm: number;
+  /** design: audiences of up to `smallAudienceMax` sit this close, so all of them fit the narrow lens viewport (build-notes M1). */
+  smallAudienceSpacingCm: number;
+  smallAudienceMax: number;
   /** design: height above the floor that counts as an audience member's eyes (gaze target). */
   audienceEyeHeightCm: number;
   /** design: height of the top of a silhouette's head above the floor. */
@@ -92,6 +95,8 @@ export const DEFAULT_TUNABLES: Readonly<Tunables> = Object.freeze({
   stageDistanceCm: 250,
   floorOffsetCm: 160,
   audienceSpacingCm: 60,
+  smallAudienceSpacingCm: 42,
+  smallAudienceMax: 3,
   audienceEyeHeightCm: 150,
   audienceHeadTopCm: 165,
   cardAboveHeadCm: 10,

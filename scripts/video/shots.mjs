@@ -207,7 +207,7 @@ export const SEGMENTS = [
     lines: [
       'Built with CLAD and Lens Studio MCP.',
       'Ten LEAF scenarios pass.',
-      '164 Node tests pass.',
+      '166 Node tests pass.',
     ],
   },
   {

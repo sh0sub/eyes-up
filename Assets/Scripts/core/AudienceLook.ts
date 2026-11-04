@@ -13,8 +13,8 @@ export type Rgba = [number, number, number, number];
 
 /** Engaged / disengaged body tint. Engaged is a clearly blue, fairly opaque glass (was 0.55,0.68,0.85 @ 0.35). */
 export const BODY_ENGAGED: Rgba = [0.2, 0.6, 1.0, 0.72];
-/** Desaturated cool grey-lavender: next to the saturated sky blue of an engaged member the slumped one reads as drained. */
-export const BODY_DISENGAGED: Rgba = [0.66, 0.66, 0.74, 0.42];
+/** Muted periwinkle (about 60 % of the engaged saturation, dimmer and more transparent): clearly the same person, clearly drained next to the lit blue; the old grey-lavender read as a pale ghost. */
+export const BODY_DISENGAGED: Rgba = [0.44, 0.5, 0.82, 0.5];
 export const BODY_PERK: Rgba = [0.25, 0.9, 1.0, 0.85];
 export const PHONE_GLOW: [number, number, number] = [1.0, 0.78, 0.3];
 
@@ -44,6 +44,10 @@ export interface AudienceLook {
   haloBurstScale: number;
   /** Halo alpha boost from the burst, 0..1 added to the halo alpha. */
   haloBurstAlpha: number;
+  /** Scale of the thin cyan ring that expands from the head on a perk-up (1 at the start, 2.4 at the end; meaningless when pulseAlpha is 0). */
+  pulseScale: number;
+  /** Alpha of that ring: 0 with no burst, fading as it expands. */
+  pulseAlpha: number;
 }
 
 const mix = (a: Rgba, b: Rgba, k: number): Rgba => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k), lerp(a[3], b[3], k)];
@@ -69,5 +73,7 @@ export function audienceLook(engagement: number, burst = 0): AudienceLook {
     phoneGlow: clamp01((0.6 - e) / 0.4),
     haloBurstScale: b > 0 ? 1 + 0.6 * Math.sin(Math.PI * (1 - b)) : 1,
     haloBurstAlpha: b,
+    pulseScale: 1 + 1.4 * (1 - b),
+    pulseAlpha: b > 0 ? 0.9 * Math.min(1, b * 2) : 0,
   };
 }

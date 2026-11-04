@@ -35,7 +35,7 @@ more.") close the loop: look, get feedback, adjust, run it again (Again keeps th
 | Does Next show the card, then a tag after 4 s, and does a 1 s dwell reopen it? | Logic proven | LEAF `next_shows_card_then_pill`, `dwell_expands_pill` |
 | Does Finish show a Summary whose zones sum to 100 and whose time reads m:ss? | Logic proven | LEAF `finish_shows_summary` |
 | Does a neglected member slump, recover when looked at, and does Finish show a grade? | Logic proven | LEAF `neglect_disengages_then_recovers`, `finish_gives_grade` |
-| Do the timing rules hold under edge cases (gaps, ties, no gaze at all)? | Logic proven | 164 Node tests, typecheck and lint clean |
+| Do the timing rules hold under edge cases (gaps, ties, no gaze at all)? | Logic proven | 166 Node tests, typecheck and lint clean |
 | Is the attention score a fair measure of speaking skill? | **Unproven** | A design heuristic (balance x engagement), not validated |
 | Are panels legible and comfortable at real distance on Spectacles optics? | **Feel unproven** | Preview only, tuned from preview screenshots |
 | Does the spatial chime clearly come from the left or right? | **Feel unproven** | Cannot be judged in the editor |
@@ -51,6 +51,11 @@ more.") close the loop: look, get feedback, adjust, run it again (Again keeps th
 | Cue card and tag text too small at Spectacles scale | Card 84 x 34 cm, title size 290, bullets 180, tag effective size +12 % | `walkthrough/04-cue-card.png` |
 
 Habit 4 (guide attention) got a second channel: the neglected side now also looks neglected.
+
+## Cycle 2: two more things the Preview taught us
+
+- The lens is drawn in a viewport narrower than the panel around it (about +-72 cm at 2.5 m), so a 3-person audience at 60 cm spacing was sliced at the edge. Audiences of 3 or fewer now sit 42 cm apart. On glasses the field of view is narrow too, so arrange the world to fit it.
+- The Summary is read at arm's length: it grew about 1.4x, zone labels doubled, the three stat tiles became one line, and the buttons got an opaque plate so they do not blend into the wall.
 
 ## Process notes
 

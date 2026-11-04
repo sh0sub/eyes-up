@@ -36,6 +36,8 @@ export interface SummaryState {
   zones: Array<{ name: ZoneName; percent: number; label: string; bar: number; outOfRange: boolean }>;
   /** "11 s · left · at 1:12" */
   longestLookAwayLabel: string;
+  /** One line for the stats tile: "Look-away 11 s center · Cards 1 of 5 · Nudges 1" (the timestamp stays in longestLookAwayLabel). */
+  statsLine: string;
   cardExpandsLabel: string;
   nudgesLabel: string;
   /** Cards tile value: "2 of 5" (cards opened of the deck); "2" without a deck size. */
@@ -92,6 +94,7 @@ export function summaryState(s: StatsSnapshot, shownSeconds: number, ctx?: Summa
       outOfRange: zoneOutOfRange(s.zonePercents[z]),
     })),
     longestLookAwayLabel: `${away} s · ${s.longestLookAway.zoneName} · at ${formatMSS(s.longestLookAway.startSeconds)}`,
+    statsLine: `Look-away ${away} s ${s.longestLookAway.zoneName} · Cards ${ctx?.cardCount ? `${s.cardExpands} of ${ctx.cardCount}` : `${s.cardExpands}`} · Nudges ${s.nudges}`,
     cardExpandsLabel: `${s.cardExpands}`,
     nudgesLabel: `${s.nudges}`,
     cardsLabel: ctx?.cardCount ? `${s.cardExpands} of ${ctx.cardCount}` : `${s.cardExpands}`,

@@ -3,7 +3,7 @@
  *
  * Seats `count` audience members on an arc in front of the head: horizontal distance
  * `stageDistanceCm` (2.5 m), on the floor `floorOffsetCm` (160 cm) below the head,
- * `audienceSpacingCm` (0.6 m) apart along the arc, centered on the head's yaw.
+ * `audienceSpacingCm` (0.6 m; 0.42 m for 3 or fewer) apart along the arc, centered on the head's yaw.
  * Index 0 is the leftmost member as seen by the speaker.
  *
  * Pure math only; the Lens side (EyesUpApp) moves the Audience_i SceneObjects to these points.
@@ -28,7 +28,7 @@ export interface StageLayout {
 
 export type StageTunables = Pick<
   Tunables,
-  'stageDistanceCm' | 'floorOffsetCm' | 'audienceSpacingCm' | 'audienceEyeHeightCm' | 'audienceHeadTopCm' | 'cardAboveHeadCm'
+  'stageDistanceCm' | 'floorOffsetCm' | 'audienceSpacingCm' | 'smallAudienceSpacingCm' | 'smallAudienceMax' | 'audienceEyeHeightCm' | 'audienceHeadTopCm' | 'cardAboveHeadCm'
   | 'podiumDistanceCm' | 'podiumBelowCm'
 >;
 
@@ -42,7 +42,9 @@ export function computeStageLayout(
   const facing = flatten(headForward);
   const right = cross(facing, UP);
   const floorY = headPosition.y - t.floorOffsetCm;
-  const step = t.audienceSpacingCm / t.stageDistanceCm; // radians between seats along the arc
+  // Small audiences sit closer: the lens viewport is narrow (about +-72 cm at 2.5 m), and a 3-person arc at 60 cm cut the outer two off.
+  const spacing = count <= t.smallAudienceMax ? Math.min(t.audienceSpacingCm, t.smallAudienceSpacingCm) : t.audienceSpacingCm;
+  const step = spacing / t.stageDistanceCm; // radians between seats along the arc
   const seats: Vec3Like[] = [];
   const eyeTargets: Vec3Like[] = [];
   for (let i = 0; i < count; i++) {

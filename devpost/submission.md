@@ -8,18 +8,30 @@ Rehearse your talk with your eyes on the room, not on your notes.
 
 ![Eyes Up: ignored audience members slump and light a phone, the one you look at perks up in cyan, the room meter drops](screenshots/00-hero-eyes-up.png)
 
-## Pitch
+## In three lines
 
-- **Problem:** people rehearse talks staring at slides, a phone or a script, so the room never gets practice.
-- **Spatial moment:** on Spectacles a virtual audience sits 2.5 m ahead, lights up where you look, and chimes and points when you ignore one side for 8 seconds.
-- **Game hook:** every audience member has a mood. Ignore someone and they slump and light a phone; look at them and they perk up in a cyan burst. A small room meter and an S / A / B / C grade at the end turn a rehearsal into a run you want to beat (best-previous compare when you replay, kept only while the Lens is open).
-- **Proof:** LEAF 10/10 scenarios pass in the Lens Studio Interactive Preview and 164 tests pass. Preview only, gaze driven by the LEAF harness, not tested on a device. Gaze = head direction in this build.
+1. **Problem:** people rehearse talks staring at slides, a phone or a script, so the room never gets practice.
+2. **Spatial moment:** on Spectacles a virtual audience sits 2.5 m ahead and **reacts to where you look**: the member you face lights up in cyan and perks up, the ones you ignore slump and light a phone, and after 8 seconds a chime and a chevron point to the side you forgot.
+3. **Proof:** built with CLAD and the Lens Studio MCP; 10 of 10 LEAF scenarios pass in the Interactive Preview and 166 Node tests pass. Preview only, gaze = head direction driven by the LEAF harness, not tested on a device.
 
 > **Judge in 60 seconds**
 > 1. Gallery image 1 (`devpost/screenshots/00-hero-eyes-up.png`, the hero above): slumped members beside a lit one with the room meter. Video 0:00-0:17: hero frame, live Setup panel, pinch Start, audience appears, halo lights up.
 > 2. Video 0:45-1:00, Summary segment: left / center / right split, longest look-away, tip. Video 1:00-1:13: three before/after pairs. Closing frame at 1:29 carries the repo link and "Preview only, LEAF 10/10".
 > 3. `devpost/leaf-results.md`: 10/10 scenarios PASSED, plus `devpost/screenshots/09-process-at-a-glance.png`.
-> 4. The game layer (members slump, perk up, room meter, grade) is in `devpost/screenshots/10-engagement-slump.png`, `11-perk-up.png` and `06-summary.png`.
+> 4. The game layer (members slump, perk up, room meter, grade) is in `devpost/screenshots/10-engagement-slump.png`, `11-perk-up.png` and `06-summary.png` (`06b-summary-grade-zones.png` is a close crop of the grade, tip and zone bars).
+
+## What I learned building AR
+
+1. **Glasses punish pale colours and thin lines.** The display is additive, so black is clear and pale is washed out. A cyan-white halo read as a grey disc in the Preview, and a thin amber chevron box vanished on a bright wall. The lit state is now saturated cyan with the red channel low, slumped members keep a muted blue instead of grey, and the chevron is a bold icon with no box. Seen in `09-process-at-a-glance.png` (Fix 1) and `learnings.md`.
+2. **Gaze is a head ray, so targets need an exact, generous hit area, and the whole scene has to fit a narrow view.** We hit-test the real pill rectangle instead of a cone, and a 3-person audience sits 42 cm apart instead of 60 because the lens viewport is only about 1.4 m wide at 2.5 m (the outer two were cut off). UIKit's rounded backplates did not draw on Lens Studio 5.24.1, so panels use plain quads and UIKit keeps layout and pinch input.
+3. **Test the logic in Node, drive the Lens with CLAD and MCP.** Timing rules (8 s nudge, 4 s card, 1 s dwell, engagement decay) live in pure TypeScript and ran in milliseconds under Vitest. CLAD skills built the scene and the Lens Studio MCP tools edited it, moved the preview camera, ran LEAF scenarios and let us look at captures, which found all of the above. Full log in `devpost/learnings.md` and `devpost/build-notes.md`; the process card is `screenshots/09-process-at-a-glance.png`.
+
+## How it was built
+
+- **Pure-TypeScript core (no Lens Studio dependency):** state machine, gaze zones, halo attention, nudge rules, cue card, stage-line timer, session stats, engagement and room meter, score and grade, panel view models, chevron placement, deck import parser. 166 unit and integration tests, typecheck and lint pass in Node.
+- **CLAD skills:** scene and UIKit panels built with the CLAD build skills (UIKit panels and buttons, Spectacles Interaction Kit pinch input).
+- **Lens Studio MCP tools:** scene edits, `MovePreviewCamera`, `run_leaf_scenario`, compile checks and log reads, all driven through MCP; no hand-edited scene files.
+- **LEAF:** 10 scenarios pass one at a time in the Interactive Preview (start places the audience, gaze fills the halo, neglect triggers a nudge, card then pill, dwell expands the pill, finish shows the summary, repeated nudge, Finish pulses at time, a neglected member slumps and recovers, Finish shows a grade).
 
 ## What it does
 
@@ -30,9 +42,8 @@ Eyes Up is a presentation rehearsal coach for Spectacles. Setup is three pinches
 - **Nudge:** ignore one side for 8 seconds and a soft chime plays from that side while an amber double chevron appears at the edge of your view.
 - **Notes:** your next talking point floats above the audience for 4 seconds, then shrinks to a three-word tag. Look at it for a second and it opens again.
 - **Podium:** look down like a wristwatch for Prev, Next, Finish, a section counter and the talk timer.
-- **Audience reactions:** each silhouette has an engagement level. Someone you ignore for about 5 seconds starts to slip: the head sinks forward, the body slumps, the head tilts about 25 degrees, the colour drains to a pale grey-lavender, a small "zzz" appears and a small rounded phone glow with a faint light cone lights at the lap. Look at them and they straighten up with a cyan halo burst within about a second and a half.
-- **Room meter:** a thin bar on a dark plate between the audience and the cue card shows how engaged the whole room is (cyan, amber, coral) with one percentage at its left end, where lit halos cannot cover it. It is the only extra element in view.
-- **Summary:** the audience applauds (louder and bigger for a better score), then you see an attention grade (S / A / B / C) and score, your left / center / right split, a gaze timeline, your longest look-away, how often you used the cards and a one-line tip. Press Again and the Summary also shows your best earlier score from this session. On the Summary the grade is the largest element, the tip the second largest; Balance sits in the score tile.
+- **Audience and room:** ignored members slump (head sinks and tilts, colour mutes, "zzz", phone glow); look at them and they perk up with a cyan ring burst. A thin room meter shows how engaged everyone is.
+- **Summary:** applause that scales with your score, then an S / A / B / C grade, left / center / right split, gaze timeline, longest look-away and one tip. Again keeps your settings and shows your best earlier score from this session.
 
 ### How you learn from it
 
@@ -51,12 +62,12 @@ loop the Lens is built around.
 
 Every caption below describes what the image shows in the Interactive Preview (preview only, gaze driven by the LEAF harness, not tested on a device).
 
-1. `devpost/screenshots/00-hero-eyes-up.png`: Eyes Up. Two members slumped with a phone glow, one lit, the room meter amber; beside it the perk-up burst.
-2. `devpost/screenshots/10-engagement-slump.png`: Ignored members sink, desaturate, light a phone and show "zzz" while the member you look at stays lit.
-3. `devpost/screenshots/11-perk-up.png`: Look at a slumped member and a cyan burst lifts the head.
-4. `devpost/screenshots/06-summary.png`: The payoff: a large S / A / B / C grade, attention score, room and balance, zone split, gaze timeline, one tip.
-5. `devpost/screenshots/09-process-at-a-glance.png`: Process: three fixes found in the Preview (halo, hit area, game layer), 10 of 10 LEAF scenarios, 164 tests.
-6. `devpost/screenshots/03-nudge-chevron.png`: The nudge: an outline chevron and "left" appear for the side you ignored, clear of every head and the meter.
+1. `devpost/screenshots/00-hero-eyes-up.png`: Eyes Up. Two members slumped with a phone glow beside one lit, the room meter amber; beside it the perk-up ring burst with the meter near full.
+2. `devpost/screenshots/10-engagement-slump.png`: Ignored members sink, tilt, mute their colour, light a phone and show "zzz" while the member you look at stays lit.
+3. `devpost/screenshots/11-perk-up.png`: Look at a slumped member: a cyan ring pulse and burst lift the head mid-frame, and the room meter jumps from 43 % to 83 %.
+4. `devpost/screenshots/06-summary.png`: The payoff: a large S / A / B / C grade, attention score, room and balance, zone split, gaze timeline, one tip, on an opaque button plate clear of the wall art (`06b-summary-grade-zones.png` is the close crop).
+5. `devpost/screenshots/09-process-at-a-glance.png`: Process: three fixes found in the Preview (halo, hit area, game layer), 10 of 10 LEAF scenarios, 166 tests, the fixes behind lessons 1 and 2.
+6. `devpost/screenshots/03-nudge-chevron.png`: The nudge: an amber double chevron and "left" (no box) appear for the side you ignored, on the wall above the silhouettes.
 7. `devpost/screenshots/04-cue-card.png`: The cue card with the room meter below it: one bar, one number.
 8. `devpost/screenshots/05-podium.png`: The podium you look down at: Prev, Next, Finish, section counter and talk timer.
 9. `devpost/screenshots/02-audience-lit-halo.png`: The halo: the member you face lights up in cyan within about a second.
@@ -68,33 +79,6 @@ Anyone who has to speak to a room and keeps staring at slides, a phone or a scri
 a thesis defence, founders pitching, teachers, people with a job interview coming up. A laptop
 teleprompter pulls your eyes down to a screen, which is the habit you want to break. Glasses keep
 the room in view, know where you look, and draw in the world, so this only makes sense on glasses.
-
-## How it was built
-
-A new Lens built with CLAD and the Lens Studio MCP skill pack, driven end to end through the Lens
-Studio MCP tools. The scene uses UIKit panels and buttons, the audience, halo, nudge and cue card
-are TypeScript components. All logic (state machine, gaze zones, halo attention, nudge rules, cue
-card, stage-line timer, session stats, engagement and room meter, score and grade, panel view
-models, deck import parser) is plain TypeScript
-with no Lens Studio dependency, so Node tests it: 164 unit and integration tests, typecheck and
-lint all pass. Ten LEAF scenarios pass in the Interactive Preview (start places the audience,
-gaze fills the halo, neglect triggers a nudge, card then pill, dwell expands the pill, finish shows
-the summary, repeated nudge, the Finish button pulses once the talk length is reached, a neglected member slumps and recovers when looked at, Finish shows a grade). The nudge chevron is an outline that avoids panels, heads and the room meter where the view has room (placement rule in `devpost/build-notes.md`, unit tested).
-
-## What we learned
-
-- For a learner, feedback only helps when it becomes one action. One gaze number is easy to ignore, so the Summary ends with a single tip ("Next time, look left more.") that you can carry into the next run.
-- Design for the glasses first. The 40 x 30 cm Setup panel, 10 cm above eye level, is the only
-  thing on screen during setup. Keeping the world uncluttered mattered more than adding features.
-- Additive displays punish pale colors. A cyan-white halo washed out to a grey disc on the
-  preview, so the lit state is now saturated cyan (red channel kept low) and reads in seconds.
-- Gaze is a head ray, so every target needs a generous hit area. We hit-test the real pill
-  rectangle instead of a cone, which stopped the dwell from latching on the center audience.
-- UIKit on Lens Studio 5.24.1 did not draw its rounded backplates, so panels use plain quads for
-  surfaces while UIKit keeps layout, colliders and pinch input. Documented in build-notes.md.
-- A jury note became a fix. Our own review said the preview looked grey on grey, had little emotional hook and the cue card text was small. The silhouettes and halos are now saturated blue and cyan, the cue card and tag text grew about 20 % (card 84 x 34 cm), and the audience reacts to you: members slump when ignored and perk up when looked at, with a room meter and a grade. Logged in `devpost/learnings.md` as design note to fix.
-- Test the logic away from the editor. The pure TypeScript core let us iterate on timing rules
-  (8 s nudge, 4 s card, 1 s dwell) in milliseconds, and LEAF scenarios checked the real Lens.
 
 ## What we would test next
 
@@ -112,6 +96,7 @@ We have not measured learning outcomes. These are open questions, not results.
   test harness (head ray and pinch simulated), and the narration and sounds are synthesized locally.
 - The attention score and grade are a design heuristic (balance times how engaged the virtual room stayed), not a validated measure of speaking skill. The best-previous compare lives only while the Lens is open; nothing is saved.
 - The demo video was cut before the game layer was added. The game layer is shown in the screenshots and LEAF scenarios, not in the video.
+- Screenshot 11 (and walkthrough 08) was captured with the perk-up burst stretched from 0.7 s to 3 s, so the ring pulse could be photographed mid-burst; the look is unchanged. Screenshots 10 and 11 use a 3-person audience; with 6 or 9 members the outer ones sit beyond the preview's narrow lens viewport, as they would at the edge of a real display.
 - Voice features (filler-word counter) are not in this build.
 - The AR keyboard for deck import does not open in the Lens Studio preview. The outline parser is
   unit tested and the sample decks cover the demo.

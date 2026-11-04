@@ -2,8 +2,9 @@
 
 Run in Lens Studio 5.24.1 Interactive Preview, driven through the Lens Studio MCP. Gaze is injected
 with `ScriptedGazeProvider`. The first six are the done criteria of `design-brief.md`, one to one.
-Final run (2026-11-04, game layer): `npm run check` passes (164 tests, typecheck, lint); the 10 LEAF scenarios
+Final run (2026-11-04, game layer): `npm run check` passes (166 tests, typecheck, lint); the 10 LEAF scenarios
 (rows 1 to 8, 13, 14) pass live with no runtime errors in the Logger. Rows 9 to 12 and 15 are capture helpers.
+Cycle 2 re-run (2026-11-04, after the 3-member spacing, Summary and chevron changes): all 10 scenarios PASSED again one at a time, no E/F lines from project scripts.
 Preview only, not tested on a Spectacles device.
 
 | # | Scenario | Checks | Result |
@@ -32,7 +33,7 @@ Preview only, not tested on a Spectacles device.
 
 ## Node tests
 
-`npm run check`: typecheck, ESLint and 164 Vitest tests (state machine, gaze zones, halo attention,
+`npm run check`: typecheck, ESLint and 166 Vitest tests (state machine, gaze zones, halo attention,
 nudge rules, chevron placement, cue card, stage line, session stats, panel view models, deck import,
 engagement decay and recovery, silhouette look, room meter tone, score, grade, best-previous compare,
 applause strength).

@@ -839,7 +839,7 @@ removing the halo, nudge, cue card, podium or Summary.
 
 ### Verification
 
-`npm run check`: typecheck, ESLint, 158 tests. Ten LEAF scenarios PASSED one at a time in the Interactive Preview,
+`npm run check`: typecheck, ESLint, 166 tests. Ten LEAF scenarios PASSED one at a time in the Interactive Preview,
 no E/F lines from project scripts. Every screenshot in `devpost/screenshots` 02 to 06, 10 and 11 was looked at
 (captured with the Lens Studio window grabbed during `capture_game`, camera set with `MovePreviewCamera` to look at
 (0, -12, -250); Summary at (0, 18, -150); podium at (0, -30, -55)). Not verified: legibility and motion on real
@@ -875,4 +875,17 @@ Findings while capturing:
 - In the narrow preview view there is no free wall above the heads (the cue card and meter occupy it), so the outline chevron lands over a member's body at times. Heads and the meter stay clear.
 - The slumped head's 25 degree roll is subtle in stills; the colour drain, the sunk head, "zzz" and the phone carry the read.
 
-Verification: `npm run check` 164 tests, ten LEAF scenarios PASSED one at a time, every changed screenshot (02 to 06, 10, 11, hero, process card) was looked at. Not verified: legibility on real optics, anything on a device.
+Verification: `npm run check` 166 tests, ten LEAF scenarios PASSED one at a time, every changed screenshot (02 to 06, 10, 11, hero, process card) was looked at. Not verified: legibility on real optics, anything on a device.
+
+
+## Cycle 2 (2026-11-04): fit the frame, readable Summary, polish
+
+Judge-facing fixes from the cycle 1 review (M1, M2, M5, M6). Preview only, gaze driven by LEAF, not tested on a device.
+
+- **M1, the clipped right-hand member.** Cause found by looking at the full Lens Studio window: the Interactive Preview draws the lens in a viewport only about 537 of 870 px wide (about +-72 cm at 2.5 m), centred in the panel; the wall photo behind it is wider. A 3-person arc at 60 cm spacing put the outer members' bodies past that edge, so the right one looked sliced by a hard vertical line. Fix: audiences of 3 or fewer sit 42 cm apart (`smallAudienceSpacingCm`, `smallAudienceMax` in `core/Tunables.ts`, used by `StagePlacer.ts`, unit tested); 4, 6 and 9 keep 60 cm. All three members now sit inside the frame with margin in every audience capture. The room meter and cue card moved up 4 cm (`METER_BELOW_ANCHOR_CM -6`, `CARD_LIFT_CM 10`) so lit halos of the closer members do not cover the meter label.
+- **M1, 10 vs 11.** `capture_game` now makes member 0 perk up and recover first, then member 1: the room meter is 43 % in 10 (two slumped, one lit) and 83 % in 11 (mid-burst, ring pulse, two others lit). For 11 only, `burstSeconds` is stretched from 0.7 s to 3 s in the scenario so a screenshot taken after the scenario returns still lands mid-burst. The look is unchanged.
+- **M5.** Slumped members use a muted periwinkle (`BODY_DISENGAGED [0.44, 0.50, 0.82, 0.50]`, about 58 % of the engaged HSV saturation, was grey-lavender at about 11 %), the head tilt (25 degrees) and sink stay. The phone was already a rounded rectangle with a faint light cone. The box around the nudge chevron is gone (icon plus caption only, extents used for placement), and the chevron's keep-clear rects now cover each member's whole silhouette, so it lands on the wall above the heads. Perk-up gets a ring pulse: 24 short cyan bars on a circle (`AudienceRig.ts`, `pulseScale` 1 to 2.4 and `pulseAlpha` fading in `core/AudienceLook.ts`, unit tested).
+- **M2, the Summary.** Panel scale 0.85 to 1.2 (about 1.4x), zone labels and percentages at size 92 (were 48), thicker bars (1.6 cm), timeline rows 1.9 cm with larger L / C / R and "11 s" labels, the three stat tiles folded into one line (`statsLine` in `core/SummaryModel.ts`, unit tested: "Look-away 11 s center · Cards 1 of 5 · Nudges 1"), buttons 13 x 4.6 cm at Headline1 on an opaque dark plate with its own frame, panel raised to 29 cm above eye level (was 16) so the plate clears the picture frames. `06b-summary-grade-zones.png` is a close crop of the grade, zones and tip.
+- **M6.** Test count is 166 everywhere (README, devpost, docs, gallery sources, video script text); the earlier 139 / 130 / 8-scenario text is marked as an earlier state in `docs/spec-matrix.md`.
+- **Captures** (window grabs of the Interactive Preview, looked at): 02 to 06, 10, 11 and walkthrough 02 to 08 retaken, `00` hero and `09` process card rebuilt from them (`scripts/gallery/`). Camera aims as in cycle 4, Summary at (0, 22, -150).
+- Not verified: legibility on real optics, anything on a device.

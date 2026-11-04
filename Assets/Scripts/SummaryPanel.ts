@@ -2,7 +2,7 @@
  * SummaryPanel.ts — Lens component for the Summary panel (plan M8: 50×40 cm, 1.5 m ahead, eye level).
  * Pass 4 layout follows artifact S5: "Nice work — m:ss" + Balance badge, "target m:ss · deck",
  * three zone rows (name · bar · %, amber when out of 15–35 %), three stat boxes (longest look-away
- * with timestamp, Cards "2 of 5", Nudges "1"), a one-line tip, Again / Done.
+ * with timestamp, Cards "2 of 5", Nudges "1"; Cycle 2 folded them into one line), a one-line tip, Again / Done.
  * Pass 5 adds S5's gaze timeline strip (③) between the zone bars and the stat boxes, a mint check
  * icon left of the title and a "Session complete" chip above the panel. The panel grew 40 → 53 cm
  * tall to fit the strip (D27).
@@ -53,22 +53,24 @@ const GRADE_COLOR: Record<Grade, vec4> = {
   B: new vec4(0.55, 0.85, 1.0, 1),
   C: new vec4(1.0, 0.62, 0.42, 1),
 };
+const BUTTON_PLATE = new vec4(0.08, 0.11, 0.18, 1);
+const BUTTON_PLATE_FRAME = new vec4(0.6, 0.78, 0.95, 0.9);
 const W = 50;
 /** Game pass: 53 -> 60 cm to fit the grade row (attention score, grade, best-previous). */
-const H = 62;
+const H = 64;
 /** Whole-panel scale: the Summary used to clip its top in the preview frame. */
-const PANEL_SCALE = 0.85;
+const PANEL_SCALE = 1.2;
 const DIST = 150;
-const BAR_W = 27;
-const BAR_H = 1.2;
+const BAR_W = 23;
+const BAR_H = 1.6;
 /** Timeline block: 44 × 7.4 cm. Row labels on the left, a 40 cm strip, nudge markers below. */
 const TL_W = W - 6;
-const TL_H = 7.4;
+const TL_H = 9.2;
 const TL_X0 = -18.5;
 const TL_STRIP_W = 40;
-const TL_ROW_Y = [2.9, 1.0, -0.9];
-const TL_ROW_H = 1.4;
-const TL_NUDGE_Y = -2.7;
+const TL_ROW_Y = [3.5, 1.2, -1.1];
+const TL_ROW_H = 1.9;
+const TL_NUDGE_Y = -3.4;
 
 @component
 export class SummaryPanel extends BaseScriptComponent {
@@ -85,9 +87,7 @@ export class SummaryPanel extends BaseScriptComponent {
   private zoneBars: SceneObject[] = [];
   private timelineBlock: SceneObject | null = null;
   private timelineDyn: SceneObject | null = null;
-  private longestText!: Text;
-  private cardsText!: Text;
-  private nudgesText!: Text;
+  private statsText!: Text;
   private tipText!: Text;
 
   private onAgain: (() => void) | null = null;
@@ -121,32 +121,35 @@ export class SummaryPanel extends BaseScriptComponent {
     this.gameText.size = 96; // between the title (100 would crowd it) and the stat tiles: 3 short lines still fit the 28.8 cm tile
     // Zone rows: name · bar · percent (artifact S5 ②).
     for (const name of ['Left', 'Center', 'Right']) {
-      const row = flexRow(c, `Zone${name}`, W - 6, 2.7, 1.2);
-      this.zoneNames.push(textRow(row, `Zone${name}Name`, name, 'Headline2', 8, 2.7, DIST));
-      const barCell = flexRow(row, `Zone${name}BarCell`, BAR_W, 2.4, 0);
+      const row = flexRow(c, `Zone${name}`, W - 6, 3.4, 1.2);
+      const zn = textRow(row, `Zone${name}Name`, name, 'Headline1', 10, 3.4, DIST);
+      zn.size = 92; // zone labels and percentages are what the Summary is read for: larger than Headline1 (74 at this distance)
+      this.zoneNames.push(zn);
+      const barCell = flexRow(row, `Zone${name}BarCell`, BAR_W, 3, 0);
       addSurface(child(barCell, 'Track', new vec3(0, 0, 0.05)), BAR_W, BAR_H, 0, BAR_TRACK, null);
       const pivot = child(barCell, `Zone${name}Bar`, new vec3(-BAR_W / 2, 0, 0.1));
       const bar = child(pivot, 'Fill', new vec3(BAR_W / 2, 0, 0));
       addSurface(bar, BAR_W, BAR_H, 0, BAR_FILL, null);
       this.zoneBars.push(pivot);
-      this.zoneTexts.push(textRow(row, `Zone${name}Text`, '0%', 'Headline2', 6.5, 2.7, DIST));
+      const zp = textRow(row, `Zone${name}Text`, '0%', 'Headline1', 8.4, 3.4, DIST);
+      zp.size = 92;
+      this.zoneTexts.push(zp);
     }
     // Gaze timeline strip (artifact S5 ③), drawn in show().
     this.timelineBlock = addBlock(c, 'GazeTimeline', TL_W, TL_H);
-    // Stat boxes (artifact S5 ④).
-    const stats = flexRow(c, 'SummaryStats', W - 6, 6.4, 1.2);
-    this.longestText = addBox(stats, 'LongestText', 'Longest look-away\n0 s', 'Headline2', 19.6, 6.4, DIST, TEXT_PRIMARY, BOX_SOLID);
-    this.cardsText = addBox(stats, 'CardsText', 'Cards\n0', 'Headline2', 11, 6.4, DIST, TEXT_PRIMARY, BOX_SOLID);
-    this.nudgesText = addBox(stats, 'NudgesText', 'Nudges\n0', 'Headline2', 11, 6.4, DIST, TEXT_PRIMARY, BOX_SOLID);
+    // Stat tiles collapsed to one line (Cycle 2 M2): longest look-away, Cards and Nudges read as one row at 2.5 m.
+    this.statsText = addBox(c, 'StatsText', '', 'Headline2', W - 6, 4.4, DIST, TEXT_PRIMARY, BOX_SOLID);
     // The coaching tip is the second-largest text on the panel (after the grade).
     this.tipText = addBox(c, 'TipText', '', 'Title2', W - 6, 5.2, DIST, TEXT_TIP, BOX_AMBER_SOLID);
-    const buttons = flexRow(c, 'SummaryButtons', W - 6, 4.4, 2);
-    const big = { labelRole: 'Headline2' as const };
-    addButton(buttons, 'AgainButton', 'Again', 12, 4.2, DIST, () => this.onAgain?.(), { icon: 'replay', ...big });
-    addButton(buttons, 'DoneButton', 'Done', 12, 4.2, DIST, () => this.onDone?.(), { icon: 'check', primary: true, ...big });
+    // An opaque dark plate (own frame) behind the buttons, so they never read as part of the wall art behind the panel's lower edge.
+    const buttons = flexRow(c, 'SummaryButtons', W - 6, 6.2, 2);
+    addSurface(child(buttons, 'ButtonPlate', new vec3(0, 0, -0.1)), W - 6, 6.2, 0, BUTTON_PLATE, BUTTON_PLATE_FRAME);
+    const big = { labelRole: 'Headline1' as const };
+    addButton(buttons, 'AgainButton', 'Again', 13, 4.6, DIST, () => this.onAgain?.(), { icon: 'replay', ...big });
+    addButton(buttons, 'DoneButton', 'Done', 13, 4.6, DIST, () => this.onDone?.(), { icon: 'check', primary: true, ...big });
     // Pass 6 (artifact F2): Re-place (same size and type role as Again / Done), reachable here once the rehearsal is over (the podium
     // hides it during Rehearsal). Seats the stage again where you now face and restarts the talk.
-    addButton(buttons, 'SummaryReplaceButton', 'Re-place', 12, 4.2, DIST, () => this.onReplace?.(), big);
+    addButton(buttons, 'SummaryReplaceButton', 'Re-place', 13, 4.6, DIST, () => this.onReplace?.(), big);
     // Hidden state is applied in UpdateEvent, after every UIKit element ran OnStart (G3).
     this.createEvent('UpdateEvent').bind(() => {
       if (this.panel.root.enabled !== this.wantVisible) this.panel.root.enabled = this.wantVisible;
@@ -202,9 +205,7 @@ export class SummaryPanel extends BaseScriptComponent {
       }
       if (this.zoneBars[i]) this.zoneBars[i].getTransform().setLocalScale(new vec3(Math.max(0.001, z.bar), 1, 1));
     });
-    this.longestText.text = `Longest look-away\n${s.longestLookAwayLabel}`;
-    this.cardsText.text = `Cards\n${s.cardsLabel}`;
-    this.nudgesText.text = `Nudges\n${s.nudgesLabel}`;
+    this.statsText.text = s.statsLine;
     this.tipText.text = s.tip;
     this.gradeText.text = s.gradeLabel || '-';
     this.gradeText.textFill.color = s.grade ? GRADE_COLOR[s.grade] : TEXT_SECONDARY;
@@ -240,7 +241,7 @@ export class SummaryPanel extends BaseScriptComponent {
       const y = TL_ROW_Y[tl.longest.zone];
       addSurface(child(root, 'Longest', new vec3(cx, y, 0.2)), lw, TL_ROW_H + 0.5, 0, CORAL_FILL, CORAL);
       const label = tl.longest.label;
-      labels.push(() => addText(root, 'LongestLabel', label, 'Subheadline', lw, TL_ROW_H + 0.5, DIST, CORAL, new vec3(cx, y, 0.3)));
+      labels.push(() => addText(root, 'LongestLabel', label, 'Headline2', lw, TL_ROW_H + 0.5, DIST, CORAL, new vec3(cx, y, 0.3)));
     }
     tl.nudges.forEach((f) => {
       const x = xOf(f);
@@ -249,7 +250,8 @@ export class SummaryPanel extends BaseScriptComponent {
     });
     labels.forEach((f) => f());
     ['L', 'C', 'R'].forEach((n, z) => {
-      addText(root, `Row${n}`, n, 'Headline2', 2.5, TL_ROW_H + 0.4, DIST, amberRows[z] ? TEXT_AMBER : TEXT_PRIMARY, new vec3(-20.6, TL_ROW_Y[z], 0.1));
+      const rl = addText(root, `Row${n}`, n, 'Headline1', 2.5, TL_ROW_H + 0.4, DIST, amberRows[z] ? TEXT_AMBER : TEXT_PRIMARY, new vec3(-20.6, TL_ROW_Y[z], 0.1));
+      rl.size = 80;
     });
   }
 }
