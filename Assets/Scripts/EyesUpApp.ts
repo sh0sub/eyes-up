@@ -105,9 +105,10 @@ const PILL_Y = 11;
  * The room meter floats between the heads and the card. Raised 6 cm (was 4 cm below the anchor, now 6 cm above; Cycle 2: with 3 members 42 cm apart the outer halos reached the label) so lit halos
  * (burst ring up to 1.6x) no longer cover it; the card is lifted by the same amount so the two never overlap.
  */
-const METER_BELOW_ANCHOR_CM = -8;
+const METER_BELOW_ANCHOR_CM = -12;
+/** Cycle 6 (D3): meter -8 -> -12 (4 cm higher) so the lit halo of the tallest head is at least 2 cm clear of the meter plate (it touched), card 17 -> 19 cm so the gap between meter and card stays 2.6 cm; the opening card would clip at the top edge, so the stage is 3 cm lower (floorOffsetCm 152). */
 /** Cycle 5 (R5): lifted 14 -> 17 cm so the meter plate and the card are 3.6 cm apart (they used to touch); the card is 3 cm shorter, so its top edge is where it was. */
-const CARD_LIFT_CM = 17;
+const CARD_LIFT_CM = 19;
 /**
  * Cycle 3 (S4): a faint dark rounded plate stands 40 cm behind the audience so the busy wall frames do not sit behind heads and bodies.
  * It is an alpha-blended plate for the Preview; on an additive display a dark plate adds nothing (black is clear), so it costs nothing there.
@@ -124,8 +125,6 @@ const METER_HALF_H_CM = 4.4;
 /** Footprint of a "zzz" marker in the member's space (cm), kept clear by the nudge chevron. */
 const ZZZ_HALF_W_CM = 11;
 const ZZZ_HALF_H_CM = 6;
-/** Halo alpha above this counts as lit: the chevron then stays above the head line. */
-const LIT_HALO_ALPHA = 0.55;
 /** Lit halo ring radius around a head, cm (rest scale 36 cm, diameter). */
 const LIT_HALO_RADIUS_CM = 22;
 /** Measured in Preview: ≈ 0.0124 cm per size unit per glyph for Inter titles (size 200 → 2.5 cm). */
@@ -412,22 +411,32 @@ export class EyesUpApp extends BaseScriptComponent {
     return r;
   }
 
-  /** View-plane rect of each member's silhouette (head and halo ring down to the floor) (only lit ones when `litOnly`), skipping members behind the camera. */
-  private headRects(litOnly: boolean): PlaneRect[] {
+  /**
+   * View-plane no-go rectangles for the nudge chevron, skipping members behind the camera.
+   * `heads`: only the head and halo ring at the head's CURRENT position (a slumped head sits lower and further forward than the rest pose); the chevron never covers these.
+   * `silhouette`: the whole body column down to the floor too (preferred: the chevron then lands on the wall above the member).
+   */
+  private headRects(mode: 'heads' | 'silhouette'): PlaneRect[] {
     const inv = this.camera.getTransform().getInvertedWorldTransform();
     const rects: PlaneRect[] = [];
     this.audience.forEach((so, i) => {
-      const h = this.halos[i];
-      if (!so.enabled || !h || (litOnly && h.mainPass.baseColor.w < LIT_HALO_ALPHA)) return;
-      const headWorld = so.getTransform().getWorldTransform().multiplyPoint(new vec3(0, 153, 0));
+      if (!so.enabled || !this.halos[i]) return;
+      const restWorld = so.getTransform().getWorldTransform().multiplyPoint(new vec3(0, 153, 0));
+      const headWorld = (this.rig && this.rig.headWorld(i)) || restWorld;
       const p = inv.multiplyPoint(headWorld);
-      if (p.z > -5) return;
+      const pr = inv.multiplyPoint(restWorld);
+      if (p.z > -5 || pr.z > -5) return;
       const k = CHEVRON_PLANE_CM / -p.z;
+      const kr = CHEVRON_PLANE_CM / -pr.z;
       const sc = so.getTransform().getWorldScale().x;
       const r = LIT_HALO_RADIUS_CM * k * sc;
-      // The whole silhouette (head to floor) is kept clear, not just the head: the chevron belongs on the wall above it.
-      const half = Math.max(r, MEMBER_BODY_HALF_W_CM * k * sc);
-      rects.push({ minX: p.x * k - half, maxX: p.x * k + half, minY: -1000, maxY: p.y * k + r });
+      rects.push({ minX: p.x * k - r, maxX: p.x * k + r, minY: p.y * k - r, maxY: p.y * k + r });
+      if (mode === 'silhouette') {
+        // The body column below and the rest-pose head line above: the chevron belongs on the wall above the member.
+        const rr = LIT_HALO_RADIUS_CM * kr * sc;
+        const half = Math.max(rr, MEMBER_BODY_HALF_W_CM * kr * sc);
+        rects.push({ minX: pr.x * kr - half, maxX: pr.x * kr + half, minY: -1000, maxY: pr.y * kr + rr });
+      }
     });
     // A visible "zzz" is a small obstacle of its own, also in the lit-only fallback (a slumped member is not lit).
     this.audience.forEach((so, i) => {
@@ -456,11 +465,10 @@ export class EyesUpApp extends BaseScriptComponent {
         : this.projectRect(this.cueCard, 0, CARD_CENTER_Y, CARD_W / 2, CARD_H / 2);
       if (r) panels.push(r);
     }
-    // Heads (each member's head and halo ring, lit ones first as the fallback) and the room meter are obstacles too: the chevron
-    // goes into free wall above a head, never over a member or the meter.
+    // Every head and halo ring (at its current, possibly slumped, position) and the room meter are obstacles too.
     const meterRect = this.meter && this.meter.root.enabled ? this.projectRect(this.meter.root, 0, 0, METER_HALF_W_CM, METER_HALF_H_CM) : null;
-    const lit = this.headRects(true);
-    const all = this.headRects(false);
+    const heads = this.headRects('heads');
+    const silhouettes = this.headRects('silhouette');
     const cam = this.camera.getComponent('Component.Camera') as Camera;
     const halfH = CHEVRON_PLANE_CM * Math.tan(cam.fov / 2);
     const base = this.hintBase[i];
@@ -473,8 +481,9 @@ export class EyesUpApp extends BaseScriptComponent {
         { margin: CHEVRON_PANEL_MARGIN_CM, viewHalfW: halfH * cam.aspect, viewHalfH: halfH },
       );
     const withMeter = (rects: PlaneRect[]) => (meterRect ? [...rects, meterRect] : rects);
-    // Never drop the cue: if there is no room, avoid only the lit heads (and the meter), then only the meter, then only the panels.
-    const spot = place(withMeter(all)) || place(withMeter(lit)) || place(withMeter([])) || place([]);
+    // Heads and halos are hard no-go (Cycle 6, D1): prefer wall clear of whole silhouettes and the meter, then clear of heads and the meter, then of heads only.
+    // If even that has no room the chevron is hidden (the chime still plays) rather than drawn over a head.
+    const spot = place(withMeter(silhouettes)) || place(withMeter(heads)) || place(heads);
     this.hintHidden[i] = spot === null;
     if (spot === null) {
       so.getTransform().setLocalScale(new vec3(0, 0, 0));

@@ -142,7 +142,16 @@ declare class Asset {
 }
 declare function requireAsset(path: string): Asset;
 declare function require(path: string): unknown;
-declare class Texture extends Asset {}
+declare class Texture extends Asset {
+  control: unknown;
+}
+declare enum TextureFormat {
+  RGBA8Unorm,
+}
+declare class ProceduralTextureProvider {
+  static createWithFormat(width: number, height: number, format: TextureFormat): Texture;
+  setPixels(x: number, y: number, width: number, height: number, data: Uint8Array): void;
+}
 declare class Font extends Asset {}
 declare class Pass {
   baseColor: vec4;

@@ -7,13 +7,13 @@ import { FORWARD, HEAD, defaultLayout } from '../helpers/fixtures';
 const FLOOR_Y = HEAD.y - DEFAULT_TUNABLES.floorOffsetCm;
 
 describe('StagePlacer layout (M2 #4 math, used by LEAF start_places_audience)', () => {
-  it('seats 6 members 250±5 cm (horizontal) from the head, on the floor 149 cm below (stage raised 11 cm in total)', () => {
+  it('seats 6 members 250±5 cm (horizontal) from the head, on the floor 152 cm below (stage raised 8 cm in total)', () => {
     const l = defaultLayout(6);
     expect(l.seats).toHaveLength(6);
     for (const s of l.seats) {
       expect(Math.abs(horizontalDistance(s, HEAD) - 250)).toBeLessThanOrEqual(5);
       expect(s.y).toBeCloseTo(HEAD.y - DEFAULT_TUNABLES.floorOffsetCm, 9);
-      expect(HEAD.y - s.y).toBe(149);
+      expect(HEAD.y - s.y).toBe(152);
     }
   });
 

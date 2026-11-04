@@ -2,12 +2,12 @@
  * Capture helper, NOT a done-criterion test (Cycle 4, A2): `capture_loop` plays the learning loop twice with scripted gaze, to give the
  * Run 1 vs Run 2 table in devpost/ its real numbers. Run 1 stares at the right side of a six-person room and neglects the left
  * (a nervous speaker); Finish gives the Summary and its tip. Again, then Run 2 follows the tip: left first, then the whole room.
- * Everything else is real app logic (engagement, nudge, stats, grade). Numbers are printed as "[capture_loop] run1 ..." / "run2 ...".
+ * Everything else is real app logic (engagement, nudge, stats, grade). Numbers are printed as "[capture_loop] run1 ..." / "run2 ..."; the look-away uses the Summary's own formatter (`summaryState`), so the log and the on-screen Summary agree.
  * Gaze is scripted: this is an illustrative loop, not a user study.
  */
 import { Scenario } from 'Leaf.lspkg/Scenarios/scenario/Scenario';
 import { sleep, waitUntil } from 'Leaf.lspkg/Utils/common/Utils';
-import { summaryTip } from '../../Scripts/core/SummaryModel';
+import { summaryState, summaryTip } from '../../Scripts/core/SummaryModel';
 import { lookAtMember, lookDownAtPodium, muteLeafOverlay, Rig, setUp, startAndWaitForRehearsal, tap } from './EyesUpLeafHelpers';
 
 type Step = readonly [member: number, ms: number];
@@ -29,7 +29,7 @@ async function finishAndReport(rig: Rig, label: string): Promise<void> {
   if (s && g) {
     print(
       `[capture_loop] ${label} grade ${g.grade} score ${g.score} balance ${s.balanceScore} room ${g.engagementPercent}% ` +
-        `zones L${s.zonePercents[0]}/C${s.zonePercents[1]}/R${s.zonePercents[2]} longest ${Math.round(s.longestLookAway.seconds)} s ${s.longestLookAway.zoneName} ` +
+        `zones L${s.zonePercents[0]}/C${s.zonePercents[1]}/R${s.zonePercents[2]} longest ${summaryState(s, 1).longestLookAwayLabel.replace(/ · /g, ' ')} ` +
         `nudges ${s.nudges} secs ${Math.round(s.durationSeconds)} tip "${summaryTip(s.zonePercents)}" new-best ${g.newBest}`,
     );
   }

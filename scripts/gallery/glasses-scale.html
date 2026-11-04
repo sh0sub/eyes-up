@@ -1,0 +1,33 @@
+<!doctype html><meta charset="utf-8"><title>Eyes Up glasses scale</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+html,body{width:1600px;height:1080px}
+.wrap{padding:34px 48px}
+h1{font-size:46px}
+.top{display:grid;grid-template-columns:636px 1fr;gap:22px;margin-top:20px}
+.plan{position:relative}
+.im{height:590px;border-radius:14px;background:#6b665f url('../../devpost/screenshots/02-audience-lit-halo.png') center/cover no-repeat;position:relative}
+.tag{position:absolute;background:#20232d;color:#fff;font-size:22px;font-weight:700;border-radius:9px;padding:6px 12px}
+.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:20px}
+.rule{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:start}
+.th{width:150px;height:104px;border-radius:10px;background-size:cover;background-position:center}
+.n{display:inline-block;width:34px;height:34px;border-radius:50%;background:var(--cy);color:#fff;font-weight:800;text-align:center;line-height:34px;margin-right:8px;font-size:21px}
+.rt{font-size:25px;font-weight:800;line-height:1.15}
+.rd{font-size:18px;line-height:1.3;color:#2b2f3d;margin-top:6px}
+.rv{font-size:16px;font-weight:700;color:var(--ind);margin-top:6px}
+.foot{font-size:17px;margin-top:12px}
+</style>
+<div class="wrap">
+ <h1>Why it only works on glasses: room scale, in your view</h1>
+ <div class="sub" style="font-size:23px">Left: the plan, seen from above. Right: what the Lens draws in that view (Lens Studio Interactive Preview).</div>
+ <div class="top">
+  <div class="card plan"><svg viewBox="0 -26 600 632" width="600" height="590" xmlns="http://www.w3.org/2000/svg"><path d="M62.5 148.6 A475.0 475.0 0 0 1 537.5 148.6" fill="none" stroke="#9aa3d9" stroke-width="2" stroke-dasharray="7 7"/><path d="M300 560 L163.2 85.0 L436.8 85.0 Z" fill="#00b8d9" fill-opacity="0.12" stroke="#00b8d9" stroke-width="2"/><rect x="195.9" y="83.7" width="49.4" height="16" rx="8" fill="#4a7de0" fill-opacity="0.55"/><circle cx="220.6" cy="91.7" r="20.9" fill="#5aa8ff" fill-opacity="0.85" stroke="#00b8d9" stroke-width="1.5"/><rect x="275.3" y="77.0" width="49.4" height="16" rx="8" fill="#4a7de0" fill-opacity="0.55"/><circle cx="300.0" cy="85.0" r="20.9" fill="#5aa8ff" fill-opacity="0.85" stroke="#00b8d9" stroke-width="1.5"/><rect x="354.7" y="83.7" width="49.4" height="16" rx="8" fill="#4a7de0" fill-opacity="0.55"/><circle cx="379.4" cy="91.7" r="20.9" fill="#5aa8ff" fill-opacity="0.85" stroke="#00b8d9" stroke-width="4"/><path d="M220.2 37.0 L300.0 37.0" stroke="#14161f" stroke-width="2"/><path d="M220.2 30.0 v14 M300.0 30.0 v14" stroke="#14161f" stroke-width="2"/><text x="260.1" y="25.0" text-anchor="middle" font-size="19" font-weight="800" fill="#14161f">42 cm</text><rect x="245.0" y="-11.0" width="110" height="14" rx="4" fill="#3b4ba8"/><text x="364.0" y="1.0" font-size="17" font-weight="700" fill="#3b4ba8">cue card</text><rect x="268.0" y="446.5" width="64" height="18" rx="5" fill="#e8920c"/><text x="342.0" y="461.5" font-size="17" font-weight="700" fill="#a86300">podium (look down)</text><circle cx="300" cy="560" r="20" fill="#14161f"/><path d="M288 554 q12 -16 24 0" fill="none" stroke="#fff" stroke-width="3"/><text x="300" y="598" text-anchor="middle" font-size="21" font-weight="800">you (top-down)</text><path d="M230 560 L230 85.0" stroke="#5b6070" stroke-width="2" stroke-dasharray="3 6"/><text x="220" y="322.5" text-anchor="end" font-size="21" font-weight="800" fill="#5b6070">2.5 m</text><text x="446.8" y="55.0" font-size="17" font-weight="700" fill="#007c94">view edge</text><text x="446.8" y="75.0" font-size="17" font-weight="700" fill="#007c94">about 1.4 m wide</text><g transform="translate(224.8 298.8) rotate(16)"><path d="M0 -9 L-8 0 L0 9" fill="none" stroke="#e8920c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(375.2 298.8) rotate(-16)"><path d="M0 -9 L8 0 L0 9" fill="none" stroke="#e8920c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></g></svg></div>
+  <div class="card"><div class="im"><span class="tag" style="left:14px;top:14px">Preview frame</span><span class="tag" style="left:14px;bottom:14px;background:#00789a">Three members, 42 cm apart, fill the view</span></div></div>
+ </div>
+ <div class="rules">
+  <div class="card rule"><div class="th" style="background-image:url('../../devpost/screenshots/04-cue-card.png')"></div><div><div class="rt"><span class="n">1</span>Placement</div><div class="rd">The stage stands 2.5 m ahead and the floor 1.5 m below your eyes. Three members sit 42 cm apart so the whole room fits the narrow view; the cue card floats 10 cm above their heads.</div><div class="rv">Seen in: the frame above, <code>04-cue-card</code></div></div></div>
+  <div class="card rule"><div class="th" style="background-image:url('../../devpost/screenshots/05-podium.png')"></div><div><div class="rt"><span class="n">2</span>Targets of 3 cm or larger</div><div class="rd">Gaze is a head ray, so every target is generous: the smallest pinch button is 7.2 x 3.8 cm, the cue tag is 12 cm tall and hit-tested on its real rectangle plus 1.5 degrees.</div><div class="rv">Seen in: <code>05-podium</code>, <code>06-summary</code></div></div></div>
+  <div class="card rule"><div class="th" style="background-image:url('../../devpost/screenshots/03-nudge-chevron.png')"></div><div><div class="rt"><span class="n">3</span>Show only when needed</div><div class="rd">The podium appears when you look down 15 degrees. The cue card shrinks to a tag after 4 s. The chevron shows for 3 s, only after you ignored a side for 8 s.</div><div class="rv">Seen in: <code>03-nudge-chevron</code>, <code>04-cue-card</code>, <code>05-podium</code></div></div></div>
+ </div>
+ <div class="foot">Plan is drawn to scale from the Lens settings (2.5 m arc, 42 cm spacing); the view width is the measured Interactive Preview viewport. Preview only, gaze driven by the LEAF harness, not tested on a Spectacles device.</div>
+</div>

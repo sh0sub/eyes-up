@@ -918,3 +918,21 @@ Preview only, gaze driven by LEAF, not tested on a Spectacles device.
 - **R5, legibility.** Setup panel 46 x 34 cm with labels, captions, deck buttons and Start (25 x 5.6 cm) at about 1.3x; podium 38 x 12.5 cm with larger Prev / Next / Finish / Re-place labels; panel plates fully opaque; cue card 100 x 26 cm with title 330 and bullets 235 (about 1.3x), card lifted 3 cm so the Room meter and the card are 3.6 cm apart (they touched). The card is 3 cm shorter, so its top edge stays where it was inside the frame.
 - **R3, R4, R6, devpost.** New images built from real captures by `scripts/gallery/`: `12-run-compare.png` (Run 1 C 39 next to Run 2 A 84, both Summaries from `capture_loop`), `10b-slump-to-perk-up.png`, `13-clad-mcp.png` (architecture strip, four real steps, two real log lines). Process card pill label fixed ("Pill hit area"). `submission.md` and `README.md` open with hero, hook, Learn / For, then three inline images; disclosures are grouped as "Not tested" and "Not claimed". Detail that used to close the "not done" list is here: the Room meter has no darker plate because the Preview draws these quads like an additive display (an opaque black plate was invisible), and a faint dark plate (35 % alpha) behind the audience has no visible effect in the Preview. Before every capture the Preview is refreshed and its camera put at one fixed pose (`scripts/video/preview-reset.sh`).
 - **Numbers.** `capture_loop` this run: Run 1 C 39, balance 46, room 76 %, split 0/30/70, longest look-away 29 s in the log (the Summary label shows 28 s), 3 nudges; Run 2 A 84, balance 89, room 91 %, split 41/26/33, 12 s right, 1 nudge. `npm run check`: 174 tests.
+
+## Not claimed (details)
+
+Moved here from `submission.md` in cycle 6 so the Devpost page stays short.
+
+- The attention score and grade are a design heuristic (balance times how engaged the virtual room stayed), not a validated measure of speaking skill. The best-previous compare lives only while the Lens is open; nothing is saved.
+- The Run 1 vs Run 2 loop is one scripted run (gaze driven by the LEAF harness), not a user study and not evidence that people improve.
+- The video shows the Lens Studio Interactive Preview. Gaze and pinches in it are driven by the LEAF test harness (head ray and pinch simulated); the narration and sounds are synthesized locally.
+- Screenshot 11 (and walkthrough 08) was captured with the perk-up burst stretched from 0.7 s to 3 s so the ring pulse could be photographed mid-burst; the look is unchanged.
+- Screenshots use the Setup default of 3 people; with 6 or 9 members the outer ones sit beyond the preview's narrow lens viewport. Framing method and the Preview's additive-display limits are described above in this file.
+- Voice features (filler-word counter) are not in this build.
+- Number note: `capture_loop` logged longest look-away 29 s before cycle 6; the log now uses the Summary's own formatter, so log, Summary and gallery images 5 and 7 all read 28 s (split 0 / 31 / 69).
+
+## Cycle 6
+
+- D2: silhouette bodies fade out over the lower part (alpha texture, `core/BodyFade.ts`), soft floor shadow per member, slumped head scale capped at the lit head scale, stage floor 152 cm, meter and cue card raised for a 2 cm gap above the tallest head. Stills 00, 02, 03, 04, 05, 10, 10b, 11 and walkthrough 02 to 08 retaken.
+- D1: chevron placement keeps out of every head and halo rectangle (`core/ChevronPlacement.ts`, unit test with the left member slumped).
+- A2: `14-glasses-scale.png` (plan from above, Preview frame, three rules). A4: 28 s everywhere. A5, A7: `submission.md` reordered, loop table and rationale added.

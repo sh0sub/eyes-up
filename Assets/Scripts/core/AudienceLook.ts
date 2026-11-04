@@ -23,7 +23,7 @@ export const HEAD_UP_Y = 153;
 export const HEAD_SINK_CM = 34;
 export const HEAD_PITCH_DEG = 38;
 /** Cycle 5 (R2): local height (cm above the member's floor) of the phone screen's centre; its lowest edge is about 6 cm below. */
-export const PHONE_Y_CM = 86;
+export const PHONE_Y_CM = 89;
 export const PHONE_BOTTOM_BELOW_CENTER_CM = 6;
 /** The slumped head also tilts sideways (roll about the view axis) by this much; the ellipsoid makes a roll visible, a pitch is not. */
 export const HEAD_TILT_DEG = 30;

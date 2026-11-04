@@ -43,7 +43,7 @@ export interface Tunables {
 
   /** plan: stage distance in front of the head (2.5 m). */
   stageDistanceCm: number;
-  /** plan: floor is this far below the head (머리 -160 cm). Cycle 3 (S4): 154; Cycle 4 (D1) kept 154; Cycle 5 (R2): 149 so phone glows stay inside the bottom 4 % of the preview frame (the card is 5 cm shorter, so it still fits). Heads (upright and slumped, which sink 49 cm with the squash and lean) stay inside a 10 % margin (core/Framing.ts, tested). */
+  /** plan: floor is this far below the head (머리 -160 cm). Cycle 3 (S4): 154; Cycle 4 (D1) kept 154; Cycle 5 (R2): 149; Cycle 6 (D2): 152 (8 cm above the plan's 160) so the taller opening card keeps clear of the top of the preview frame after the meter and card were raised 4 and 3 cm for a 2 cm gap above the tallest head; the phone sits 3 cm higher on the body to stay put in the frame. Phone glows stay inside the bottom 4 % of the preview frame; the rest of the old note:  phone glows stay inside the bottom 4 % of the preview frame (the card is 5 cm shorter, so it still fits). Heads (upright and slumped, which sink 49 cm with the squash and lean) stay inside a 10 % margin (core/Framing.ts, tested). */
   floorOffsetCm: number;
   /** plan: spacing between audience members along the arc (0.6 m). */
   audienceSpacingCm: number;
@@ -93,7 +93,7 @@ export const DEFAULT_TUNABLES: Readonly<Tunables> = Object.freeze({
   burstSeconds: 0.7,
 
   stageDistanceCm: 250,
-  floorOffsetCm: 149,
+  floorOffsetCm: 152,
   audienceSpacingCm: 60,
   smallAudienceSpacingCm: 42,
   smallAudienceMax: 3,

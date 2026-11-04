@@ -1,6 +1,6 @@
 # Spec matrix (artifact "specs" section vs running product)
 
-Current state (2026-11-05, cycle 5; the list below is mostly history): `npm run check` 174 tests pass, typecheck and lint clean; 10 LEAF scenarios PASSED live in the Interactive Preview one at a time, no E/F lines from project scripts; screenshots 00 to 06, 09 to 11 and walkthrough 01 to 08 retaken or rebuilt from live captures that were looked at (last section below). Preview only, gaze driven by LEAF, not tested on a Spectacles device. The demo video under `.local/video/` (not committed) is rebuilt once at the end from the same pipeline (`scripts/video/`); rows about it below describe earlier cuts.
+Current state (2026-11-05, cycle 5; the list below is mostly history): `npm run check` 183 tests pass, typecheck and lint clean; 10 LEAF scenarios PASSED live in the Interactive Preview one at a time, no E/F lines from project scripts; screenshots 00 to 06, 09 to 11 and walkthrough 01 to 08 retaken or rebuilt from live captures that were looked at (last section below). Preview only, gaze driven by LEAF, not tested on a Spectacles device. The demo video under `.local/video/` (not committed) is rebuilt once at the end from the same pipeline (`scripts/video/`); rows about it below describe earlier cuts.
 
 Earlier state (before cycle 3), kept for the record: (2026-11-04, game layer): `npm run check` 166 tests pass, typecheck and lint clean; 10 LEAF scenarios PASSED live in the Interactive Preview (8 earlier + `neglect_disengages_then_recovers`, `finish_gives_grade`); game layer rows are in the last section below; walkthrough and screenshots retaken (02 to 06, new 10 and 11). The demo video below was cut before the game layer and is unchanged. Earlier state (2026-11-03): `npm run check` 139 tests pass, typecheck and lint clean; 8 LEAF scenarios PASSED live in the Interactive Preview; demo video 1:33 (`.local/video/eyes-up-demo.mp4`, not committed; cycle-3 rebuild 2026-11-03: opening is the hero halo frame with the title, a 1.5 s drawn "Eyes drop" card, the live Setup pinch zoomed 1.5x with one chip and a 0.3 s cross-dissolve to the lit halo; one clean nudge plus a 2 s "again"; podium trimmed to the Next pinch with the chevron outside the crop; Notes shortened; Summary holds the full panel 2 s then zooms to the timeline with an arrow label; new card with three real before/after pairs and the Summary Again line; shorter build card; cycle-2 rebuild: disclosure once then PREVIEW pill, "You look -> they light up" caption on the halo frame by 0:08, clipped cue/pill footage trimmed out, CLAD/MCP/LEAF card with 8/8 and 139, close card with 36 px Shown / Not yet tested boxes and a halo end frame; cycle-3: end frame lower-third carries the repo link and "Preview only, LEAF 8/8"; submission.md reordered tagline, hero image, pitch, Judge box with real video times, plus a "What we would test next" list). Preview only, not tested on a Spectacles device.
 
@@ -228,7 +228,7 @@ Verified in the Lens Studio 5.24.1 Interactive Preview with window captures that
 
 ## Cycle 5 (2026-11-05): Summary in frame, legible slump, comparison images, CLAD card
 
-Verified in the Lens Studio 5.24.1 Interactive Preview with window captures that were looked at: `npm run check` 174/174, 10 LEAF scenarios from a refreshed preview at the canonical camera pose (see `devpost/leaf-results.md`). Preview only, gaze driven by LEAF, not tested on a device.
+Verified in the Lens Studio 5.24.1 Interactive Preview with window captures that were looked at: `npm run check` 183/183, 10 LEAF scenarios from a refreshed preview at the canonical camera pose (see `devpost/leaf-results.md`). Preview only, gaze driven by LEAF, not tested on a device.
 
 | id | source | expected | status | evidence |
 |---|---|---|---|---|
@@ -238,3 +238,16 @@ Verified in the Lens Studio 5.24.1 Interactive Preview with window captures that
 | R4 | judge: text-heavy first screen, file paths, defensive last bullet | Hero, hook, Learn / For, three inline images with captions; gallery references; disclosures grouped | match | `devpost/submission.md`, `README.md`, hero 00 re-exported with the Learn / For line |
 | R5 | judge: small Setup, podium and cue-card text | About 1.3x text, bigger Start, opaque plates, meter 3 cm clear of the card | match (preview) | `SetupPanel.ts` (46 x 34 cm), `Podium.ts` (38 x 12.5 cm), `EyesUpApp.ts` card 100 x 26 cm, title 330, bullets 235, `CARD_LIFT_CM` 17, `EyesUpUI.ts` opaque `SURFACE_FILL`; `screenshots/01, 04, 05` recaptured. Legibility on real optics unverified |
 | R6 | judge: no single-glance CLAD / MCP evidence; stray pill label | Card 13 with architecture, steps and real log lines; pill label "Pill hit area" | match | `13-clad-mcp.png`, `scripts/gallery/clad-mcp.html`, `process-image.html`; 09 re-exported |
+
+## Cycle 6 (2026-11-05)
+
+| Id | Judge issue | Change | Status | Evidence |
+|---|---|---|---|---|
+| D2 (A3, D3) | bodies hard-cut, no ground, slumped heads bigger than lit head | alpha fade over the lower body, soft floor shadow, slumped head scale capped at the lit head, meter and card raised for a 2 cm gap above the tallest head | match (preview) | `core/BodyFade.ts`, `tests/unit/BodyFade.test.ts`, stills 00, 02, 10, 10b, 11 |
+| D1 | chevron and "left" on the first head | no-go rectangles around every head and halo | match (preview) | `ChevronPlacement.test.ts` (left member slumped), still 03 and walkthrough 03 |
+| A2 | no wearer view or scale | `14-glasses-scale.png`, gallery image 3 | done | `scripts/gallery/glasses-scale.html` |
+| A7 | no learner before/after | 3-row table and rationale under the loop | done | `devpost/submission.md` |
+| A5 | long submission, stale text | judge block under the hero, Not claimed in 4 lines, 8 cm stage figure, URL placeholder marked last step | done | `devpost/submission.md`, `build-notes.md` |
+| A4 | 29 s vs 28 s | log uses the Summary formatter, all images read 28 s | done | `13-clad-mcp.png`, `12-run-compare.png` |
+
+`npm run check` 183 tests; 10 of 10 LEAF scenarios PASSED. Preview only, gaze driven by LEAF, not tested on a device.

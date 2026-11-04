@@ -9,7 +9,25 @@
  * Local axes: the silhouette faces +Z (the speaker), so a forward lean is +Z.
  */
 import { AudienceLook, PHONE_Y_CM } from './core/AudienceLook';
+import { FADE_ROWS, SHADOW_LAYERS, bodyFadePixels, headDepthScale, shadowBars } from './core/BodyFade';
+import { DEFAULT_TUNABLES } from './core/Tunables';
 import { addSurface, addText, child } from './EyesUpUI';
+
+/** Cycle 6 (D2): the soft shadow sits where the body has faded out, just above the bottom of the preview frame (about 57 cm above the feet). */
+const SHADOW_Y = 74;
+const SHADOW_Z = -1;
+const SHADOW_RGB: [number, number, number] = [0.12, 0.2, 0.62];
+/** Cycle 6 (D2): the lower part of the body fades out through an alpha texture on the body mesh. */
+function makeBodyFadeTexture(plain = false): Texture | null {
+  try {
+    const tex = ProceduralTextureProvider.createWithFormat(2, FADE_ROWS, TextureFormat.RGBA8Unorm);
+    (tex.control as ProceduralTextureProvider).setPixels(0, 0, 2, FADE_ROWS, bodyFadePixels(2, plain));
+    return tex;
+  } catch (e) {
+    print('EyesUp: body fade texture unavailable: ' + e);
+    return null;
+  }
+}
 
 const BODY_REST_Y = 70;
 const BODY_REST_H = 140;
@@ -22,7 +40,7 @@ const HEAD_FORWARD_CM = 8;
  * A small bright phone screen (a plus-shaped quad pair gives rounded corners) with a faint stepped light cone rising toward
  * the face. Sized to read at 2.5 m without becoming a card; the whole thing stays within the silhouette's lap, inside the frame.
  */
-/** Cycle 5 (R2): the phone sits 6 cm higher (80 -> 86) so its glow stays inside the frame bottom at the canonical pose. */
+/** Cycle 5 (R2): the phone sits 6 cm higher (80 -> 86) so its glow stays inside the frame bottom at the canonical pose; Cycle 6 (D2): 89 because the floor is 3 cm lower (floorOffsetCm 152), so it stays where it was in the frame. */
 const PHONE_Y = PHONE_Y_CM;
 const PHONE_W = 9;
 const PHONE_H = 14;
@@ -56,6 +74,9 @@ interface Member {
   zzzText: Text;
   ring: SceneObject;
   ringVisuals: RenderMeshVisual[];
+  shadow: RenderMeshVisual[][];
+  shadowFade: number;
+  headRestScale: vec3;
 }
 
 function byName(parent: SceneObject, name: string): SceneObject | null {
@@ -66,11 +87,14 @@ function byName(parent: SceneObject, name: string): SceneObject | null {
   return null;
 }
 
-function visualOf(so: SceneObject | null): RenderMeshVisual | null {
+function visualOf(so: SceneObject | null, fadeTexture: Texture | null = null): RenderMeshVisual | null {
   if (!so) return null;
   const v = so.getComponent('Component.RenderMeshVisual') as RenderMeshVisual;
   if (!v) return null;
   v.mainMaterial = v.mainMaterial.clone();
+  if (fadeTexture) {
+    v.mainPass.baseTex = fadeTexture;
+  }
   return v;
 }
 
@@ -78,6 +102,9 @@ export class AudienceRig {
   private members: Member[] = [];
 
   constructor(audience: SceneObject[]) {
+    const fadeTexture = makeBodyFadeTexture();
+    // The silhouette material now samples a base texture (ENABLE_BASE_TEX), so the head gets an opaque white one.
+    const plainTexture = makeBodyFadeTexture(true);
     this.members = audience.map((root) => {
       const body = byName(root, 'Body');
       const head = byName(root, 'Head');
@@ -114,12 +141,19 @@ export class AudienceRig {
         ringVisuals.push(addSurface(bar, RING_BAR_LEN, RING_BAR_THICK, 0, new vec4(RING_RGB[0], RING_RGB[1], RING_RGB[2], 0), null));
       }
       ring.enabled = false;
+      // Soft floor shadow: nested ellipses of horizontal bars behind the body.
+      const shadowRoot = child(root, 'Shadow', new vec3(0, SHADOW_Y, SHADOW_Z));
+      const shadow = SHADOW_LAYERS.map((layer, li) =>
+        shadowBars(layer).map((b, bi) =>
+          addSurface(child(shadowRoot, `S${li}_${bi}`, new vec3(0, b.y, -0.02 * li)), Math.max(0.1, b.w), b.h, 0, new vec4(SHADOW_RGB[0], SHADOW_RGB[1], SHADOW_RGB[2], 0), null),
+        ),
+      );
       return {
         body,
         head,
         halo,
-        bodyVisual: visualOf(body),
-        headVisual: visualOf(head),
+        bodyVisual: visualOf(body, fadeTexture),
+        headVisual: visualOf(head, plainTexture),
         bodyRestScale: body ? body.getTransform().getLocalScale() : new vec3(80, 140, 64),
         haloRestScale: halo ? halo.getTransform().getLocalScale() : new vec3(36, 36, 36),
         phone: phoneRig,
@@ -129,6 +163,9 @@ export class AudienceRig {
         zzzText,
         ring,
         ringVisuals,
+        shadow,
+        shadowFade: -1,
+        headRestScale: head ? head.getTransform().getLocalScale() : new vec3(22, 25, 22),
       };
     });
   }
@@ -157,6 +194,9 @@ export class AudienceRig {
     if (m.head) {
       const ht = m.head.getTransform();
       ht.setLocalPosition(headPos);
+      // Cycle 6 (D2): creeping toward the viewer must not make the slumped head draw larger than the lit one.
+      const ds = headDepthScale(headPos.z, DEFAULT_TUNABLES.stageDistanceCm);
+      ht.setLocalScale(new vec3(m.headRestScale.x * ds, m.headRestScale.y * ds, m.headRestScale.z * ds));
       ht.setLocalRotation(quat.angleAxis((-look.headTiltDeg * Math.PI) / 180, new vec3(0, 0, 1)));
     }
     if (m.halo) {
@@ -164,7 +204,12 @@ export class AudienceRig {
       const s = look.haloBurstScale;
       const t = m.halo.getTransform();
       t.setLocalPosition(headPos);
-      t.setLocalScale(new vec3(m.haloRestScale.x * s, m.haloRestScale.y * s, m.haloRestScale.z * s));
+      const ds = headDepthScale(headPos.z, DEFAULT_TUNABLES.stageDistanceCm);
+      t.setLocalScale(new vec3(m.haloRestScale.x * s * ds, m.haloRestScale.y * s * ds, m.haloRestScale.z * s * ds));
+    }
+    if (m.shadowFade !== fade) {
+      m.shadowFade = fade;
+      m.shadow.forEach((bars, li) => bars.forEach((v) => (v.mainPass.baseColor = new vec4(SHADOW_RGB[0], SHADOW_RGB[1], SHADOW_RGB[2], SHADOW_LAYERS[li].alpha * fade))));
     }
     const pa = look.pulseAlpha * fade;
     if (m.ring.enabled !== pa > 0.01) m.ring.enabled = pa > 0.01;
@@ -194,6 +239,12 @@ export class AudienceRig {
     const m = this.members[i];
     if (!m || !m.zzz.enabled) return null;
     return m.zzz.getTransform().getWorldPosition();
+  }
+
+  /** World position of member `i`'s head (its current, possibly slumped, position), or null when there is no head object. */
+  headWorld(i: number): vec3 | null {
+    const m = this.members[i];
+    return m && m.head ? m.head.getTransform().getWorldPosition() : null;
   }
 
   /** Hide every phone (used when the audience is hidden). */

@@ -1,4 +1,4 @@
-import { ChevronBox, PlacementOptions, PlaneRect, isClear, placeChevron } from '../../Assets/Scripts/core/ChevronPlacement';
+import { ChevronBox, PlacementOptions, PlaneRect, isClear, placeChevron, rectsOverlap } from '../../Assets/Scripts/core/ChevronPlacement';
 
 // Same numbers as EyesUpApp: backing 15 x 19 cm, 4.2 cm above the hint origin; hint base x = 21, y = -6.5.
 const BOX: ChevronBox = { halfW: 7.9, below: 5.6, above: 14.5 };
@@ -124,3 +124,35 @@ describe('placeChevron free pockets (halo case, per-member head rects)', () => {
     expect(placeChevron('right', BASE, BOX, [wall], WIDE)).toBeNull();
   });
 });
+
+describe('placeChevron: head no-go rectangles (Cycle 6, D1)', () => {
+  // 3 members 42 cm apart at 2.5 m, in the 100 cm view plane (x0.4): halo ring radius 8.8 cm, upright head centre y = 1.6, fully slumped head y = -18.
+  const ring = 8.8;
+  const headRect = (x: number, y: number): PlaneRect => ({ minX: x - ring, maxX: x + ring, minY: y - ring, maxY: y + ring });
+  const meter: PlaneRect = { minX: -18.8, maxX: 18.8, minY: 13.4, maxY: 17 };
+  const dims: PlacementOptions = { margin: 1.5, viewHalfW: 29, viewHalfH: 33 };
+  const hintBox: ChevronBox = { halfW: 5.8, below: 1.6, above: 12.1 };
+
+  it('left member slumped: the left chevron lands on the free wall above that head, clear of all three heads and the meter', () => {
+    const heads = [headRect(-16.8, -18), headRect(0, 1.6), headRect(16.8, 1.6)];
+    const r = placeChevron('left', { x: -21, y: -6.5 }, hintBox, [...heads, meter], dims)!;
+    expect(r).not.toBeNull();
+    expect(isClear(r.x, r.y, hintBox, [...heads, meter], dims)).toBe(true);
+    for (const h of heads) expect(rectsOverlap(boxRectOf(r, hintBox), h)).toBe(false);
+  });
+
+  it('right member upright beside a slumped one: the right chevron also avoids every head', () => {
+    const heads = [headRect(-16.8, 1.6), headRect(0, -18), headRect(16.8, 1.6)];
+    const r = placeChevron('right', { x: 21, y: -6.5 }, hintBox, [...heads, meter], dims);
+    if (r) for (const h of heads) expect(rectsOverlap(boxRectOf(r, hintBox), h)).toBe(false);
+  });
+
+  it('returns null rather than overlapping a head when the free wall is gone', () => {
+    const wall: PlaneRect = { minX: -29, maxX: 29, minY: -33, maxY: 33 };
+    expect(placeChevron('left', { x: -21, y: -6.5 }, hintBox, [wall], dims)).toBeNull();
+  });
+});
+
+function boxRectOf(p: { x: number; y: number }, b: ChevronBox): PlaneRect {
+  return { minX: p.x - b.halfW, maxX: p.x + b.halfW, minY: p.y - b.below, maxY: p.y + b.above };
+}

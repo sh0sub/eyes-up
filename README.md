@@ -10,16 +10,16 @@
 
 1. **Problem:** people rehearse staring at slides, a phone or a script, so the room never gets practice.
 2. **Spatial moment:** a virtual audience sits 2.5 m ahead and reacts to where you look: the member you face lights up and perks up, the ones you ignore slump and light a phone, and after 8 s a chime and chevron point to the side you forgot.
-3. **Proof:** built with CLAD and the Lens Studio MCP. LEAF 10/10 and 174 tests pass in the Interactive Preview; gaze = head direction, driven by the LEAF harness. **Preview only, not tested on a device.**
+3. **Proof:** built with CLAD and the Lens Studio MCP. LEAF 10/10 and 183 tests pass in the Interactive Preview; gaze = head direction, driven by the LEAF harness. **Preview only, not tested on a device.**
 
 **Learning goal:** spread your eye contact across the whole room. **Feedback:** the audience reacts live, then you get one tip and a grade. **Practice:** press Again and beat your grade. *Limit: learning outcomes are not measured; preview only, gaze is head direction driven by the LEAF harness, untested on a device.*
 
 **Gallery** (Interactive Preview captures, preview only):
 
-![Ignore them and they slump; look at one and it perks up: two moments, room meter 42 % to 76 %](devpost/screenshots/10b-slump-to-perk-up.png)
+![Ignore them and they slump; look at one and it perks up: two moments, room meter 43 % to 81 %](devpost/screenshots/10b-slump-to-perk-up.png)
 ![Summary: grade, attention score, zone split, timeline, one tip and Again](devpost/screenshots/06-summary.png)
 ![Run 1 (C 39) next to Run 2 (A 84) after following the tip; scripted gaze, illustrative](devpost/screenshots/12-run-compare.png)
-![Process at a glance: three fixes found in the Preview, 10 of 10 LEAF scenarios, 174 tests](devpost/screenshots/09-process-at-a-glance.png)
+![Process at a glance: three fixes found in the Preview, 10 of 10 LEAF scenarios, 183 tests](devpost/screenshots/09-process-at-a-glance.png)
 ![How CLAD and the Lens Studio MCP were used: architecture, four steps, real log lines](devpost/screenshots/13-clad-mcp.png)
 ![Nudge: amber double chevron for the side you ignored](devpost/screenshots/03-nudge-chevron.png)
 
@@ -31,7 +31,7 @@ More screenshots: [01 setup](devpost/screenshots/01-setup-panel.png), [02 halo](
 
 | | Grade | Balance | Left / Center / Right | Longest look-away | Tip shown |
 |---|---|---|---|---|---|
-| Run 1: ignores the left | C (39) | 46 | 0 / 30 / 70 % | 28 s, left | look left more |
+| Run 1: ignores the left | C (39) | 46 | 0 / 31 / 69 % | 28 s, left | look left more |
 | Run 2: follows the tip | A (84) | 89 | 41 / 26 / 33 % | 12 s, right | look at the center more |
 
 **What I learned building AR** (details in `devpost/learnings.md` and `devpost/screenshots/09-process-at-a-glance.png`): additive displays wash out pale colours; gaze is a head ray, so hit areas must be exact and the scene must fit a narrow view; test the logic in Node and drive the Lens with CLAD and MCP.
@@ -51,7 +51,7 @@ Built for Learn AR with SPECS (deadline 2026-11-09 PST). Preview-only is accepta
 - **10 LEAF scenarios pass** in the Interactive Preview: `start_places_audience`, `gaze_fills_halo`,
   `neglect_triggers_nudge`, `next_shows_card_then_pill`, `dwell_expands_pill`, `finish_shows_summary`,
   `repeated_nudge`, `finish_pulses_at_time`, `neglect_disengages_then_recovers`, `finish_gives_grade` (results: `devpost/leaf-results.md`). Node checks:
-  `npm run check` (typecheck, lint, 174 vitest tests).
+  `npm run check` (typecheck, lint, 183 vitest tests).
 - **Preview only, not tested on a Spectacles device.** Gaze is head rotation, simulated by LEAF in tests.
 - **Nudge chevron placement rule** (`Assets/Scripts/core/ChevronPlacement.ts`): the chevron is a bold double chevron with a caption and no box; it keeps its
   edge-of-view spot; panels (podium, cue card), the room meter and every member's whole silhouette are projected into its view
