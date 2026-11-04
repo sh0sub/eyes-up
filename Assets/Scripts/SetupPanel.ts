@@ -24,11 +24,12 @@ import {
 import { SessionConfig } from './core/EyesUpSession';
 import { BOX_NEUTRAL, Panel, TEXT_LABEL, TEXT_PRIMARY, addBox, addButton, flexRow, makePanel, textRow } from './EyesUpUI';
 
-const W = 40;
-const H = 30;
+/** Cycle 5 (R5): 40 x 30 -> 46 x 34 cm so the captions, labels and Start button can be about 1.3x larger. */
+const W = 46;
+const H = 34;
 const DIST = 110;
 /** R4: one label column (left-aligned) and one row width so Talk length / Audience / Deck line up. */
-const LABEL_W = 8;
+const LABEL_W = 10.5;
 const ROW_W = W - 4;
 
 @component
@@ -52,54 +53,54 @@ export class SetupPanel extends BaseScriptComponent {
     this.panel = makePanel(this.getSceneObject(), W, H, 1.4, 0.8);
     const c = this.panel.content;
     // Pass 4 (artifact S1): title with a "SETUP" pill on the right.
-    const titleRow = flexRow(c, 'SetupTitleRow', W - 4, 4.0, 1);
-    textRow(titleRow, 'SetupTitle', this.title, 'Title2', W - 15, 4.0, DIST).horizontalAlignment = HorizontalAlignment.Left;
+    const titleRow = flexRow(c, 'SetupTitleRow', W - 4, 4.4, 1);
+    textRow(titleRow, 'SetupTitle', this.title, 'Title2', W - 15, 4.4, DIST).horizontalAlignment = HorizontalAlignment.Left;
     addBox(titleRow, 'SetupPill', SETUP_PILL, 'Subheadline', 9, 2.6, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
-    textRow(c, 'SetupSubtitle', this.subtitle, 'Headline2', W - 4, 2.2, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
+    textRow(c, 'SetupSubtitle', this.subtitle, 'HeadlineXL', W - 4, 3, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
     // Pass 6 (artifact S1): segmented 3/5/10 and 3/6/9 controls (selected = cyan), deck list, mint Start.
-    const seg = { labelRole: 'Headline1' as const };
+    const seg = { labelRole: 'HeadlineXL' as const };
     this.lengthSeg = this.segmentRow(c, 'Length', 'Talk length', LENGTH_OPTIONS, 'min', (v) => this.model.setLengthSlider(optionToSlider(LENGTH_OPTIONS, v)), seg);
     this.audienceSeg = this.segmentRow(c, 'Audience', 'Audience', AUDIENCE_OPTIONS, 'people', (v) => this.model.setAudienceSlider(optionToSlider(AUDIENCE_OPTIONS, v)), seg);
-    const deckRow = flexRow(c, 'DeckRow', W - 4, 4.4, 1);
-    textRow(deckRow, 'DeckLabel', 'Deck', 'Headline2', LABEL_W, 4.4, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
+    const deckRow = flexRow(c, 'DeckRow', W - 4, 5.2, 1);
+    textRow(deckRow, 'DeckLabel', 'Deck', 'HeadlineXL', LABEL_W, 5.2, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
     this.deckButtons = DECKS.map((d) => {
       const id = d.id;
       const btn = addButton(
         deckRow,
         `Deck_${id}`,
         `${d.name}\n${d.sections.length} cards`,
-        9.5,
-        4.4,
+        11,
+        5.2,
         DIST,
         () => {
           this.model.selectDeck(id);
           this.refresh();
         },
-        { labelRole: 'Subheadline' },
+        { labelRole: 'Headline2' },
       );
       return { id, setSelected: btn.setSelected };
     });
     // Artifact F14 (stretch): type a talk outline on the AR keyboard (core/DeckImport.ts format).
-    const imp = addButton(deckRow, 'ImportDeckButton', 'Import\ntext', 6, 4.4, DIST, () => this.importDeck(), { labelRole: 'Subheadline' });
+    const imp = addButton(deckRow, 'ImportDeckButton', 'Import\ntext', 7, 5.2, DIST, () => this.importDeck(), { labelRole: 'Headline2' });
     this.importLabel = imp.label;
     this.deckButtons.push({ id: IMPORTED_DECK_ID, setSelected: imp.setSelected });
     // Start + the artifact caption side by side (keeps the panel inside 40 × 30 cm).
-    const startRow = flexRow(c, 'StartRow', W - 4, 4.4, 1);
+    const startRow = flexRow(c, 'StartRow', W - 4, 5.6, 1);
     addButton(
       startRow,
       'StartButton',
       'Start rehearsal',
-      20,
-      4.4,
+      25,
+      5.6,
       DIST,
       () => {
         if (this.exitTime >= 0) return;
         this.exitTime = 0; // 0.3 s shrink, then hand the config to EyesUpApp
       },
-      { icon: 'play_arrow', mint: true, labelRole: 'Headline1' },
+      { icon: 'play_arrow', mint: true, labelRole: 'HeadlineXL' },
     );
     // The panel's Text never wraps (Overflow), so the caption breaks after "ahead".
-    textRow(startRow, 'SetupCaption', SETUP_CAPTION.replace(' of ', '\nof '), 'Headline2', 15, 4.4, DIST, TEXT_LABEL);
+    textRow(startRow, 'SetupCaption', SETUP_CAPTION.replace(' of ', '\nof '), 'Headline1', 16, 5.6, DIST, TEXT_LABEL);
     // Visibility is applied in UpdateEvent (after every UIKit element has run OnStart): disabling
     // a UIKit host before its OnStart stops it from ever initializing (specs-build-ui G3).
     this.createEvent('UpdateEvent').bind(() => {
@@ -140,17 +141,17 @@ export class SetupPanel extends BaseScriptComponent {
     options: readonly number[],
     unit: string,
     pick: (value: number) => void,
-    btn: { labelRole: 'Headline1' },
+    btn: { labelRole: 'HeadlineXL' },
   ): Array<{ value: number; setSelected: (on: boolean) => void }> {
-    const row = flexRow(parent, `${name}Row`, W - 4, 3.6, 1);
-    textRow(row, `${name}Label`, label, 'Headline2', LABEL_W, 3.6, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
+    const row = flexRow(parent, `${name}Row`, W - 4, 4.2, 1);
+    textRow(row, `${name}Label`, label, 'HeadlineXL', LABEL_W, 4.2, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
     const segs = options.map((value) => {
       const b = addButton(
         row,
         `${name}_${value}`,
         String(value),
-        5.5,
-        3.5,
+        6.2,
+        4.1,
         DIST,
         () => {
           pick(value);
@@ -160,7 +161,7 @@ export class SetupPanel extends BaseScriptComponent {
       );
       return { value, setSelected: b.setSelected };
     });
-    textRow(row, `${name}Unit`, unit, 'Subheadline', ROW_W - LABEL_W - 3 * 5.5 - 4, 3.6, DIST, TEXT_LABEL);
+    textRow(row, `${name}Unit`, unit, 'Headline2', ROW_W - LABEL_W - 3 * 6.2 - 4, 4.2, DIST, TEXT_LABEL);
     return segs;
   }
 

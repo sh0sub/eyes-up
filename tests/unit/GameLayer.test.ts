@@ -85,11 +85,11 @@ describe('audienceLook', () => {
     expect(down.phoneGlow).toBe(1);
   });
 
-  it('a slumped head tilts about 25 degrees and shows zzz; engaged and perked-up members do not', () => {
+  it('a slumped head tilts about 30 degrees and shows zzz; engaged and perked-up members do not', () => {
     expect(audienceLook(1).headTiltDeg).toBe(0);
     expect(audienceLook(1).zzz).toBe(0);
     expect(audienceLook(0).headTiltDeg).toBeCloseTo(HEAD_TILT_DEG, 6);
-    expect(HEAD_TILT_DEG).toBe(25);
+    expect(HEAD_TILT_DEG).toBe(30);
     expect(audienceLook(0).zzz).toBe(1);
     expect(audienceLook(0.2, 1).zzz).toBe(0);
     expect(audienceLook(0.2, 1).headTiltDeg).toBe(0);

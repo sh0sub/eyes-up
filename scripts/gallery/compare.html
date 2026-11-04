@@ -1,0 +1,23 @@
+<!doctype html><meta charset="utf-8"><title>Eyes Up run compare</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+.row{display:grid;grid-template-columns:1fr 130px 1fr;gap:0;margin-top:26px;align-items:center}
+.im{height:760px;border-radius:14px;background-repeat:no-repeat;background-color:#6b665f;position:relative;overflow:hidden}
+.mid{text-align:center;font-weight:800;color:var(--ind);font-size:22px}
+.mid b{display:block;font-size:84px;line-height:1}
+.tip{margin-top:12px;font-size:24px;font-weight:700}
+.tip span{color:var(--amber)}
+.g1{color:#d9582b}.g2{color:#0a9b73}
+</style>
+<div class="wrap">
+ <h1>The tip changes the next run</h1>
+ <div class="sub">Run 1 ignores the left and gets a C. Run 2 follows the tip and gets an A.</div>
+ <div class="row">
+  <div class="card"><div class="im" style="background-image:url('src/run1-summary.png');background-position:-253px -59px;background-size:1253px 873px"><span class="cap">Run 1</span></div>
+   <div class="k" style="margin-top:14px">Stares right, ignores the left</div><div class="t"><span class="g1">C &middot; 39</span> &nbsp;balance 46 &nbsp;L / C / R 0 / 30 / 70 %</div><div class="tip">Tip: <span>"Next time, look left more."</span></div></div>
+  <div class="mid">press<b>&rarr;</b>Again</div>
+  <div class="card"><div class="im" style="background-image:url('src/run2-summary.png');background-position:-253px -59px;background-size:1253px 873px"><span class="cap">Run 2</span></div>
+   <div class="k" style="margin-top:14px">Follows the tip, sweeps the room</div><div class="t"><span class="g2">A &middot; 84</span> &nbsp;balance 89 &nbsp;L / C / R 41 / 26 / 33 %</div><div class="tip">New best (was 39). Tip: <span>"look at the center more."</span></div></div>
+ </div>
+ <div class="foot">Scripted gaze, illustrative loop (LEAF capture_loop in the Lens Studio 5.24.1 Interactive Preview), not a user study. Preview only, not tested on a Spectacles device.</div>
+</div>

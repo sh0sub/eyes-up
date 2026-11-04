@@ -29,6 +29,7 @@ import { StageLayout } from './StagePlacer';
 import { SummaryPanel } from './SummaryPanel';
 import { AudienceLook } from './core/AudienceLook';
 import { AudienceView, EyesUpSession, SessionViews } from './core/EyesUpSession';
+import { SUMMARY_CENTER_Y_CM, SUMMARY_DISTANCE_CM } from './core/Framing';
 import { PillRect } from './core/PillHit';
 import { ChevronBox, PlaneRect, placeChevron } from './core/ChevronPlacement';
 import { podiumState } from './core/PodiumModel';
@@ -74,9 +75,7 @@ const LINE_AMBER: [number, number, number] = [1.0, 0.72, 0.2];
 const SETUP_DISTANCE_CM = 110;
 /** Round 6: negative = above eye level; the panel clears the room's wall art in Preview and on device. */
 const SETUP_BELOW_EYES_CM = -10;
-const SUMMARY_DISTANCE_CM = 150;
-/** Round 6: raised so the stat tiles and tip clear the room's wall art (additive display: art shows through any fill). */
-const SUMMARY_ABOVE_EYES_CM = 29;
+/** Cycle 5 (R1): the Summary used to sit 29 cm above the eyes and clipped its top in the preview frame; its distance and centre height now live in core/Framing.ts (unit tested to stay inside the viewport). */
 /** design: panels follow the head only while the preview/device pose settles, then stay put. */
 const PANEL_SETTLE_SECONDS = 1.0;
 
@@ -89,16 +88,16 @@ const PANEL_SETTLE_SECONDS = 1.0;
  * Game pass (jury: "cue card text too small at Spectacles scale"): title 240 -> 290, bullets 140 -> 180, card
  * 64 x 26 -> 84 x 34 cm, pill height 10 -> 12 cm. The pill's effective size is 290 x 1.2 = 348 (was 240 x 1.3 = 312).
  */
-const CARD_W = 84;
-const CARD_H = 34;
+const CARD_W = 100;
+const CARD_H = 26;
 /** The card sits above the anchor (bottom edge 1 cm below it) so it clears the audience's heads and the room meter. */
-const CARD_CENTER_Y = 16;
-const CARD_TITLE_Y = 25.5;
-const CARD_BODY_Y = 13.2;
-const CARD_COUNTDOWN_Y = 1.6;
-const CARD_COUNTDOWN_W = 78;
-const CARD_TITLE_SIZE = 290;
-const CARD_BODY_SIZE = 180;
+const CARD_CENTER_Y = 12;
+const CARD_TITLE_Y = 20.2;
+const CARD_BODY_Y = 9.8;
+const CARD_COUNTDOWN_Y = 0.9;
+const CARD_COUNTDOWN_W = 94;
+const CARD_TITLE_SIZE = 330;
+const CARD_BODY_SIZE = 235;
 const PILL_SCALE = 1.2;
 const PILL_H = 12;
 const PILL_Y = 11;
@@ -107,7 +106,8 @@ const PILL_Y = 11;
  * (burst ring up to 1.6x) no longer cover it; the card is lifted by the same amount so the two never overlap.
  */
 const METER_BELOW_ANCHOR_CM = -8;
-const CARD_LIFT_CM = 14;
+/** Cycle 5 (R5): lifted 14 -> 17 cm so the meter plate and the card are 3.6 cm apart (they used to touch); the card is 3 cm shorter, so its top edge is where it was. */
+const CARD_LIFT_CM = 17;
 /**
  * Cycle 3 (S4): a faint dark rounded plate stands 40 cm behind the audience so the busy wall frames do not sit behind heads and bodies.
  * It is an alpha-blended plate for the Preview; on an additive display a dark plate adds nothing (black is clear), so it costs nothing there.
@@ -131,7 +131,7 @@ const LIT_HALO_RADIUS_CM = 22;
 /** Measured in Preview: ≈ 0.0124 cm per size unit per glyph for Inter titles (size 200 → 2.5 cm). */
 const PILL_GLYPH_CM = 0.0124 * CARD_TITLE_SIZE;
 /** Game pass (jury: grey-on-grey): a deeper indigo card with a bright cyan frame; white text keeps its contrast. */
-const CARD_FILL = new vec4(0.1, 0.18, 0.46, 0.93);
+const CARD_FILL = new vec4(0.09, 0.16, 0.44, 1);
 const CARD_FRAME = new vec4(0.5, 0.88, 1.0, 0.95);
 
 @component
@@ -551,7 +551,7 @@ export class EyesUpApp extends BaseScriptComponent {
     }
     if (phase === 'Summary') {
       const so = this.summaryPanel.getSceneObject();
-      so.getTransform().setWorldPosition(this.aheadOfHead(SUMMARY_DISTANCE_CM, SUMMARY_ABOVE_EYES_CM));
+      so.getTransform().setWorldPosition(this.aheadOfHead(SUMMARY_DISTANCE_CM, SUMMARY_CENTER_Y_CM));
       faceTowards(so, this.headPosition(), true);
     }
   }

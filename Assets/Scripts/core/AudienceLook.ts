@@ -14,16 +14,19 @@ export type Rgba = [number, number, number, number];
 /** Engaged / disengaged body tint. Engaged is a clearly blue, fairly opaque glass (was 0.55,0.68,0.85 @ 0.35). */
 export const BODY_ENGAGED: Rgba = [0.2, 0.6, 1.0, 0.72];
 /** Muted periwinkle (about 60 % of the engaged saturation, dimmer and more transparent): clearly the same person, clearly drained next to the lit blue; the old grey-lavender read as a pale ghost. */
-export const BODY_DISENGAGED: Rgba = [0.44, 0.5, 0.82, 0.5];
+export const BODY_DISENGAGED: Rgba = [0.36, 0.4, 0.7, 0.4];
 export const BODY_PERK: Rgba = [0.25, 0.9, 1.0, 0.85];
 export const PHONE_GLOW: [number, number, number] = [1.0, 0.78, 0.3];
 
 /** Head local y at upright (scene) and the most it sinks, in cm. */
 export const HEAD_UP_Y = 153;
-export const HEAD_SINK_CM = 30;
+export const HEAD_SINK_CM = 34;
 export const HEAD_PITCH_DEG = 38;
+/** Cycle 5 (R2): local height (cm above the member's floor) of the phone screen's centre; its lowest edge is about 6 cm below. */
+export const PHONE_Y_CM = 86;
+export const PHONE_BOTTOM_BELOW_CENTER_CM = 6;
 /** The slumped head also tilts sideways (roll about the view axis) by this much; the ellipsoid makes a roll visible, a pitch is not. */
-export const HEAD_TILT_DEG = 25;
+export const HEAD_TILT_DEG = 30;
 
 export interface AudienceLook {
   bodyColor: Rgba;

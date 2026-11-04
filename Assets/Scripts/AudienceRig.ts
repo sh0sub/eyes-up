@@ -8,7 +8,7 @@
  * lights a small rounded phone screen with a faint light cone at the lap, shows a "zzz" marker, and pulses the Halo ring on a perk-up burst.
  * Local axes: the silhouette faces +Z (the speaker), so a forward lean is +Z.
  */
-import { AudienceLook } from './core/AudienceLook';
+import { AudienceLook, PHONE_Y_CM } from './core/AudienceLook';
 import { addSurface, addText, child } from './EyesUpUI';
 
 const BODY_REST_Y = 70;
@@ -22,6 +22,8 @@ const HEAD_FORWARD_CM = 8;
  * A small bright phone screen (a plus-shaped quad pair gives rounded corners) with a faint stepped light cone rising toward
  * the face. Sized to read at 2.5 m without becoming a card; the whole thing stays within the silhouette's lap, inside the frame.
  */
+/** Cycle 5 (R2): the phone sits 6 cm higher (80 -> 86) so its glow stays inside the frame bottom at the canonical pose. */
+const PHONE_Y = PHONE_Y_CM;
 const PHONE_W = 9;
 const PHONE_H = 14;
 const PHONE_CORNER = 1.6;
@@ -81,7 +83,7 @@ export class AudienceRig {
       const head = byName(root, 'Head');
       const halo = byName(root, 'Halo');
       const phoneRig = child(root, 'PhoneRig');
-      const phone = child(phoneRig, 'Phone', new vec3(0, 80, 44));
+      const phone = child(phoneRig, 'Phone', new vec3(0, PHONE_Y, 44));
       // Tilted back like a phone held at the lap.
       phone.getTransform().setLocalRotation(quat.angleAxis(-Math.PI / 4, new vec3(1, 0, 0)));
       const clear = new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], 0);
@@ -92,7 +94,7 @@ export class AudienceRig {
         addSurface(child(screen, 'Mid'), PHONE_W - 0.8, PHONE_H - 0.8, 0, clear, null),
       ];
       // Light cone: widening, ever fainter steps stacked upward from the screen toward the face.
-      const cone = child(phoneRig, 'PhoneCone', new vec3(0, 88, 40));
+      const cone = child(phoneRig, 'PhoneCone', new vec3(0, PHONE_Y + 8, 40));
       const coneVisuals: RenderMeshVisual[] = [];
       for (let k = 0; k < CONE_STEPS; k++) {
         const w = PHONE_W + 7 * (k + 1);

@@ -9,6 +9,7 @@ import { UpdateDispatcher } from 'Leaf.lspkg/Utils/common/UpdateDispatcher';
 import { findSceneObjectByName, sleep, waitUntil } from 'Leaf.lspkg/Utils/common/Utils';
 import { EyesUpApp } from '../../Scripts/EyesUpApp';
 import { ScriptedGazeProvider } from '../../Scripts/GazeProvider';
+import { PHONE_BOTTOM_BELOW_CENTER_CM, PHONE_Y_CM } from '../../Scripts/core/AudienceLook';
 import { EyesUpSession } from '../../Scripts/core/EyesUpSession';
 
 export interface Rig {
@@ -74,6 +75,24 @@ export function headFrameProblems(rig: Rig): string[] {
       const sp = cam.worldSpaceToScreenSpace(p);
       if (sp.x < 0.05 || sp.x > 0.95 || sp.y < 0.05 || sp.y > 0.95) problems.push(`member ${i} head edge at (${sp.x.toFixed(2)}, ${sp.y.toFixed(2)})`);
     }
+  }
+  return problems;
+}
+
+/**
+ * Cycle 5 (R2): the slumped members' phone glow must end inside the bottom 4 % of the viewport at the canonical pose
+ * (phone centre PHONE_Y_CM above the member's floor, its lowest edge PHONE_BOTTOM_BELOW_CENTER_CM below that).
+ */
+export function phoneBottomProblems(rig: Rig): string[] {
+  const camSo = findSceneObjectByName('Camera Object');
+  const cam = camSo ? (camSo.getComponent('Component.Camera') as Camera) : null;
+  if (!cam) throw new Error('Camera Object has no Camera');
+  const problems: string[] = [];
+  const members = rig.app.audienceMembers();
+  for (let i = 0; i < rig.session.config.audienceCount; i++) {
+    const p = members[i].getTransform().getWorldPosition();
+    const sp = cam.worldSpaceToScreenSpace(new vec3(p.x, p.y + PHONE_Y_CM - PHONE_BOTTOM_BELOW_CENTER_CM, p.z));
+    if (sp.y < 0.04 || sp.y > 0.96) problems.push(`member ${i} phone glow bottom at y ${sp.y.toFixed(2)}`);
   }
   return problems;
 }

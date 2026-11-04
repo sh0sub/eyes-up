@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { computeStageLayout } from '../../Assets/Scripts/StagePlacer';
 import { DEFAULT_TUNABLES } from '../../Assets/Scripts/core/Tunables';
-import { CANONICAL_PITCH_DEG, forwardAtPitch, headExtent, insideMargin, projectToViewport } from '../../Assets/Scripts/core/Framing';
+import { CANONICAL_PITCH_DEG, forwardAtPitch, headExtent, insideMargin, projectToViewport, summaryExtent } from '../../Assets/Scripts/core/Framing';
+import { PHONE_BOTTOM_BELOW_CENTER_CM, PHONE_Y_CM } from '../../Assets/Scripts/core/AudienceLook';
 
 const head = { x: 0, y: 0, z: 0 };
 const facing = { x: 0, y: 0, z: -1 };
@@ -41,5 +42,27 @@ describe('Preview framing (Cycle 4, D1)', () => {
       return !!e && insideMargin(e);
     });
     expect(inside.every(Boolean)).toBe(false);
+  });
+});
+
+describe('Cycle 5 framing (R1, R2)', () => {
+  it('keeps the whole Summary panel (header and grade tile included) inside the viewport, with its top 8 to 16 % below the viewport top', () => {
+    const e = summaryExtent(head, forwardAtPitch(CANONICAL_PITCH_DEG));
+    expect(e).not.toBeNull();
+    if (!e) return;
+    expect(e.top, JSON.stringify(e)).toBeLessThanOrEqual(0.92);
+    expect(e.top).toBeGreaterThanOrEqual(0.84);
+    expect(e.bottom).toBeGreaterThanOrEqual(-0.95);
+    expect(e.left).toBeGreaterThanOrEqual(-0.9);
+    expect(e.right).toBeLessThanOrEqual(0.9);
+  });
+
+  it('keeps every slumped member\'s phone glow inside the bottom 4 % margin of the viewport', () => {
+    const layout = computeStageLayout(head, facing, 3, DEFAULT_TUNABLES);
+    const fwd = forwardAtPitch(CANONICAL_PITCH_DEG);
+    for (const seat of layout.seats) {
+      const p = projectToViewport(head, fwd, { x: seat.x, y: seat.y + PHONE_Y_CM - PHONE_BOTTOM_BELOW_CENTER_CM, z: seat.z });
+      expect(p && p.y >= -0.96, JSON.stringify(p)).toBe(true);
+    }
   });
 });

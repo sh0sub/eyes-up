@@ -17,12 +17,14 @@ import { StatsSnapshot } from './SessionStats';
 import { SummaryContext, summaryState, BAR_FILL_SECONDS } from './core/SummaryModel';
 import { gazeTimeline } from './core/GazeTimeline';
 import { Grade } from './core/GameScore';
+import { SUMMARY_PANEL_H_CM, SUMMARY_PANEL_SCALE, SUMMARY_PANEL_W_CM } from './core/Framing';
 import {
   BOX_AMBER_SOLID,
   BOX_SOLID,
   TEXT_TIP,
   Panel,
   TEXT_AMBER,
+  TEXT_LABEL,
   TEXT_MINT,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
@@ -53,19 +55,20 @@ const GRADE_COLOR: Record<Grade, vec4> = {
 };
 const BUTTON_PLATE = new vec4(0.08, 0.11, 0.18, 1);
 const BUTTON_PLATE_FRAME = new vec4(0.6, 0.78, 0.95, 0.9);
-const W = 50;
-/** Game pass: 53 -> 60 cm to fit the grade row (attention score, grade, best-previous). */
-/** Cycle 4 (D3): 64 -> 74 cm; the stat line and the toast chip are gone, the timeline is about 2x taller. */
-const H = 74;
-/** Whole-panel scale: the Summary used to clip its top in the preview frame (1.2 -> 1.15 so the taller panel still fits). */
-const PANEL_SCALE = 1.12;
+const W = SUMMARY_PANEL_W_CM;
+/**
+ * Game pass: 53 -> 60 cm to fit the grade row; Cycle 4 (D3): 74 cm. Cycle 5 (R1): 78 cm for the bigger grade, tip, a legend line and taller buttons.
+ * Panel size and scale live in core/Framing.ts: a unit test keeps the whole panel (header and grade included) inside the preview viewport.
+ */
+const H = SUMMARY_PANEL_H_CM;
+const PANEL_SCALE = SUMMARY_PANEL_SCALE;
 const DIST = 150;
 const BAR_W = 23;
 const BAR_H = 2.2;
 /** Timeline block: 44 × 7.4 cm. Row labels on the left, a 40 cm strip, nudge markers below. */
 const TL_W = W - 6;
 /** Cycle 4 (D3): 9.2 -> 15 cm, rows 1.9 -> 3.4 cm tall (1.8x), so segments and the coral look-away read at thumbnail size. */
-const TL_H = 15;
+const TL_H = 14;
 const TL_X0 = -18.5;
 const TL_STRIP_W = 40;
 const TL_ROW_Y = [4.4, 0.8, -2.8];
@@ -73,7 +76,7 @@ const TL_ROW_H = 3.4;
 const TL_NUDGE_Y = -5.8;
 /** Zone labels and percentages: 92 -> 120 (about 1.3x). Buttons: 5.6 cm tall targets, Again is the widest. */
 const ZONE_TEXT_SIZE = 120;
-const BUTTON_H = 5.6;
+const BUTTON_H = 6.6;
 const BUTTON_TEXT_SIZE = 92;
 
 @component
@@ -107,20 +110,20 @@ export class SummaryPanel extends BaseScriptComponent {
     const c = this.panel.content;
     // Cycle 4 (D3): the "Session complete" toast above the panel is gone (it overlapped the panel edge and added nothing the title does not say).
     // Header: check icon + title (artifact S5 ①). Balance moved into the game tile's sub-line.
-    const header = flexRow(c, 'SummaryHeader', W - 4, 5.6, 1.2);
-    addIconCell(header, 'SummaryCheck', 'check_circle', 3.4, 3.6, 5.6);
-    this.titleText = textRow(header, 'TimeText', 'Nice work — 0:00', 'Headline1', W - 10, 5.6, DIST);
+    const header = flexRow(c, 'SummaryHeader', W - 4, 5.2, 1.2);
+    addIconCell(header, 'SummaryCheck', 'check_circle', 3.4, 3.6, 5.2);
+    this.titleText = textRow(header, 'TimeText', 'Nice work — 0:00', 'Headline1', W - 10, 5.2, DIST);
     this.titleText.size = 100; // larger than the stat tiles, smaller than the tip (127) and the grade (520)
     this.titleText.horizontalAlignment = HorizontalAlignment.Left;
     // Game layer: a big grade tile (the payoff) + attention score, room engagement, balance and best-previous.
-    const game = flexRow(c, 'GameRow', W - 6, 12, 1.2);
-    this.gradeText = addBox(game, 'GradeBadge', '-', 'Title1', 14, 12, DIST, TEXT_MINT, BOX_SOLID);
-    this.gradeText.size = 520; // about 2x the earlier 260: the grade is the hero of the game layer
-    this.gameText = addBox(game, 'GameText', '', 'Headline1', W - 6 - 14 - 1.2, 12, DIST, TEXT_PRIMARY, BOX_SOLID);
+    const game = flexRow(c, 'GameRow', W - 6, 13, 1.2);
+    this.gradeText = addBox(game, 'GradeBadge', '-', 'Title1', 16, 13, DIST, TEXT_MINT, BOX_SOLID);
+    this.gradeText.size = 650; // Cycle 5 (R1): 2.5x the first 260, in the grade colour: the grade is the hero of the game layer
+    this.gameText = addBox(game, 'GameText', '', 'Headline1', W - 6 - 16 - 1.2, 13, DIST, TEXT_PRIMARY, BOX_SOLID);
     this.gameText.size = 96; // between the title (100 would crowd it) and the stat tiles: 3 short lines still fit the 28.8 cm tile
     // Zone rows: name · bar · percent (artifact S5 ②).
     for (const name of ['Left', 'Center', 'Right']) {
-      const row = flexRow(c, `Zone${name}`, W - 6, 4.4, 1.2);
+      const row = flexRow(c, `Zone${name}`, W - 6, 4.2, 1.2);
       const zn = textRow(row, `Zone${name}Name`, name, 'Headline1', 11, 4.4, DIST);
       zn.size = ZONE_TEXT_SIZE; // zone labels and percentages are what the Summary is read for: larger than Headline1 (74 at this distance)
       this.zoneNames.push(zn);
@@ -136,20 +139,24 @@ export class SummaryPanel extends BaseScriptComponent {
     }
     // Gaze timeline strip (artifact S5 ③), drawn in show().
     this.timelineBlock = addBlock(c, 'GazeTimeline', TL_W, TL_H);
+    // Cycle 5 (R1): a tiny legend so the red box and the amber dot explain themselves.
+    const legend = textRow(c, 'TimelineLegend', 'red box: longest look-away   amber dot: nudge', 'Headline2', W - 6, 2.4, DIST, TEXT_LABEL);
+    legend.size = 80;
     // Cycle 4 (D3): the one-line stat row is gone; the longest look-away is the coral box in the timeline, the grade and tip carry the rest.
     // The coaching tip is the second-largest text on the panel (after the grade).
-    this.tipText = addBox(c, 'TipText', '', 'Title2', W - 6, 6.2, DIST, TEXT_TIP, BOX_AMBER_SOLID);
-    this.tipText.size = 140;
+    this.tipText = addBox(c, 'TipText', '', 'Title2', W - 6, 7.6, DIST, TEXT_TIP, BOX_AMBER_SOLID);
+    this.tipText.size = 148; // Cycle 5 (R1): a bigger amber bar, the second-largest text after the grade
     // An opaque dark plate (own frame) behind the buttons, so they never read as part of the wall art behind the panel's lower edge.
     const buttons = flexRow(c, 'SummaryButtons', W - 6, BUTTON_H + 1.8, 1.6);
     addSurface(child(buttons, 'ButtonPlate', new vec3(0, 0, -0.1)), W - 6, BUTTON_H + 1.8, 0, BUTTON_PLATE, BUTTON_PLATE_FRAME);
     const big = { labelRole: 'Headline1' as const };
     // Again is the practice loop: the widest, primary (cyan) button. Done and Re-place are secondary.
-    addButton(buttons, 'AgainButton', 'Again', 17, BUTTON_H, DIST, () => this.onAgain?.(), { icon: 'replay', primary: true, labelRole: 'Title2' });
-    addButton(buttons, 'DoneButton', 'Done', 11, BUTTON_H, DIST, () => this.onDone?.(), { icon: 'check', ...big }).label.size = BUTTON_TEXT_SIZE;
+    // Cycle 5 (R1): Again is the only filled cyan button and says what it is for; Done and Move stage are outlines.
+    addButton(buttons, 'AgainButton', 'Again', 17, BUTTON_H, DIST, () => this.onAgain?.(), { icon: 'replay', primary: true, labelRole: 'Title2', subline: 'beat your grade' });
+    addButton(buttons, 'DoneButton', 'Done', 9.4, BUTTON_H, DIST, () => this.onDone?.(), { icon: 'check', outline: true, ...big }).label.size = BUTTON_TEXT_SIZE;
     // Pass 6 (artifact F2): Re-place (same size and type role as Again / Done), reachable here once the rehearsal is over (the podium
     // hides it during Rehearsal). Seats the stage again where you now face and restarts the talk.
-    addButton(buttons, 'SummaryReplaceButton', 'Re-place', 12, BUTTON_H, DIST, () => this.onReplace?.(), big).label.size = BUTTON_TEXT_SIZE;
+    addButton(buttons, 'SummaryReplaceButton', 'Move stage', 13, BUTTON_H, DIST, () => this.onReplace?.(), { outline: true, ...big }).label.size = BUTTON_TEXT_SIZE;
     // Hidden state is applied in UpdateEvent, after every UIKit element ran OnStart (G3).
     this.createEvent('UpdateEvent').bind(() => {
       if (this.panel.root.enabled !== this.wantVisible) this.panel.root.enabled = this.wantVisible;
@@ -206,6 +213,7 @@ export class SummaryPanel extends BaseScriptComponent {
       if (this.zoneBars[i]) this.zoneBars[i].getTransform().setLocalScale(new vec3(Math.max(0.001, z.bar), 1, 1));
     });
     this.tipText.text = s.tip;
+    this.tipText.size = s.tip.length > 30 ? 116 : 148; // the longest tip ("Next time, look at the center more.") must stay inside the 44 cm bar
     this.gradeText.text = s.gradeLabel || '-';
     this.gradeText.textFill.color = s.grade ? GRADE_COLOR[s.grade] : TEXT_SECONDARY;
     this.gameText.text = s.scoreLabel

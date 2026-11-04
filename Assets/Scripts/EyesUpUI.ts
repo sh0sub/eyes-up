@@ -92,7 +92,7 @@ const ICONS: Record<IconName, Texture> = {
  * and a slightly deeper tone, so the room behind reads less through the panel while white text
  * keeps its contrast. On the additive display nothing is fully opaque.
  */
-const SURFACE_FILL = new vec4(0.17, 0.23, 0.33, 0.95);
+const SURFACE_FILL = new vec4(0.14, 0.2, 0.31, 1);
 const SURFACE_BORDER = new vec4(0.6, 0.78, 0.95, 0.7);
 /** Button faces: brighter blue-grey than the surface, with a light frame. */
 const BUTTON_FACE = new vec4(0.3, 0.42, 0.58, 0.95);
@@ -161,7 +161,13 @@ const MINT_FACE_PRESS = new vec4(0.24, 0.64, 0.52, 1);
 const MINT_BORDER = new vec4(0.5, 1.0, 0.8, 0.95);
 
 type FaceSet = [vec4, vec4, vec4, vec4];
-const FACES: Record<'normal' | 'primary' | 'amber' | 'mint', FaceSet> = {
+/** Cycle 5 (R1): secondary buttons are outlines (dark face, light frame) so the one filled cyan button is the obvious next step. */
+const OUTLINE_FACE = new vec4(0.1, 0.15, 0.25, 1);
+const OUTLINE_FACE_HOVER = new vec4(0.2, 0.3, 0.45, 1);
+const OUTLINE_FACE_PRESS = new vec4(0.3, 0.44, 0.62, 1);
+const OUTLINE_BORDER = new vec4(0.78, 0.9, 1, 1);
+const FACES: Record<'normal' | 'primary' | 'amber' | 'mint' | 'outline', FaceSet> = {
+  outline: [OUTLINE_FACE, OUTLINE_FACE_HOVER, OUTLINE_FACE_PRESS, OUTLINE_BORDER],
   normal: [BUTTON_FACE, BUTTON_FACE_HOVER, BUTTON_FACE_PRESS, BUTTON_BORDER],
   primary: [PRIMARY_FACE, PRIMARY_FACE_HOVER, PRIMARY_FACE_PRESS, PRIMARY_BORDER],
   amber: [AMBER_FACE, AMBER_FACE_HOVER, AMBER_FACE_PRESS, AMBER_BORDER],
@@ -354,6 +360,10 @@ export interface ButtonOptions {
   amber?: boolean;
   /** Mint face and mint label (Start rehearsal, artifact S1). Ignored when `primary` is set. */
   mint?: boolean;
+  /** Outline styling (dark face, light frame) for secondary buttons. Ignored when `primary` is set. */
+  outline?: boolean;
+  /** A second, smaller line under the label (for example 'beat your grade'). */
+  subline?: string;
 }
 
 /**
@@ -400,7 +410,7 @@ export function addButton(
   const so = child(parent, name);
   const button = so.createComponent(Button.getTypeName()) as Button;
   button.size = new vec3(widthCm, heightCm, 1);
-  const setSelected = themeButton(button, so, widthCm, heightCm, opts.primary ? 'primary' : opts.mint ? 'mint' : opts.amber ? 'amber' : 'normal');
+  const setSelected = themeButton(button, so, widthCm, heightCm, opts.primary ? 'primary' : opts.mint ? 'mint' : opts.amber ? 'amber' : opts.outline ? 'outline' : 'normal');
   const role = opts.labelRole ?? 'Button';
   let labelX = 0;
   let labelW = widthCm - 0.5;
@@ -416,8 +426,13 @@ export function addButton(
     labelX = -groupW / 2 + iconSize + gap + textW / 2;
     labelW = textW + 0.4;
   }
-  const labelSo = child(so, 'Label', new vec3(labelX, 0, BUTTON_LABEL_Z));
-  const text = makeText(labelSo, label, role, labelW, heightCm, distanceCm, opts.mint && !opts.primary ? TEXT_MINT : TEXT_PRIMARY);
+  // With a subline the label moves up and the subline (about 60 % of the label size) sits under it.
+  const labelSo = child(so, 'Label', new vec3(labelX, opts.subline ? heightCm * 0.17 : 0, BUTTON_LABEL_Z));
+  const text = makeText(labelSo, label, role, labelW, opts.subline ? heightCm * 0.6 : heightCm, distanceCm, opts.mint && !opts.primary ? TEXT_MINT : TEXT_PRIMARY);
+  if (opts.subline) {
+    const sub = makeText(child(so, 'Subline', new vec3(labelX, -heightCm * 0.27, BUTTON_LABEL_Z)), opts.subline, role, labelW, heightCm * 0.3, distanceCm, TEXT_LABEL);
+    sub.size = roleSize(role, distanceCm) * 0.62;
+  }
   const item = so.createComponent(FlexItem.getTypeName()) as FlexItem;
   item.overrideWidth = widthCm;
   item.overrideHeight = heightCm;

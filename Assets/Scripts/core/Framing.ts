@@ -73,3 +73,33 @@ export function headExtent(origin: Vec3Like, forward: Vec3Like, seat: Vec3Like):
 export function insideMargin(e: { left: number; right: number; top: number; bottom: number }, margin = FRAME_MARGIN): boolean {
   return e.left >= -margin && e.right <= margin && e.top <= margin && e.bottom >= -margin;
 }
+
+/**
+ * Cycle 5 (R1): Summary panel geometry shared by SummaryPanel (size, scale) and EyesUpApp (placement), so a unit test can
+ * prove the whole panel (grade tile and header included) sits inside the preview viewport at the canonical pose.
+ * The panel stands `SUMMARY_DISTANCE_CM` ahead (yaw only) with its centre `SUMMARY_CENTER_Y_CM` above the eyes (negative = below).
+ */
+export const SUMMARY_DISTANCE_CM = 150;
+export const SUMMARY_CENTER_Y_CM = -6.5;
+export const SUMMARY_PANEL_W_CM = 50;
+export const SUMMARY_PANEL_H_CM = 78;
+export const SUMMARY_PANEL_SCALE = 1.08;
+
+/** Viewport extent of the Summary panel for a camera at `origin` looking along `forward` (any pitch, yaw 0). */
+export function summaryExtent(origin: Vec3Like, forward: Vec3Like): { left: number; right: number; top: number; bottom: number } | null {
+  const hw = (SUMMARY_PANEL_W_CM * SUMMARY_PANEL_SCALE) / 2;
+  const hh = (SUMMARY_PANEL_H_CM * SUMMARY_PANEL_SCALE) / 2;
+  const cx = origin.x;
+  const cy = origin.y + SUMMARY_CENTER_Y_CM;
+  const cz = origin.z - SUMMARY_DISTANCE_CM;
+  const pts = [
+    projectToViewport(origin, forward, { x: cx - hw, y: cy + hh, z: cz }),
+    projectToViewport(origin, forward, { x: cx + hw, y: cy + hh, z: cz }),
+    projectToViewport(origin, forward, { x: cx - hw, y: cy - hh, z: cz }),
+    projectToViewport(origin, forward, { x: cx + hw, y: cy - hh, z: cz }),
+  ];
+  if (pts.some((p) => p === null)) return null;
+  const xs = pts.map((p) => (p as { x: number }).x);
+  const ys = pts.map((p) => (p as { y: number }).y);
+  return { left: Math.min(...xs), right: Math.max(...xs), top: Math.max(...ys), bottom: Math.min(...ys) };
+}

@@ -19,8 +19,9 @@ export interface PodiumHandlers {
 }
 
 /** Pass 3 (demo legibility): 30 → 34 cm wide so the larger labels fit; buttons 7.2 × 3.6 cm (≥ 3 cm). */
-export const PODIUM_W_CM = 34;
-export const PODIUM_H_CM = 11;
+/** Cycle 5 (R5): 34 x 11 -> 38 x 12.5 cm, labels and buttons about 1.15x to 1.3x larger. */
+export const PODIUM_W_CM = 38;
+export const PODIUM_H_CM = 12.5;
 const W = PODIUM_W_CM;
 const H = PODIUM_H_CM;
 const DIST = 55;
@@ -44,23 +45,23 @@ export class Podium extends BaseScriptComponent {
     // Pass 4 (artifact S4): counter "n / N" + timer "m:ss / m:ss"; Next is the largest target and
     // the cyan primary; Prev / Finish smaller (Finish amber-framed). All buttons stay ≥ 3 cm tall.
     // Re-place lives in the info row (hidden during Rehearsal) so the button row stays centered.
-    const info = flexRow(c, 'PodiumInfo', W - 2, 3.2, 2);
-    this.replaceButton = addButton(info, 'ReplaceButton', 'Re-place', 5.6, 3.2, DIST, () => this.handlers?.replace(), {
-      labelRole: 'Headline2',
+    const info = flexRow(c, 'PodiumInfo', W - 2, 3.8, 2);
+    this.replaceButton = addButton(info, 'ReplaceButton', 'Re-place', 7.2, 3.8, DIST, () => this.handlers?.replace(), {
+      labelRole: 'Headline1',
     }).button.getSceneObject();
-    this.sectionText = textRow(info, 'SectionText', '1 / 5', 'Title2', 8, 3.0, DIST, TEXT_ACCENT);
-    this.elapsedText = textRow(info, 'ElapsedText', '0:00 / 3:00', 'Title2', 14, 3.0, DIST);
-    const buttons = flexRow(c, 'PodiumButtons', W - 2, 5.0, 1.0);
-    addButton(buttons, 'PrevButton', 'Prev', 6.4, 3.6, DIST, () => this.handlers?.prev(), { icon: 'chevron_left', labelRole: 'Headline1' });
-    addButton(buttons, 'NextButton', 'Next', 9.6, 4.8, DIST, () => this.handlers?.next(), {
+    this.sectionText = textRow(info, 'SectionText', '1 / 5', 'Title2', 8, 3.4, DIST, TEXT_ACCENT);
+    this.elapsedText = textRow(info, 'ElapsedText', '0:00 / 3:00', 'Title2', 15, 3.4, DIST);
+    const buttons = flexRow(c, 'PodiumButtons', W - 2, 5.8, 1.0);
+    addButton(buttons, 'PrevButton', 'Prev', 7.8, 4.2, DIST, () => this.handlers?.prev(), { icon: 'chevron_left', labelRole: 'HeadlineXL' });
+    addButton(buttons, 'NextButton', 'Next', 11.2, 5.4, DIST, () => this.handlers?.next(), {
       icon: 'chevron_right',
       primary: true,
-      labelRole: 'HeadlineXL',
+      labelRole: 'Title2',
     });
-    const finish = addButton(buttons, 'FinishButton', 'Finish', 6.4, 3.6, DIST, () => this.handlers?.finish(), {
+    const finish = addButton(buttons, 'FinishButton', 'Finish', 8.2, 4.2, DIST, () => this.handlers?.finish(), {
       icon: 'flag',
       amber: true,
-      labelRole: 'Headline1',
+      labelRole: 'HeadlineXL',
     });
     this.finishButton = finish.button.getSceneObject();
     this.finishLabel = finish.label;
