@@ -301,7 +301,7 @@ function coldHtml(seg, cue, st = {}) {
   const tag = st.tag ? `<div style="position:absolute;left:1160px;top:470px;background:var(--primary);color:#fff;border-radius:16px;padding:18px 30px;font-size:46px;font-weight:800;letter-spacing:-.005em;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:6">${esc(st.tag)}</div>` : '';
   const pill = `<div class="chip" style="left:48px;top:40px;font-size:24px"><b>PREVIEW</b>live${speed}</div>`;
   if (seg.hero) {
-    return `${pill}<div style="position:absolute;left:50%;transform:translateX(-50%);bottom:48px;background:rgba(32,35,45,.9);color:#fff;border-radius:24px;padding:22px 64px;text-align:center;white-space:nowrap"><div style="font-size:92px;font-weight:800;letter-spacing:-.03em;line-height:1">Eyes Up</div><div style="font-size:46px;font-weight:600;margin-top:14px;color:#cfdcff">Rehearse with your eyes on the room.</div><div style="font-size:34px;font-weight:600;margin-top:18px;padding-top:16px;border-top:2px solid rgba(255,255,255,.25);color:#fff">github.com/sh0sub/eyes-up <span style="color:#9fb6ff">&nbsp;·&nbsp;</span> Preview only, LEAF 8/8</div></div>`;
+    return `${pill}<div style="position:absolute;left:50%;transform:translateX(-50%);bottom:48px;background:rgba(32,35,45,.9);color:#fff;border-radius:24px;padding:22px 64px;text-align:center;white-space:nowrap"><div style="font-size:92px;font-weight:800;letter-spacing:-.03em;line-height:1">Eyes Up</div><div style="font-size:46px;font-weight:600;margin-top:14px;color:#cfdcff">Rehearse with your eyes on the room.</div><div style="font-size:34px;font-weight:600;margin-top:18px;padding-top:16px;border-top:2px solid rgba(255,255,255,.25);color:#fff">github.com/sh0sub/eyes-up <span style="color:#9fb6ff">&nbsp;·&nbsp;</span> Preview only, LEAF 10/10</div></div>`;
   }
   return `${pill}${disclosure}${chip}${lower}${tag}
   <div class="capbar" style="font-size:40px;padding:22px 40px;width:max-content">${esc(cue.text)}</div>`;
@@ -334,7 +334,7 @@ function openHtml(seg, cap0, top, st) {
       <text x="1330" y="850" font-family="-apple-system,Helvetica Neue,Arial,sans-serif" font-size="120" font-weight="800" fill="#3864ed" letter-spacing="-2">drop</text>
     </g></svg>${cap}</div>`;
   }
-  const hero = 'devpost/screenshots/08-halo-cyan.png';
+  const hero = 'devpost/screenshots/archive/08-halo-cyan.png';
   const sc = W / 1024;
   return `<div class="card" style="background-image:url('${fileUrl(hero)}');background-repeat:no-repeat;background-size:${W}px ${Math.round(713 * sc)}px;background-position:0 ${-50 * sc}px"></div>
   ${st.disclosure ? disclosureHtml() : ''}
@@ -417,9 +417,9 @@ function cardHtml(seg, ci, cue, st = {}) {
         ${step(3, 'LEAF', 'Scripted scenarios check the done criteria in the Preview', ci === 1)}
       </div>
       <div style="display:flex;gap:24px;margin-top:34px">
-        <div style="${box(on(ci === 1))}flex:1.15;padding:20px 34px"><div style="display:flex;align-items:baseline;gap:22px"><span style="font-size:210px;font-weight:800;color:var(--primary-ink);line-height:1;letter-spacing:-.03em">8/8</span><span style="font-size:36px;font-weight:700;line-height:1.25">LEAF scenarios<br>passed</span></div>
+        <div style="${box(on(ci === 1))}flex:1.15;padding:20px 34px"><div style="display:flex;align-items:baseline;gap:22px"><span style="font-size:210px;font-weight:800;color:var(--primary-ink);line-height:1;letter-spacing:-.03em">10/10</span><span style="font-size:36px;font-weight:700;line-height:1.25">LEAF scenarios<br>passed</span></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;margin-top:12px">${ids}</div></div>
-        <div style="${box(on(ci === 2))}flex:1;padding:20px 34px"><div style="display:flex;align-items:baseline;gap:22px"><span style="font-size:210px;font-weight:800;color:var(--primary-ink);line-height:1;letter-spacing:-.03em">139</span><span style="font-size:36px;font-weight:700;line-height:1.25">Node tests<br>passing</span></div>
+        <div style="${box(on(ci === 2))}flex:1;padding:20px 34px"><div style="display:flex;align-items:baseline;gap:22px"><span style="font-size:210px;font-weight:800;color:var(--primary-ink);line-height:1;letter-spacing:-.03em">164</span><span style="font-size:36px;font-weight:700;line-height:1.25">Node tests<br>passing</span></div>
           <div style="font-size:26px;line-height:1.4;color:var(--muted);margin-top:14px">Unit and integration tests for the core rehearsal logic: gaze, halos, nudges, cue cards.</div></div>
       </div></div>${cap}</div>`;
   }

@@ -4,12 +4,12 @@
  * Each Audience_i holds Body (box 80 x 140 x 64), Head (ellipsoid) and Halo children. The rig
  * clones the Body / Head materials per member (otherwise every silhouette shares one tint), then
  * per frame: tints them, leans the body forward about the feet, sinks and pushes the head forward
- * (the head is a sphere, so a pitch would be invisible: the droop is position), lights an amber
- * phone-glow quad at the lap, and pulses the Halo ring on a perk-up burst.
+ * (the head is a sphere, so a pitch would be invisible: the droop is position) and rolls it about 25 degrees,
+ * lights a small rounded phone screen with a faint light cone at the lap, shows a "zzz" marker, and pulses the Halo ring on a perk-up burst.
  * Local axes: the silhouette faces +Z (the speaker), so a forward lean is +Z.
  */
 import { AudienceLook } from './core/AudienceLook';
-import { addSurface, child } from './EyesUpUI';
+import { addSurface, addText, child } from './EyesUpUI';
 
 const BODY_REST_Y = 70;
 const BODY_REST_H = 140;
@@ -18,12 +18,18 @@ const HEAD_REST_Y = 153;
 const LEAN_SHARE = 0.35;
 /** The head also creeps toward the speaker by this many cm at full slump. */
 const HEAD_FORWARD_CM = 8;
-/** A small bright phone screen with a soft halo behind it; sized to read at 2.5 m without becoming a card. */
-const PHONE_W = 8;
-const PHONE_H = 13;
-const GLOW_W = 20;
-const GLOW_H = 26;
+/**
+ * A small bright phone screen (a plus-shaped quad pair gives rounded corners) with a faint stepped light cone rising toward
+ * the face. Sized to read at 2.5 m without becoming a card; the whole thing stays within the silhouette's lap, inside the frame.
+ */
+const PHONE_W = 9;
+const PHONE_H = 14;
+const PHONE_CORNER = 1.6;
+const CONE_STEPS = 4;
 const PHONE_RGB: [number, number, number] = [1.0, 0.8, 0.3];
+/** 'zzz' marker: lavender, above-right of the sunk head. Title2 at 420 cm is about 7 cm tall in the silhouette's space. */
+const ZZZ_RGB = new vec4(0.85, 0.85, 1.0, 1);
+const ZZZ_DIST = 420;
 
 interface Member {
   body: SceneObject | null;
@@ -34,8 +40,10 @@ interface Member {
   bodyRestScale: vec3;
   haloRestScale: vec3;
   phone: SceneObject;
-  phoneVisual: RenderMeshVisual;
-  glowVisual: RenderMeshVisual;
+  screenVisuals: RenderMeshVisual[];
+  coneVisuals: RenderMeshVisual[];
+  zzz: SceneObject;
+  zzzText: Text;
 }
 
 function byName(parent: SceneObject, name: string): SceneObject | null {
@@ -62,12 +70,29 @@ export class AudienceRig {
       const body = byName(root, 'Body');
       const head = byName(root, 'Head');
       const halo = byName(root, 'Halo');
-      const phone = child(root, 'Phone', new vec3(0, 84, 42));
-      // Tilted back like a phone held at the lap; the soft glow sits just behind the bright screen.
+      const phoneRig = child(root, 'PhoneRig');
+      const phone = child(phoneRig, 'Phone', new vec3(0, 80, 44));
+      // Tilted back like a phone held at the lap.
       phone.getTransform().setLocalRotation(quat.angleAxis(-Math.PI / 4, new vec3(1, 0, 0)));
-      const glowVisual = addSurface(child(phone, 'Glow', new vec3(0, 0, -0.1)), GLOW_W, GLOW_H, 0, new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], 0), null);
-      const phoneVisual = addSurface(child(phone, 'Screen'), PHONE_W, PHONE_H, 0, new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], 0), null);
-      phone.enabled = false;
+      const clear = new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], 0);
+      const screen = child(phone, 'Screen');
+      const screenVisuals = [
+        addSurface(child(screen, 'Wide'), PHONE_W, PHONE_H - 2 * PHONE_CORNER, 0, clear, null),
+        addSurface(child(screen, 'Tall'), PHONE_W - 2 * PHONE_CORNER, PHONE_H, 0, clear, null),
+        addSurface(child(screen, 'Mid'), PHONE_W - 0.8, PHONE_H - 0.8, 0, clear, null),
+      ];
+      // Light cone: widening, ever fainter steps stacked upward from the screen toward the face.
+      const cone = child(phoneRig, 'PhoneCone', new vec3(0, 88, 40));
+      const coneVisuals: RenderMeshVisual[] = [];
+      for (let k = 0; k < CONE_STEPS; k++) {
+        const w = PHONE_W + 7 * (k + 1);
+        coneVisuals.push(addSurface(child(cone, `Cone${k}`, new vec3(0, 7 + 9 * k, -0.2 - 0.05 * k)), w, 12, 0, clear, null));
+      }
+      cone.getTransform().setLocalRotation(quat.angleAxis(-Math.PI / 10, new vec3(1, 0, 0)));
+      phoneRig.enabled = false;
+      const zzz = child(root, 'Zzz', new vec3(16, 170, 20));
+      const zzzText = addText(zzz, 'ZzzText', 'zzz', 'Title2', 14, 8, ZZZ_DIST, ZZZ_RGB, new vec3(0, 0, 0));
+      zzz.enabled = false;
       return {
         body,
         head,
@@ -76,9 +101,11 @@ export class AudienceRig {
         headVisual: visualOf(head),
         bodyRestScale: body ? body.getTransform().getLocalScale() : new vec3(80, 140, 64),
         haloRestScale: halo ? halo.getTransform().getLocalScale() : new vec3(36, 36, 36),
-        phone,
-        phoneVisual,
-        glowVisual,
+        phone: phoneRig,
+        screenVisuals,
+        coneVisuals,
+        zzz,
+        zzzText,
       };
     });
   }
@@ -104,7 +131,11 @@ export class AudienceRig {
     }
     const hy = HEAD_REST_Y * k;
     const headPos = new vec3(0, hy * Math.cos(lean) + look.headDropCm, hy * Math.sin(lean) + HEAD_FORWARD_CM * slump);
-    if (m.head) m.head.getTransform().setLocalPosition(headPos);
+    if (m.head) {
+      const ht = m.head.getTransform();
+      ht.setLocalPosition(headPos);
+      ht.setLocalRotation(quat.angleAxis((-look.headTiltDeg * Math.PI) / 180, new vec3(0, 0, 1)));
+    }
     if (m.halo) {
       // The halo ring stays around the head as it sinks, and pops outward on a perk-up burst.
       const s = look.haloBurstScale;
@@ -115,13 +146,23 @@ export class AudienceRig {
     const glow = look.phoneGlow * fade;
     if (m.phone.enabled !== glow > 0.01) m.phone.enabled = glow > 0.01;
     if (glow > 0.01) {
-      m.phoneVisual.mainPass.baseColor = new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], 0.95 * glow);
-      m.glowVisual.mainPass.baseColor = new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], 0.2 * glow);
+      m.screenVisuals.forEach((v) => (v.mainPass.baseColor = new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], 0.95 * glow)));
+      // The three screen quads overlap; keep the sum opaque but not blown out.
+      m.coneVisuals.forEach((v, k) => (v.mainPass.baseColor = new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], (0.13 - 0.025 * k) * glow)));
+    }
+    const z = look.zzz * fade;
+    if (m.zzz.enabled !== z > 0.01) m.zzz.enabled = z > 0.01;
+    if (z > 0.01) {
+      m.zzz.getTransform().setLocalPosition(new vec3(headPos.x + 18, headPos.y + 26, headPos.z + 6));
+      m.zzzText.textFill.color = new vec4(ZZZ_RGB.x, ZZZ_RGB.y, ZZZ_RGB.z, z);
     }
   }
 
   /** Hide every phone (used when the audience is hidden). */
   hidePhones(): void {
-    this.members.forEach((m) => (m.phone.enabled = false));
+    this.members.forEach((m) => {
+      m.phone.enabled = false;
+      m.zzz.enabled = false;
+    });
   }
 }

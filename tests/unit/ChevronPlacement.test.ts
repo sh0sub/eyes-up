@@ -35,6 +35,27 @@ describe('placeChevron', () => {
     }
   });
 
+  it('halo case: a lit-head band across the view puts the outline chevron above the head line, clear of every member', () => {
+    // Lit halos of three members at the base spot's height, spanning the view: no sideways slide is possible.
+    const heads: PlaneRect = { minX: -45, maxX: 45, minY: -18, maxY: 4 };
+    for (const side of ['left', 'right'] as const) {
+      const r = placeChevron(side, BASE, BOX, [heads], WIDE)!;
+      expect(r).not.toBeNull();
+      expect(isClear(r.x, r.y, BOX, [heads], WIDE)).toBe(true);
+      // Sits above the band (its bottom edge is over the heads) rather than covering a member.
+      expect(r.y - BOX.below).toBeGreaterThanOrEqual(heads.maxY + WIDE.margin - 1e-6);
+    }
+  });
+
+  it('halo case: with no room above, the chevron goes below the band; with no room either way it is dropped', () => {
+    const heads: PlaneRect = { minX: -45, maxX: 45, minY: -18, maxY: 4 };
+    const tight: PlacementOptions = { margin: 1.5, viewHalfW: 62, viewHalfH: 22 };
+    const below = placeChevron('right', BASE, BOX, [heads], tight);
+    expect(below === null || isClear(below.x, below.y, BOX, [heads], tight)).toBe(true);
+    const noRoom: PlacementOptions = { margin: 1.5, viewHalfW: 62, viewHalfH: 20 };
+    expect(placeChevron('right', BASE, BOX, [heads], noRoom)).toBeNull();
+  });
+
   it('keeps the view-edge spot when no panel is near', () => {
     expect(placeChevron('right', BASE, BOX, [], WIDE)).toEqual({ x: 21, y: -6.5 });
     expect(placeChevron('left', BASE, BOX, [], WIDE)).toEqual({ x: -21, y: -6.5 });
@@ -77,5 +98,29 @@ describe('placeChevron', () => {
         }
       }
     }
+  });
+});
+
+describe('placeChevron free pockets (halo case, per-member head rects)', () => {
+  it('goes into the free wall above a low head instead of above the tallest lit halo or over a member', () => {
+    // Left member low (slumped, top at y = -2), centre low, right member lit with a tall ring up to y = 24; the room meter sits right of the left pocket at y 13..21.
+    const heads: PlaneRect[] = [
+      { minX: -42, maxX: -24, minY: -20, maxY: -2 },
+      { minX: -9, maxX: 9, minY: -20, maxY: -2 },
+      { minX: 24, maxX: 42, minY: -10, maxY: 24 },
+    ];
+    const meter: PlaneRect = { minX: -8, maxX: 22, minY: 13, maxY: 21 };
+    const o: PlacementOptions = { margin: 1.5, viewHalfW: 62, viewHalfH: 40 };
+    const r = placeChevron('left', BASE, BOX, [...heads, meter], o)!;
+    expect(r).not.toBeNull();
+    expect(isClear(r.x, r.y, BOX, [...heads, meter], o)).toBe(true);
+    // Stays on the left (base x), above the left head, below the view top.
+    expect(r.x).toBeCloseTo(-21, 5);
+    expect(r.y - BOX.below).toBeGreaterThanOrEqual(-2 + o.margin - 1e-6);
+  });
+
+  it('returns null rather than overlap when the pockets are all full', () => {
+    const wall: PlaneRect = { minX: -62, maxX: 62, minY: -62, maxY: 62 };
+    expect(placeChevron('right', BASE, BOX, [wall], WIDE)).toBeNull();
   });
 });

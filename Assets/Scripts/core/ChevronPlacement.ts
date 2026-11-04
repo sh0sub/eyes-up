@@ -5,7 +5,7 @@
  * view plane, in cm at the chevron's own distance (100 cm ahead): +x right, +y up. Panels (podium,
  * cue card) are projected into that plane by the Lens adapter and arrive here as plain rects.
  * Rule: keep the base spot (view edge, per the artifact S3 mockup) when it is clear; otherwise slide
- * outward toward the view edge; otherwise move above, then below, the blocking panels; if none of
+ * outward toward the view edge; otherwise move above, then below, the blocking panels (or into any free pocket straight above / below the base spot); if none of
  * that fits inside the view, return null (the chime still plays, no chevron is drawn over a panel).
  */
 export type Side = 'left' | 'right';
@@ -40,6 +40,9 @@ export interface PlacementResult {
 function boxRect(x: number, y: number, b: ChevronBox, pad: number): PlaneRect {
   return { minX: x - b.halfW - pad, maxX: x + b.halfW + pad, minY: y - b.below - pad, maxY: y + b.above + pad };
 }
+
+/** Vertical scan step (cm in the view plane) for the free-pocket candidates. */
+const SCAN_STEP = 0.5;
 
 /** Edges that touch within this tolerance (cm) are not an overlap: candidates are built to sit exactly on the margin. */
 const EPS = 1e-6;
@@ -87,6 +90,11 @@ export function placeChevron(
   candidates.push({ x: sign * outer, y: base.y });
   candidates.push({ x: bx, y: Math.max(...panels.map((p) => p.maxY)) + o.margin + b.below });
   candidates.push({ x: bx, y: Math.min(...panels.map((p) => p.minY)) - o.margin - b.above });
+
+  // Free pockets between obstacles (e.g. the wall left of the room meter, above one low head): scan up and down at the base x.
+  for (let dy = SCAN_STEP; dy <= 2 * o.viewHalfH; dy += SCAN_STEP) {
+    candidates.push({ x: bx, y: base.y + dy }, { x: bx, y: base.y - dy });
+  }
 
   // The clear candidate that moves the chevron least.
   let best: PlacementResult | null = null;

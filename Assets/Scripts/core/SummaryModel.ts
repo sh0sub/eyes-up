@@ -52,6 +52,8 @@ export interface SummaryState {
   scoreLabel: string;
   /** "Room engaged 91%" or ''. */
   engagementLabel: string;
+  /** "Room 91%" or '' (short form for the game tile). */
+  engagementShort: string;
   /** "New best! (was 72)" / "Best so far 78 · A" / '' on a first run. */
   compareLabel: string;
 }
@@ -100,6 +102,7 @@ export function summaryState(s: StatsSnapshot, shownSeconds: number, ctx?: Summa
     grade: ctx?.game ? ctx.game.grade : null,
     scoreLabel: ctx?.game ? `Attention ${ctx.game.score}` : '',
     engagementLabel: ctx?.game ? `Room engaged ${ctx.game.engagementPercent}%` : '',
+    engagementShort: ctx?.game ? `Room ${ctx.game.engagementPercent}%` : '',
     compareLabel: ctx?.game ? compareLabel(ctx.game) : '',
   };
 }

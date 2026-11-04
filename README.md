@@ -1,10 +1,10 @@
 # eyes-up
 
-![Eyes Up: the watched audience member lights up in cyan](devpost/screenshots/08-halo-cyan.png)
+![Eyes Up: ignored audience members slump and light a phone, the one you look at perks up in cyan, the room meter drops](devpost/screenshots/00-hero-eyes-up.png)
 
 **Eyes Up** is a presentation rehearsal coach for Spectacles. It seats a small virtual audience in your room, lights up whoever you look at, nudges you toward the side you ignore, and hides your notes until you need them.
 
-**Pitch:** people rehearse staring at slides, so the room never gets practice. On Spectacles a virtual audience sits 2.5 m ahead, lights up where you look, and chimes and points when you ignore one side for 8 seconds. Members you ignore slump and light a phone, members you look at perk up, a room meter and an S/A/B/C grade close the run. LEAF 10/10 and 158 tests pass in the Interactive Preview; gaze = head direction, driven by the LEAF harness, not tested on a device. Process at a glance: `devpost/screenshots/09-process-at-a-glance.png`.
+**Pitch:** people rehearse staring at slides, so the room never gets practice. On Spectacles a virtual audience sits 2.5 m ahead, lights up where you look, and chimes and points when you ignore one side for 8 seconds. Members you ignore slump and light a phone, members you look at perk up, a room meter and an S/A/B/C grade close the run. LEAF 10/10 and 164 tests pass in the Interactive Preview; gaze = head direction, driven by the LEAF harness, not tested on a device. Process at a glance: `devpost/screenshots/09-process-at-a-glance.png`.
 
 Built for Learn AR with SPECS (deadline 2026-11-09 PST). New Lens built with CLAD and the Lens Studio MCP skill pack; preview-only is acceptable, no device required.
 
@@ -16,14 +16,14 @@ Built for Learn AR with SPECS (deadline 2026-11-09 PST). New Lens built with CLA
 ## Status
 
 - **Scene built** in Lens Studio 5.24.1, driven entirely through the Lens Studio MCP tools (no hand-edited scene files).
-- **8 LEAF scenarios pass** in the Interactive Preview: `start_places_audience`, `gaze_fills_halo`,
+- **10 LEAF scenarios pass** in the Interactive Preview: `start_places_audience`, `gaze_fills_halo`,
   `neglect_triggers_nudge`, `next_shows_card_then_pill`, `dwell_expands_pill`, `finish_shows_summary`,
-  `repeated_nudge`, `finish_pulses_at_time` (results: `devpost/leaf-results.md`). Node checks:
-  `npm run check` (typecheck, lint, 158 vitest tests).
+  `repeated_nudge`, `finish_pulses_at_time`, `neglect_disengages_then_recovers`, `finish_gives_grade` (results: `devpost/leaf-results.md`). Node checks:
+  `npm run check` (typecheck, lint, 164 vitest tests).
 - **Preview only, not tested on a Spectacles device.** Gaze is head rotation, simulated by LEAF in tests.
-- **Nudge chevron placement rule** (`Assets/Scripts/core/ChevronPlacement.ts`): the chevron keeps its
-  edge-of-view spot, and panels (podium, cue card) are projected into its view plane each frame so it
-  slides aside or hides rather than covering one. Unit tested.
+- **Nudge chevron placement rule** (`Assets/Scripts/core/ChevronPlacement.ts`): the chevron is an outline that keeps its
+  edge-of-view spot; panels (podium, cue card), the room meter and every member's head are projected into its view
+  plane each frame so it slides into free space (or, if there is none, avoids what it can) rather than covering them. Unit tested.
 - **Demo video:** 1:33, narrated and captioned, opening on the hero halo frame and a drawn "Eyes drop" card, then live preview footage (Setup, pinch, audience, halo; the disclosure shows for the first 2 s, then a PREVIEW pill stays on screen). Gaze, nudge and podium clips play in real time, the cue clip at x1.3 (badged on screen), the Summary is a still capture with a zoom to the timeline, and a card shows three real before/after pairs. `scripts/video/build-video.mjs` builds it from Lens Studio preview footage. YouTube: **TODO_PASTE_PUBLIC_YOUTUBE_URL_HERE**
   (the upload needs the entrant's account).
 - Setup: segmented 3/5/10 min and 3/6/9 audience buttons (selected = cyan), deck list, optional

@@ -55,19 +55,20 @@ const GRADE_COLOR: Record<Grade, vec4> = {
 };
 const W = 50;
 /** Game pass: 53 -> 60 cm to fit the grade row (attention score, grade, best-previous). */
-const H = 61;
+const H = 62;
+/** Whole-panel scale: the Summary used to clip its top in the preview frame. */
+const PANEL_SCALE = 0.85;
 const DIST = 150;
 const BAR_W = 27;
 const BAR_H = 1.2;
-/** Timeline block: 44 × 10 cm. Row labels on the left, a 40 cm strip, nudge row and time axis below. */
+/** Timeline block: 44 × 7.4 cm. Row labels on the left, a 40 cm strip, nudge markers below. */
 const TL_W = W - 6;
-const TL_H = 10;
+const TL_H = 7.4;
 const TL_X0 = -18.5;
 const TL_STRIP_W = 40;
-const TL_ROW_Y = [4.0, 2.1, 0.2];
+const TL_ROW_Y = [2.9, 1.0, -0.9];
 const TL_ROW_H = 1.4;
-const TL_NUDGE_Y = -1.7;
-const TL_AXIS_Y = -3.9;
+const TL_NUDGE_Y = -2.7;
 
 @component
 export class SummaryPanel extends BaseScriptComponent {
@@ -75,8 +76,6 @@ export class SummaryPanel extends BaseScriptComponent {
 
   private panel!: Panel;
   private titleText!: Text;
-  private targetText!: Text;
-  private balanceText!: Text;
   private gradeText!: Text;
   private gameText!: Text;
   /** [left, center, right] zone names and percent labels. */
@@ -101,27 +100,25 @@ export class SummaryPanel extends BaseScriptComponent {
 
   onAwake(): void {
     this.panel = makePanel(this.getSceneObject(), W, H, 2.0, 1.3);
+    this.panel.root.getTransform().setLocalScale(new vec3(PANEL_SCALE, PANEL_SCALE, PANEL_SCALE));
     const c = this.panel.content;
     // "Session complete" chip above the panel (artifact S5).
     const chip = child(this.panel.root, 'CompleteChip', new vec3(0, H / 2 + 2.8, 0.6));
     addSurface(chip, 20, 3.4, 0, BOX_MINT[0], BOX_MINT[1]);
     addIcon(chip, 'check_circle', 2.0, new vec3(-7.2, 0, 0.08));
     addText(chip, 'CompleteChipText', 'Session complete', 'Headline2', 15, 3.4, DIST, TEXT_MINT, new vec3(1.2, 0, 0.08));
-    // Header: check icon + title + Balance badge (artifact S5 ①).
+    // Header: check icon + title (artifact S5 ①). Balance moved into the game tile's sub-line.
     const header = flexRow(c, 'SummaryHeader', W - 4, 5.6, 1.2);
     addIconCell(header, 'SummaryCheck', 'check_circle', 3.4, 3.6, 5.6);
-    this.titleText = textRow(header, 'TimeText', 'Nice work — 0:00', 'Title2', W - 20, 5.6, DIST);
+    this.titleText = textRow(header, 'TimeText', 'Nice work — 0:00', 'Headline1', W - 10, 5.6, DIST);
+    this.titleText.size = 100; // larger than the stat tiles, smaller than the tip (127) and the grade (520)
     this.titleText.horizontalAlignment = HorizontalAlignment.Left;
-    this.balanceText = addBox(header, 'BalanceBadge', '0\nBalance', 'Headline1', 9.5, 5.6, DIST, TEXT_MINT, BOX_MINT);
-    // Game layer: grade tile + attention score, room engagement and best-previous compare.
-    const game = flexRow(c, 'GameRow', W - 6, 8, 1.2);
-    this.gradeText = addBox(game, 'GradeBadge', '-', 'Title1', 10, 8, DIST, TEXT_MINT, BOX_SOLID);
-    this.gradeText.size = 260; // the grade is the hero of the game layer: larger than the Title1 role
-    this.gameText = addBox(game, 'GameText', '', 'Headline2', W - 6 - 10 - 1.2, 8, DIST, TEXT_PRIMARY, BOX_SOLID);
-    this.targetText = textRow(c, 'TargetText', 'target 0:00', 'Subheadline', W - 4, 2.2, DIST, TEXT_SECONDARY);
-    // Line the target up under the title (title cell starts 4.8 cm in from the header's left edge).
-    this.targetText.horizontalAlignment = HorizontalAlignment.Left;
-    this.targetText.layoutRect = Rect.create(-(W - 4) / 2 + 4.8, (W - 4) / 2, -1.1, 1.1);
+    // Game layer: a big grade tile (the payoff) + attention score, room engagement, balance and best-previous.
+    const game = flexRow(c, 'GameRow', W - 6, 13, 1.2);
+    this.gradeText = addBox(game, 'GradeBadge', '-', 'Title1', 14, 13, DIST, TEXT_MINT, BOX_SOLID);
+    this.gradeText.size = 520; // about 2x the earlier 260: the grade is the hero of the game layer
+    this.gameText = addBox(game, 'GameText', '', 'Headline1', W - 6 - 14 - 1.2, 13, DIST, TEXT_PRIMARY, BOX_SOLID);
+    this.gameText.size = 96; // between the title (100 would crowd it) and the stat tiles: 3 short lines still fit the 28.8 cm tile
     // Zone rows: name · bar · percent (artifact S5 ②).
     for (const name of ['Left', 'Center', 'Right']) {
       const row = flexRow(c, `Zone${name}`, W - 6, 2.7, 1.2);
@@ -141,7 +138,8 @@ export class SummaryPanel extends BaseScriptComponent {
     this.longestText = addBox(stats, 'LongestText', 'Longest look-away\n0 s', 'Headline2', 19.6, 6.4, DIST, TEXT_PRIMARY, BOX_SOLID);
     this.cardsText = addBox(stats, 'CardsText', 'Cards\n0', 'Headline2', 11, 6.4, DIST, TEXT_PRIMARY, BOX_SOLID);
     this.nudgesText = addBox(stats, 'NudgesText', 'Nudges\n0', 'Headline2', 11, 6.4, DIST, TEXT_PRIMARY, BOX_SOLID);
-    this.tipText = addBox(c, 'TipText', '', 'Headline2', W - 6, 3.2, DIST, TEXT_TIP, BOX_AMBER_SOLID);
+    // The coaching tip is the second-largest text on the panel (after the grade).
+    this.tipText = addBox(c, 'TipText', '', 'Title2', W - 6, 5.2, DIST, TEXT_TIP, BOX_AMBER_SOLID);
     const buttons = flexRow(c, 'SummaryButtons', W - 6, 4.4, 2);
     const big = { labelRole: 'Headline2' as const };
     addButton(buttons, 'AgainButton', 'Again', 12, 4.2, DIST, () => this.onAgain?.(), { icon: 'replay', ...big });
@@ -195,8 +193,6 @@ export class SummaryPanel extends BaseScriptComponent {
     if (!this.snapshot || !this.titleText) return;
     const s = summaryState(this.snapshot, this.shown, this.ctx);
     this.titleText.text = s.titleLabel;
-    this.targetText.text = s.targetLabel;
-    this.balanceText.text = `${s.balanceLabel}\nBalance`;
     s.zones.forEach((z, i) => {
       const color = z.outOfRange ? TEXT_AMBER : TEXT_PRIMARY;
       if (this.zoneNames[i]) this.zoneNames[i].textFill.color = color;
@@ -213,13 +209,13 @@ export class SummaryPanel extends BaseScriptComponent {
     this.gradeText.text = s.gradeLabel || '-';
     this.gradeText.textFill.color = s.grade ? GRADE_COLOR[s.grade] : TEXT_SECONDARY;
     this.gameText.text = s.scoreLabel
-      ? `${s.scoreLabel} · ${s.engagementLabel}\n${s.compareLabel || 'Replay to set a best'}`
+      ? [s.scoreLabel, `${s.engagementShort} · Balance ${s.balanceLabel}`, s.compareLabel].filter((l) => l).join('\n')
       : '';
   }
 
   /**
    * Artifact S5 ③: L / C / R rows of cyan segments over 0:00 … end, the longest look-away outlined
-   * in coral with its seconds, an amber dot + "nudge" under each nudge, and a time axis. Quads go
+   * in coral with its seconds, and an amber dot under each nudge (the "nudge" word and the time axis were dropped: too small to read on Specs; the Nudges tile and the title carry them). Quads go
    * first and texts last so the labels draw on top (hierarchy order).
    */
   private buildTimeline(snapshot: StatsSnapshot): void {
@@ -246,28 +242,14 @@ export class SummaryPanel extends BaseScriptComponent {
       const label = tl.longest.label;
       labels.push(() => addText(root, 'LongestLabel', label, 'Subheadline', lw, TL_ROW_H + 0.5, DIST, CORAL, new vec3(cx, y, 0.3)));
     }
-    let lastLabelX = -Infinity;
     tl.nudges.forEach((f) => {
       const x = xOf(f);
       addSurface(child(root, 'NudgeStem', new vec3(x, (TL_ROW_Y[2] + TL_NUDGE_Y) / 2, 0.25)), 0.12, TL_ROW_Y[2] - TL_NUDGE_Y, 0, NUDGE_AMBER, null);
-      addSurface(child(root, 'NudgeDot', new vec3(x, TL_NUDGE_Y, 0.3)), 0.6, 0.6, 0, NUDGE_AMBER, null);
-      // One "nudge" word per marker unless it would overlap the previous one.
-      // Compare the clamped label centres: near the right edge several markers share one clamped x.
-      const lx = Math.min(x + 2.9, TL_X0 + TL_STRIP_W - 2.4);
-      if (lx - lastLabelX > 6) {
-        lastLabelX = lx;
-        labels.push(() => addText(root, 'NudgeLabel', 'nudge', 'Subheadline', 5, 1.6, DIST, NUDGE_AMBER, new vec3(lx, TL_NUDGE_Y, 0.3)));
-      }
+      addSurface(child(root, 'NudgeDot', new vec3(x, TL_NUDGE_Y, 0.3)), 0.8, 0.8, 0, NUDGE_AMBER, null);
     });
     labels.forEach((f) => f());
     ['L', 'C', 'R'].forEach((n, z) => {
       addText(root, `Row${n}`, n, 'Headline2', 2.5, TL_ROW_H + 0.4, DIST, amberRows[z] ? TEXT_AMBER : TEXT_PRIMARY, new vec3(-20.6, TL_ROW_Y[z], 0.1));
-    });
-    tl.axis.forEach((tick, i) => {
-      const last = i === tl.axis.length - 1;
-      // The first label starts at 0:00 and the last ends at the strip's right edge.
-      const x = xOf(tick.at) + (i === 0 ? 1.6 : last ? -1.6 : 0);
-      addText(root, 'Axis', tick.label, 'Subheadline', 4.5, 1.6, DIST, TEXT_SECONDARY, new vec3(x, TL_AXIS_Y, 0.1));
     });
   }
 }

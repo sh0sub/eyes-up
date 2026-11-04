@@ -61,6 +61,8 @@ const CHEVRON_BOX: ChevronBox = {
   above: (CHEVRON_BACK_H / 2 + CHEVRON_BACK_Y) * 1.05,
 };
 const CHEVRON_TEXT = new vec4(1.0, 0.82, 0.35, 1);
+const CHEVRON_FILL = new vec4(0.34, 0.26, 0.1, 0.12);
+const CHEVRON_OUTLINE_CM = 0.6;
 /** ≈ 1.5 cm caption at 100 cm (S3: "left" 1.5 cm). */
 const CHEVRON_CAPTION_SIZE = 150;
 
@@ -100,8 +102,19 @@ const CARD_BODY_SIZE = 180;
 const PILL_SCALE = 1.2;
 const PILL_H = 12;
 const PILL_Y = 11;
-/** The room meter floats this far below the card anchor (between the heads and the card). */
-const METER_BELOW_ANCHOR_CM = 4;
+/**
+ * The room meter floats between the heads and the card. Raised 6 cm (was 4 cm below the anchor, now 2 cm above) so lit halos
+ * (burst ring up to 1.6x) no longer cover it; the card is lifted by the same amount so the two never overlap.
+ */
+const METER_BELOW_ANCHOR_CM = -2;
+const CARD_LIFT_CM = 6;
+/** Room meter plate extents about its centre (cm, local): track 52 + label 28 + padding, 3 + padding tall (RoomMeter.ts). */
+const METER_HALF_W_CM = 42;
+const METER_HALF_H_CM = 3.6;
+/** Halo alpha above this counts as lit: the chevron then stays above the head line. */
+const LIT_HALO_ALPHA = 0.55;
+/** Lit halo ring radius around a head, cm (rest scale 36 cm, diameter). */
+const LIT_HALO_RADIUS_CM = 22;
 /** Measured in Preview: ≈ 0.0124 cm per size unit per glyph for Inter titles (size 200 → 2.5 cm). */
 const PILL_GLYPH_CM = 0.0124 * CARD_TITLE_SIZE;
 /** Game pass (jury: grey-on-grey): a deeper indigo card with a bright cyan frame; white text keeps its contrast. */
@@ -179,7 +192,15 @@ export class EyesUpApp extends BaseScriptComponent {
         this.hintColors[i] = CHEVRON_TEXT;
       }
       this.hintTexts[i] = t;
-      addSurface(child(so, 'ChevronBack', new vec3(0, CHEVRON_BACK_Y, -0.3)), CHEVRON_BACK_W, CHEVRON_BACK_H, 0, BOX_AMBER[0], BOX_AMBER[1]);
+      // Outline only: four thin bars and a faint fill (addSurface's frame is a solid quad, which made the old box cover whichever member it landed on).
+      const back = child(so, 'ChevronBack', new vec3(0, CHEVRON_BACK_Y, -0.3));
+      addSurface(back, CHEVRON_BACK_W, CHEVRON_BACK_H, 0, CHEVRON_FILL, null);
+      const bar = BOX_AMBER[1];
+      const ot = CHEVRON_OUTLINE_CM;
+      addSurface(child(back, 'Top', new vec3(0, (CHEVRON_BACK_H - ot) / 2, 0.05)), CHEVRON_BACK_W, ot, 0, bar, null);
+      addSurface(child(back, 'Bottom', new vec3(0, -(CHEVRON_BACK_H - ot) / 2, 0.05)), CHEVRON_BACK_W, ot, 0, bar, null);
+      addSurface(child(back, 'Left', new vec3(-(CHEVRON_BACK_W - ot) / 2, 0, 0.05)), ot, CHEVRON_BACK_H, 0, bar, null);
+      addSurface(child(back, 'Right', new vec3((CHEVRON_BACK_W - ot) / 2, 0, 0.05)), ot, CHEVRON_BACK_H, 0, bar, null);
       const icon = addIcon(so, i === 0 ? 'double_arrow_left' : 'double_arrow_right', CHEVRON_CM, new vec3(0, CHEVRON_ICON_Y, 0));
       this.hintIcons[i] = icon;
     });
@@ -370,6 +391,23 @@ export class EyesUpApp extends BaseScriptComponent {
     return r;
   }
 
+  /** View-plane rect of each member's head and halo ring (only lit ones when `litOnly`), skipping members behind the camera. */
+  private headRects(litOnly: boolean): PlaneRect[] {
+    const inv = this.camera.getTransform().getInvertedWorldTransform();
+    const rects: PlaneRect[] = [];
+    this.audience.forEach((so, i) => {
+      const h = this.halos[i];
+      if (!so.enabled || !h || (litOnly && h.mainPass.baseColor.w < LIT_HALO_ALPHA)) return;
+      const headWorld = so.getTransform().getWorldTransform().multiplyPoint(new vec3(0, 153, 0));
+      const p = inv.multiplyPoint(headWorld);
+      if (p.z > -5) return;
+      const k = CHEVRON_PLANE_CM / -p.z;
+      const r = LIT_HALO_RADIUS_CM * k * so.getTransform().getWorldScale().x;
+      rects.push({ minX: p.x * k - r, maxX: p.x * k + r, minY: p.y * k - r, maxY: p.y * k + r });
+    });
+    return rects;
+  }
+
   /** Keep the head-locked chevron clear of the podium and the cue card (core/ChevronPlacement.ts). */
   private placeHint(so: SceneObject, i: number): void {
     const panels: PlaneRect[] = [];
@@ -385,16 +423,25 @@ export class EyesUpApp extends BaseScriptComponent {
         : this.projectRect(this.cueCard, 0, CARD_CENTER_Y, CARD_W / 2, CARD_H / 2);
       if (r) panels.push(r);
     }
+    // Heads (each member's head and halo ring, lit ones first as the fallback) and the room meter are obstacles too: the chevron
+    // goes into free wall above a head, never over a member or the meter.
+    const meterRect = this.meter && this.meter.root.enabled ? this.projectRect(this.meter.root, 0, 0, METER_HALF_W_CM, METER_HALF_H_CM) : null;
+    const lit = this.headRects(true);
+    const all = this.headRects(false);
     const cam = this.camera.getComponent('Component.Camera') as Camera;
     const halfH = CHEVRON_PLANE_CM * Math.tan(cam.fov / 2);
     const base = this.hintBase[i];
-    const spot = placeChevron(
-      i === 0 ? 'left' : 'right',
-      { x: base.x, y: base.y },
-      CHEVRON_BOX,
-      panels,
-      { margin: CHEVRON_PANEL_MARGIN_CM, viewHalfW: halfH * cam.aspect, viewHalfH: halfH },
-    );
+    const place = (extra: PlaneRect[]) =>
+      placeChevron(
+        i === 0 ? 'left' : 'right',
+        { x: base.x, y: base.y },
+        CHEVRON_BOX,
+        [...panels, ...extra],
+        { margin: CHEVRON_PANEL_MARGIN_CM, viewHalfW: halfH * cam.aspect, viewHalfH: halfH },
+      );
+    const withMeter = (rects: PlaneRect[]) => (meterRect ? [...rects, meterRect] : rects);
+    // Never drop the cue: if there is no room, avoid only the lit heads (and the meter), then only the meter, then only the panels.
+    const spot = place(withMeter(all)) || place(withMeter(lit)) || place(withMeter([])) || place([]);
     this.hintHidden[i] = spot === null;
     if (spot === null) {
       so.getTransform().setLocalScale(new vec3(0, 0, 0));
@@ -549,7 +596,7 @@ export class EyesUpApp extends BaseScriptComponent {
             baseScale[i] = baseScale[i] ?? so.getTransform().getLocalScale().x;
           }
         });
-        setPos(this.cueCard, layout.cardAnchor);
+        setPos(this.cueCard, { x: layout.cardAnchor.x, y: layout.cardAnchor.y + CARD_LIFT_CM, z: layout.cardAnchor.z });
         this.meter?.placeAt(
           new vec3(layout.cardAnchor.x, layout.cardAnchor.y - METER_BELOW_ANCHOR_CM, layout.cardAnchor.z),
           head,

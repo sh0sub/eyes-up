@@ -855,3 +855,24 @@ UIKit 4.0.0 from the Asset Library (InstallLensStudioPackage, asset name UIKit) 
 moving the original `UIKit.lspkg` and its `.meta` aside (backup kept outside the repo) and renaming the new files to
 `UIKit.lspkg`, the error was gone. The package bytes are identical (git shows only `Packages/UIKit.lspkg.meta`
 changed).
+
+## Cycle 5: judge-facing polish (2026-11-04)
+
+The judges see stills and a video, not the running Lens, so this cycle made the stills carry the game layer.
+
+| Area | Change | Where |
+|---|---|---|
+| Slump | Disengaged body colour desaturated to (0.66, 0.66, 0.74, 0.42), head sinks 30 cm (was 22) and rolls 25 degrees about the view axis (the head is an ellipsoid, a pitch would not show), a "zzz" marker above the head, the phone is a small rounded screen (plus-shaped quad pair) with a faint four-step light cone | `core/AudienceLook.ts` (`headTiltDeg`, `zzz`), `AudienceRig.ts` |
+| Summary | Target line, axis ticks and the "nudge" word removed. Balance moved into the score tile (`Room 89% . Balance 87`). Grade tile 14 x 13 cm, size 520. Tip is Title2 (second largest), title 100, panel scale 0.85, timeline 7.4 cm | `SummaryPanel.ts`, `core/SummaryModel.ts` (`engagementShort`) |
+| Meter | Percentage moved to the left end of the bar on a dark indigo plate; meter 6 cm higher and the cue card lifted by the same 6 cm so they never overlap | `RoomMeter.ts`, `EyesUpApp.ts` (`METER_BELOW_ANCHOR_CM`, `CARD_LIFT_CM`) |
+| Chevron | Outline (four 0.6 cm bars and a 12 % fill) instead of a solid box: `addSurface`'s "frame" is a full solid quad, which is why the old box covered members. Placement now also treats each member's head (and halo ring) and the room meter as obstacles, with fallbacks (lit heads only, meter only, panels only) so the cue is never dropped. `placeChevron` scans free pockets straight above and below the base spot | `core/ChevronPlacement.ts`, `EyesUpApp.ts` (`headRects`, `placeHint`) |
+| Captures | `capture_game`, `capture_nudge_hold`, `capture_podium` pick a 3-person audience (`Audience_3` button) so the whole room fits the frame; `capture_podium` hides the LEAF overlay | `Assets/Tests/Leaf/` |
+| Gallery | New hero (`00-hero-eyes-up.png`), rebuilt process card, reordered gallery with one truthful caption per image, stale images moved to `devpost/screenshots/archive/` | `scripts/gallery/`, `devpost/submission.md` |
+
+Findings while capturing:
+
+- Camera yaw set with `MovePreviewCamera` does not change where the stage sits, because the stage is placed relative to the facing direction at Start. Framing is therefore fixed by the audience size, not the camera.
+- In the narrow preview view there is no free wall above the heads (the cue card and meter occupy it), so the outline chevron lands over a member's body at times. Heads and the meter stay clear.
+- The slumped head's 25 degree roll is subtle in stills; the colour drain, the sunk head, "zzz" and the phone carry the read.
+
+Verification: `npm run check` 164 tests, ten LEAF scenarios PASSED one at a time, every changed screenshot (02 to 06, 10, 11, hero, process card) was looked at. Not verified: legibility on real optics, anything on a device.

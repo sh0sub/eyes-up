@@ -1,0 +1,40 @@
+<!doctype html><meta charset="utf-8"><title>Eyes Up hero</title>
+<style>
+:root{--ink:#14161f;--muted:#5b6070;--cy:#00b8d9;--bg:#eef2ff;--card:#fff;--amber:#e8920c}
+*{box-sizing:border-box}html,body{margin:0;width:1800px;height:1200px;background:var(--bg);font-family:-apple-system,"SF Pro Display","Helvetica Neue",Arial,sans-serif;color:var(--ink)}
+.wrap{padding:48px 56px}
+.top{display:flex;align-items:flex-end;justify-content:space-between}
+h1{margin:0;font-size:132px;line-height:.95;letter-spacing:-.03em}
+h1 span{color:var(--cy)}
+.tag{font-size:36px;font-weight:600;margin-top:14px;max-width:1500px;line-height:1.2}
+.pill{font-size:20px;font-weight:700;color:#4a5cd6;background:#fff;border-radius:999px;padding:10px 20px;margin-bottom:10px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:34px}
+.card{background:var(--card);border-radius:22px;padding:18px}
+.im{height:640px;border-radius:14px;background-size:cover;background-position:center;position:relative}
+.cap{position:absolute;left:14px;top:14px;background:#20232d;color:#fff;font-size:26px;font-weight:700;border-radius:10px;padding:8px 16px}
+.k{font-size:16px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#4a5cd6;margin:14px 6px 2px}
+.t{font-size:30px;font-weight:800;margin:0 6px 4px}
+.chips{display:flex;gap:16px;margin-top:26px}
+.chip{flex:1;background:var(--card);border-radius:16px;padding:16px 20px;font-size:25px;font-weight:800}
+.chip small{display:block;font-size:17px;font-weight:500;color:var(--muted);margin-top:4px}
+.foot{font-size:18px;color:var(--muted);margin-top:18px}
+</style>
+<div class="wrap">
+ <div class="top">
+  <div><h1>Eyes <span>Up</span></h1><div class="tag">Rehearse your talk with your eyes on the room, not on your notes.</div></div>
+  <div class="pill">Lens for Snap Spectacles</div>
+ </div>
+ <div class="row">
+  <div class="card"><div class="im" style="background-image:url('../../devpost/screenshots/10-engagement-slump.png')"></div>
+   <div class="k">Neglect</div><div class="t">Ignore them: they slump, phones come out</div></div>
+  <div class="card"><div class="im" style="background-image:url('../../devpost/screenshots/11-perk-up.png')"></div>
+   <div class="k">Eyes up</div><div class="t">Look at one: a cyan burst, the head lifts</div></div>
+ </div>
+ <div class="chips">
+  <div class="chip">Room meter<small>one bar, one number, always in view</small></div>
+  <div class="chip">S / A / B / C grade<small>score, balance and best-previous</small></div>
+  <div class="chip">Nudge<small>chime and chevron for the side you ignore</small></div>
+  <div class="chip">Cue card<small>notes that shrink to a tag</small></div>
+ </div>
+ <div class="foot">Lens Studio 5.24.1 Interactive Preview captures. Preview only, gaze driven by the LEAF harness (head direction), not tested on a Spectacles device.</div>
+</div>

@@ -2,7 +2,7 @@
 
 Run in Lens Studio 5.24.1 Interactive Preview, driven through the Lens Studio MCP. Gaze is injected
 with `ScriptedGazeProvider`. The first six are the done criteria of `design-brief.md`, one to one.
-Final run (2026-11-04, game layer): `npm run check` passes (158 tests, typecheck, lint); the 10 LEAF scenarios
+Final run (2026-11-04, game layer): `npm run check` passes (164 tests, typecheck, lint); the 10 LEAF scenarios
 (rows 1 to 8, 13, 14) pass live with no runtime errors in the Logger. Rows 9 to 12 and 15 are capture helpers.
 Preview only, not tested on a Spectacles device.
 
@@ -17,12 +17,12 @@ Preview only, not tested on a Spectacles device.
 | 7 | `repeated_nudge` | A second nudge fires after the cooldown on the same side | PASSED |
 | 8 | `finish_pulses_at_time` | Finish button rests before the target time and pulses after it | PASSED |
 | 9 | `capture_summary` | Capture helper (about 45 s run). Gave left 26 / center 32 / right 42, Balance 87, 1 card, 1 nudge | PASSED |
-| 10 | `capture_nudge_hold` | Capture helper for `walkthrough/03-nudge.png` | PASSED |
-| 11 | `capture_podium` | Capture helper for `walkthrough/05-podium.png` | PASSED |
+| 10 | `capture_nudge_hold` | Capture helper for `walkthrough/03-nudge.png` (3-person audience, chevron held 20 s) | PASSED |
+| 11 | `capture_podium` | Capture helper for `walkthrough/04-cue-card.png` and `05-podium.png` (3-person audience, LEAF overlay hidden) | PASSED |
 | 12 | `demo_reel` | About 71 s showcase for the video (the MCP call times out at 60 s, the scenario finishes) | PASSED |
 | 13 | `neglect_disengages_then_recovers` | 17 s of gaze on #0: engagement[4] < 0.5, Head of #4 sank, room < 90 % and the meter text dropped. 1.8 s on #4: engagement 1.0, Head back up, room rose | PASSED (22 s) |
 | 14 | `finish_gives_grade` | Short sweep, Finish: grade tile is S/A/B/C and equals the result, "Attention n" matches the score | PASSED (12 s) |
-| 15 | `capture_game` | Capture helper for `walkthrough/07-engagement-slump.png` and `08-perk-up.png` | PASSED |
+| 15 | `capture_game` | Capture helper for `walkthrough/02-audience.png`, `07-engagement-slump.png` and `08-perk-up.png` (3-person audience: members 0 and 1 slump while #2 is watched, then #1 perks up) | PASSED |
 
 ## Not tested
 
@@ -32,7 +32,7 @@ Preview only, not tested on a Spectacles device.
 
 ## Node tests
 
-`npm run check`: typecheck, ESLint and 158 Vitest tests (state machine, gaze zones, halo attention,
+`npm run check`: typecheck, ESLint and 164 Vitest tests (state machine, gaze zones, halo attention,
 nudge rules, chevron placement, cue card, stage line, session stats, panel view models, deck import,
 engagement decay and recovery, silhouette look, room meter tone, score, grade, best-previous compare,
 applause strength).

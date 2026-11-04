@@ -13,14 +13,17 @@ export type Rgba = [number, number, number, number];
 
 /** Engaged / disengaged body tint. Engaged is a clearly blue, fairly opaque glass (was 0.55,0.68,0.85 @ 0.35). */
 export const BODY_ENGAGED: Rgba = [0.2, 0.6, 1.0, 0.72];
-export const BODY_DISENGAGED: Rgba = [0.5, 0.32, 0.85, 0.5];
+/** Desaturated cool grey-lavender: next to the saturated sky blue of an engaged member the slumped one reads as drained. */
+export const BODY_DISENGAGED: Rgba = [0.66, 0.66, 0.74, 0.42];
 export const BODY_PERK: Rgba = [0.25, 0.9, 1.0, 0.85];
 export const PHONE_GLOW: [number, number, number] = [1.0, 0.78, 0.3];
 
 /** Head local y at upright (scene) and the most it sinks, in cm. */
 export const HEAD_UP_Y = 153;
-export const HEAD_SINK_CM = 22;
+export const HEAD_SINK_CM = 30;
 export const HEAD_PITCH_DEG = 38;
+/** The slumped head also tilts sideways (roll about the view axis) by this much; the ellipsoid makes a roll visible, a pitch is not. */
+export const HEAD_TILT_DEG = 25;
 
 export interface AudienceLook {
   bodyColor: Rgba;
@@ -29,6 +32,10 @@ export interface AudienceLook {
   headDropCm: number;
   /** Head pitch about X (degrees, positive = chin down). */
   headPitchDeg: number;
+  /** Head roll about the audience's forward axis (degrees; 0 = upright, HEAD_TILT_DEG at full slump). */
+  headTiltDeg: number;
+  /** 0..1 strength of the small 'zzz' marker above a slumped head (0 = hidden). */
+  zzz: number;
   /** Multiplier for the body's scale Y (1 = upright). */
   bodyScaleY: number;
   /** 0..1 phone glow strength (0 = off). */
@@ -56,6 +63,8 @@ export function audienceLook(engagement: number, burst = 0): AudienceLook {
     headColor,
     headDropCm: -HEAD_SINK_CM * slump * (1 - 0.6 * lift) + 0, // + 0 turns -0 into 0
     headPitchDeg: HEAD_PITCH_DEG * slump * (1 - 0.8 * lift),
+    headTiltDeg: HEAD_TILT_DEG * slump * (1 - lift),
+    zzz: lift > 0.2 ? 0 : clamp01((slump - 0.5) / 0.3),
     bodyScaleY: 1 - 0.1 * slump,
     phoneGlow: clamp01((0.6 - e) / 0.4),
     haloBurstScale: b > 0 ? 1 + 0.6 * Math.sin(Math.PI * (1 - b)) : 1,

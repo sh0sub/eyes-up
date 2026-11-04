@@ -133,7 +133,7 @@ export const SEGMENTS = [
     ],
     stills: [
       { file: `${S}/04-cue-card.png`, crop: BAND, zoom: { rect: [140, 596, 230, 104], label: 'Cue card above the audience' } },
-      { file: `${S}/07-preview-landscape.png`, note: 'The pill: "Screens pull eyes"', zoom: { rect: [372, 214, 132, 44], label: 'Pill above the audience' } },
+      { file: `${S}/archive/07-preview-landscape.png`, note: 'The pill: "Screens pull eyes"', zoom: { rect: [372, 214, 132, 44], label: 'Pill above the audience' } },
     ],
   },
   {
@@ -171,7 +171,7 @@ export const SEGMENTS = [
   {
     // Cycle 3: three real before/after pairs, then the real Summary still with Again highlighted.
     // Pairs 1 and 2 are crops of devpost/screenshots/09-process-at-a-glance.png; pair 3 compares the first-build Setup
-    // capture (01-setup-panel-first-build.png, committed at dd6d471) with the current 01-setup-panel.png.
+    // capture (archive/01-setup-panel-first-build.png, committed at dd6d471) with the current 01-setup-panel.png.
     // No second-run numbers and no outcome claims. Each caption is six words.
     id: '08b-pairs',
     type: 'card',
@@ -184,7 +184,7 @@ export const SEGMENTS = [
       { tag: 'Gaze hit area', file: `${S}/09-process-at-a-glance.png`, crop: [688, 246, 540, 290] },
       {
         tag: 'Setup panel',
-        before: { file: `${S}/01-setup-panel-first-build.png`, crop: [88, 662, 299, 225], label: 'First build' },
+        before: { file: `${S}/archive/01-setup-panel-first-build.png`, crop: [88, 662, 299, 225], label: 'First build' },
         after: { file: `${S}/01-setup-panel.png`, crop: [493, 175, 613, 458], label: 'Now' },
       },
     ],
@@ -206,8 +206,8 @@ export const SEGMENTS = [
     card: 'built',
     lines: [
       'Built with CLAD and Lens Studio MCP.',
-      'Eight LEAF scenarios pass.',
-      '139 Node tests pass.',
+      'Ten LEAF scenarios pass.',
+      '164 Node tests pass.',
     ],
   },
   {
@@ -240,4 +240,6 @@ export const LEAF_ROWS = [
   ['finish_shows_summary', 'zones sum to 100 %, time m:ss'],
   ['repeated_nudge', 'nudges keep coming while you neglect'],
   ['finish_pulses_at_time', 'stage line pulses at the 60 s and 30 s marks'],
+  ['neglect_disengages_then_recovers', 'ignored member slumps, recovers when looked at'],
+  ['finish_gives_grade', 'Summary shows an S / A / B / C grade'],
 ];

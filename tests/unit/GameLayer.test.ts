@@ -1,4 +1,4 @@
-import { audienceLook, HEAD_SINK_CM } from '../../Assets/Scripts/core/AudienceLook';
+import { audienceLook, HEAD_SINK_CM, HEAD_TILT_DEG } from '../../Assets/Scripts/core/AudienceLook';
 import { EngagementModel } from '../../Assets/Scripts/core/Engagement';
 import {
   applauseAmplitude,
@@ -85,6 +85,21 @@ describe('audienceLook', () => {
     expect(down.phoneGlow).toBe(1);
   });
 
+  it('a slumped head tilts about 25 degrees and shows zzz; engaged and perked-up members do not', () => {
+    expect(audienceLook(1).headTiltDeg).toBe(0);
+    expect(audienceLook(1).zzz).toBe(0);
+    expect(audienceLook(0).headTiltDeg).toBeCloseTo(HEAD_TILT_DEG, 6);
+    expect(HEAD_TILT_DEG).toBe(25);
+    expect(audienceLook(0).zzz).toBe(1);
+    expect(audienceLook(0.2, 1).zzz).toBe(0);
+    expect(audienceLook(0.2, 1).headTiltDeg).toBe(0);
+  });
+
+  it('a slumped body is desaturated next to an engaged one', () => {
+    const sat = (c: number[]) => Math.max(c[0], c[1], c[2]) - Math.min(c[0], c[1], c[2]);
+    expect(sat(audienceLook(0).bodyColor)).toBeLessThan(0.5 * sat(audienceLook(1).bodyColor));
+  });
+
   it('colors are saturated blue when engaged (not grey) and never black', () => {
     const [r, g, b, a] = audienceLook(1).bodyColor;
     expect(b - r).toBeGreaterThan(0.5);
@@ -163,6 +178,7 @@ describe('score and grade', () => {
     expect(s.gradeLabel).toBe(game.grade);
     expect(s.scoreLabel).toBe(`Attention ${game.score}`);
     expect(s.engagementLabel).toBe('Room engaged 90%');
+    expect(s.engagementShort).toBe('Room 90%');
     expect(s.compareLabel).toContain('New best');
     expect(summaryState(snap, 1).gradeLabel).toBe('');
   });

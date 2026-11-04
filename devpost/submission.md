@@ -6,18 +6,18 @@ Hackathon: Learn AR with SPECS. Deadline 2026-11-09 PST.
 
 Rehearse your talk with your eyes on the room, not on your notes.
 
-![Eyes Up: the watched audience member lights up in cyan](screenshots/08-halo-cyan.png)
+![Eyes Up: ignored audience members slump and light a phone, the one you look at perks up in cyan, the room meter drops](screenshots/00-hero-eyes-up.png)
 
 ## Pitch
 
 - **Problem:** people rehearse talks staring at slides, a phone or a script, so the room never gets practice.
 - **Spatial moment:** on Spectacles a virtual audience sits 2.5 m ahead, lights up where you look, and chimes and points when you ignore one side for 8 seconds.
 - **Game hook:** every audience member has a mood. Ignore someone and they slump and light a phone; look at them and they perk up in a cyan burst. A small room meter and an S / A / B / C grade at the end turn a rehearsal into a run you want to beat (best-previous compare when you replay, kept only while the Lens is open).
-- **Proof:** LEAF 10/10 scenarios pass in the Lens Studio Interactive Preview and 158 tests pass. Preview only, gaze driven by the LEAF harness, not tested on a device. Gaze = head direction in this build.
+- **Proof:** LEAF 10/10 scenarios pass in the Lens Studio Interactive Preview and 164 tests pass. Preview only, gaze driven by the LEAF harness, not tested on a device. Gaze = head direction in this build.
 
 > **Judge in 60 seconds**
-> 1. Video 0:00-0:17: hero halo frame, live Setup panel, pinch Start, audience appears, halo lights up (`devpost/screenshots/08-halo-cyan.png`, the hero image above).
-> 2. Video 0:45-1:00, Summary segment: left / center / right split, longest look-away, tip. Video 1:00-1:13: three before/after pairs. Closing frame at 1:29 carries the repo link and "Preview only, LEAF 8/8".
+> 1. Gallery image 1 (`devpost/screenshots/00-hero-eyes-up.png`, the hero above): slumped members beside a lit one with the room meter. Video 0:00-0:17: hero frame, live Setup panel, pinch Start, audience appears, halo lights up.
+> 2. Video 0:45-1:00, Summary segment: left / center / right split, longest look-away, tip. Video 1:00-1:13: three before/after pairs. Closing frame at 1:29 carries the repo link and "Preview only, LEAF 10/10".
 > 3. `devpost/leaf-results.md`: 10/10 scenarios PASSED, plus `devpost/screenshots/09-process-at-a-glance.png`.
 > 4. The game layer (members slump, perk up, room meter, grade) is in `devpost/screenshots/10-engagement-slump.png`, `11-perk-up.png` and `06-summary.png`.
 
@@ -30,9 +30,9 @@ Eyes Up is a presentation rehearsal coach for Spectacles. Setup is three pinches
 - **Nudge:** ignore one side for 8 seconds and a soft chime plays from that side while an amber double chevron appears at the edge of your view.
 - **Notes:** your next talking point floats above the audience for 4 seconds, then shrinks to a three-word tag. Look at it for a second and it opens again.
 - **Podium:** look down like a wristwatch for Prev, Next, Finish, a section counter and the talk timer.
-- **Audience reactions:** each silhouette has an engagement level. Someone you ignore for about 5 seconds starts to slip: the head sinks forward, the body slumps, the colour cools to violet and a small amber phone glow lights at the lap. Look at them and they straighten up with a cyan halo burst within about a second and a half.
-- **Room meter:** a thin bar between the audience and the cue card shows how engaged the whole room is (cyan, amber, coral) with one percentage. It is the only extra element in view.
-- **Summary:** the audience applauds (louder and bigger for a better score), then you see an attention grade (S / A / B / C) and score, your left / center / right split, a gaze timeline, your longest look-away, how often you used the cards and a one-line tip. Press Again and the Summary also shows your best earlier score from this session.
+- **Audience reactions:** each silhouette has an engagement level. Someone you ignore for about 5 seconds starts to slip: the head sinks forward, the body slumps, the head tilts about 25 degrees, the colour drains to a pale grey-lavender, a small "zzz" appears and a small rounded phone glow with a faint light cone lights at the lap. Look at them and they straighten up with a cyan halo burst within about a second and a half.
+- **Room meter:** a thin bar on a dark plate between the audience and the cue card shows how engaged the whole room is (cyan, amber, coral) with one percentage at its left end, where lit halos cannot cover it. It is the only extra element in view.
+- **Summary:** the audience applauds (louder and bigger for a better score), then you see an attention grade (S / A / B / C) and score, your left / center / right split, a gaze timeline, your longest look-away, how often you used the cards and a one-line tip. Press Again and the Summary also shows your best earlier score from this session. On the Summary the grade is the largest element, the tip the second largest; Balance sits in the score tile.
 
 ### How you learn from it
 
@@ -49,16 +49,18 @@ loop the Lens is built around.
 
 ### Gallery order
 
-1. `devpost/screenshots/08-halo-cyan.png` (the halo, the hook)
-2. `devpost/screenshots/09-process-at-a-glance.png` (process: halo fix, hit-area fix, LEAF 8/8, 139 tests, Setup to Summary)
-3. `devpost/screenshots/02-audience-lit-halo.png`
-4. `devpost/screenshots/10-engagement-slump.png` (neglected members slump, phone glow, room meter amber)
-5. `devpost/screenshots/11-perk-up.png` (look at one: cyan burst, head lifts)
-6. `devpost/screenshots/03-nudge-chevron.png`
-7. `devpost/screenshots/04-cue-card.png`
-8. `devpost/screenshots/05-podium.png`
-9. `devpost/screenshots/06-summary.png` (grade and attention score)
-10. `devpost/screenshots/01-setup-panel.png`
+Every caption below describes what the image shows in the Interactive Preview (preview only, gaze driven by the LEAF harness, not tested on a device).
+
+1. `devpost/screenshots/00-hero-eyes-up.png`: Eyes Up. Two members slumped with a phone glow, one lit, the room meter amber; beside it the perk-up burst.
+2. `devpost/screenshots/10-engagement-slump.png`: Ignored members sink, desaturate, light a phone and show "zzz" while the member you look at stays lit.
+3. `devpost/screenshots/11-perk-up.png`: Look at a slumped member and a cyan burst lifts the head.
+4. `devpost/screenshots/06-summary.png`: The payoff: a large S / A / B / C grade, attention score, room and balance, zone split, gaze timeline, one tip.
+5. `devpost/screenshots/09-process-at-a-glance.png`: Process: three fixes found in the Preview (halo, hit area, game layer), 10 of 10 LEAF scenarios, 164 tests.
+6. `devpost/screenshots/03-nudge-chevron.png`: The nudge: an outline chevron and "left" appear for the side you ignored, clear of every head and the meter.
+7. `devpost/screenshots/04-cue-card.png`: The cue card with the room meter below it: one bar, one number.
+8. `devpost/screenshots/05-podium.png`: The podium you look down at: Prev, Next, Finish, section counter and talk timer.
+9. `devpost/screenshots/02-audience-lit-halo.png`: The halo: the member you face lights up in cyan within about a second.
+10. `devpost/screenshots/01-setup-panel.png`: Setup: talk length, audience size, deck, Start rehearsal.
 
 ## Who it is for
 
@@ -74,10 +76,10 @@ Studio MCP tools. The scene uses UIKit panels and buttons, the audience, halo, n
 are TypeScript components. All logic (state machine, gaze zones, halo attention, nudge rules, cue
 card, stage-line timer, session stats, engagement and room meter, score and grade, panel view
 models, deck import parser) is plain TypeScript
-with no Lens Studio dependency, so Node tests it: 158 unit and integration tests, typecheck and
+with no Lens Studio dependency, so Node tests it: 164 unit and integration tests, typecheck and
 lint all pass. Ten LEAF scenarios pass in the Interactive Preview (start places the audience,
 gaze fills the halo, neglect triggers a nudge, card then pill, dwell expands the pill, finish shows
-the summary, repeated nudge, the Finish button pulses once the talk length is reached, a neglected member slumps and recovers when looked at, Finish shows a grade). The nudge chevron never covers a panel (placement rule in `devpost/build-notes.md`, unit tested).
+the summary, repeated nudge, the Finish button pulses once the talk length is reached, a neglected member slumps and recovers when looked at, Finish shows a grade). The nudge chevron is an outline that avoids panels, heads and the room meter where the view has room (placement rule in `devpost/build-notes.md`, unit tested).
 
 ## What we learned
 
@@ -117,7 +119,7 @@ We have not measured learning outcomes. These are open questions, not results.
 ## Links
 
 - Repository: this repository (MIT).
-- Demo video (1:33, under 3 min, narrated and captioned; opens on the hero halo frame and a drawn "Eyes drop" card, then live preview footage with a PREVIEW pill; a card with three real before/after pairs follows the Summary; closes on a Shown / Not yet tested card, then the halo hero frame with the repo link and "Preview only, LEAF 8/8"):
+- Demo video (1:33, under 3 min, narrated and captioned; opens on the hero halo frame and a drawn "Eyes drop" card, then live preview footage with a PREVIEW pill; a card with three real before/after pairs follows the Summary; closes on a Shown / Not yet tested card, then the halo hero frame with the repo link and "Preview only, LEAF 10/10"):
   YouTube URL: **TODO_PASTE_PUBLIC_YOUTUBE_URL_HERE** (upload needs the entrant's YouTube account;
   set it to Public or Unlisted before submitting).
 - Walkthrough: `devpost/walkthrough/` (01-setup to 08-perk-up). Learnings: `devpost/learnings.md`. LEAF log: `devpost/leaf-results.md`. Screenshots: `devpost/screenshots/`. Build log: `devpost/build-notes.md`. Design brief:

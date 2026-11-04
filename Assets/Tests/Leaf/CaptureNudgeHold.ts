@@ -7,7 +7,7 @@
  */
 import { Scenario } from 'Leaf.lspkg/Scenarios/scenario/Scenario';
 import { waitUntil } from 'Leaf.lspkg/Utils/common/Utils';
-import { lookAtMember, muteLeafOverlay, setUp, startAndWaitForRehearsal } from './EyesUpLeafHelpers';
+import { lookAtMember, muteLeafOverlay, setUp, startAndWaitForRehearsal, tap } from './EyesUpLeafHelpers';
 
 @component
 export class CaptureNudgeHold extends Scenario {
@@ -16,8 +16,10 @@ export class CaptureNudgeHold extends Scenario {
     try {
       const rig = await setUp();
       rig.session.t.nudgeHintSeconds = 20; // capture only; the lens default stays 3 s
+      // Three people, as in capture_game: the whole audience fits the preview frame, so the outline chevron is judged against real heads.
+      await tap(rig, 'Audience_3');
       await startAndWaitForRehearsal(rig);
-      lookAtMember(rig, 5);
+      lookAtMember(rig, 2);
       await waitUntil(() => rig.session.activeNudge !== null, 10000, () => 'nudge');
     } finally {
       release();

@@ -2,7 +2,7 @@
  * RoomMeter.ts — the glanceable room attention meter (game layer, artifact-free design note).
  *
  * A thin bar floating between the audience's heads and the cue card (see EyesUpApp.placeAt),
- * billboarded to the speaker, with the whole-room percentage to its right. The fill is cyan while
+ * billboarded to the speaker, with the whole-room percentage at its left end (the right end collided with lit halos) on a dark backplate. The fill is cyan while
  * the room is with you, amber when it is slipping and coral when you are losing it. It is small on
  * purpose: one colour and one number, no extra panel in the field of view.
  */
@@ -13,6 +13,9 @@ import { addSurface, addText, child, faceTowards } from './EyesUpUI';
 const TRACK_W = 52;
 const BAR_H = 3;
 const LABEL_W = 28;
+/** Dark indigo plate behind label + bar so lit halos never wash the number out. */
+const PLATE_COLOR = new vec4(0.07, 0.1, 0.3, 0.88);
+const PLATE_PAD = 1.6;
 const TRACK_COLOR = new vec4(0.38, 0.46, 0.78, 0.85);
 const TONE_COLOR: Record<MeterTone, vec4> = {
   good: new vec4(0.25, 0.88, 1.0, 1),
@@ -32,11 +35,13 @@ export class RoomMeter implements RoomMeterView {
 
   constructor() {
     this.root = global.scene.createSceneObject('RoomMeter');
-    const x0 = -(TRACK_W + LABEL_W) / 2;
+    const left = -(TRACK_W + LABEL_W) / 2;
+    const x0 = left + LABEL_W; // the bar starts after the label
+    addSurface(child(this.root, 'Plate', new vec3(0, 0, -0.2)), TRACK_W + LABEL_W + 2 * PLATE_PAD, BAR_H + 2 * PLATE_PAD + 0.6, 0, PLATE_COLOR, null);
     addSurface(child(this.root, 'Track', new vec3(x0 + TRACK_W / 2, 0, 0)), TRACK_W, BAR_H, 0, TRACK_COLOR, null);
     this.pivot = child(this.root, 'FillPivot', new vec3(x0, 0, 0.1));
     this.fill = addSurface(child(this.pivot, 'Bar', new vec3(TRACK_W / 2, 0, 0)), TRACK_W, BAR_H, 0, TONE_COLOR.good, null);
-    this.label = addText(this.root, 'Percent', 'Room 100%', 'Title2', LABEL_W, 3.6, DIST, TONE_COLOR.good, new vec3(x0 + TRACK_W + LABEL_W / 2 + 0.5, 0, 0.1));
+    this.label = addText(this.root, 'Percent', 'Room 100%', 'Title2', LABEL_W, 3.6, DIST, TONE_COLOR.good, new vec3(left + LABEL_W / 2 - 0.5, 0, 0.1));
     this.label.setRenderOrder(11);
     this.root.enabled = false;
   }
