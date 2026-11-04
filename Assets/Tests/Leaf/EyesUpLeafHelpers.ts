@@ -28,16 +28,54 @@ export async function setUp(audience?: 3 | 6 | 9): Promise<Rig> {
   if (!root) throw new Error('EyesUp root not found');
   const app = root.getComponent(EyesUpApp.getTypeName()) as EyesUpApp;
   if (!app) throw new Error('EyesUpApp component not found');
-  const gaze = app.useScriptedGazeNow();
-  const f = gaze.forward;
-  const flat = new vec3(f.x, 0, f.z);
-  gaze.setForward(flat.length > 1e-4 ? { x: flat.x, y: 0, z: flat.z } : { x: 0, y: 0, z: -1 });
+  // Canonical reset (Cycle 4, D1): gaze re-synced to the live camera (no yaw left over from the last run) ...
+  const gaze = app.resetScriptedGaze();
   const rig = { app, session: app.getSession(), gaze, interactor: new DefaultLeafInteractor() };
-  if (audience !== undefined) {
-    await tap(rig, `Audience_${audience}`);
-    await sleep(300);
-  }
+  // ... a leftover Rehearsal / Summary closed back to Setup (a new Start resets engagement, cards and stats) ...
+  await returnToSetup(rig);
+  // ... and the audience segment pinched explicitly: the Setup default (3) when the scenario names none.
+  await tap(rig, `Audience_${audience ?? 3}`);
+  await sleep(300);
   return rig;
+}
+
+/** Bring a Lens that a previous scenario left in Placing, Rehearsal, Finishing or Summary back to Setup. */
+export async function returnToSetup(rig: Rig): Promise<void> {
+  const s = rig.session;
+  if (s.phase === 'Setup') return;
+  if (s.phase === 'Placing') await waitUntil(() => s.phase === 'Rehearsal', 5000);
+  if (s.phase === 'Rehearsal') s.finish();
+  if (s.phase === 'Finishing') await waitUntil(() => s.phase === 'Summary', 5000);
+  if (s.phase === 'Summary') s.done();
+  await waitUntil(() => s.phase === 'Setup', 3000, () => 'setup');
+  await sleep(300);
+}
+
+/**
+ * Viewport check (Cycle 4, D1): every active member's head (centre +-20 cm sideways and up/down) projects inside the
+ * lens viewport with a 10 % margin. Uses the preview camera, so run it from the canonical camera pose
+ * (scripts/video/preview-reset.sh). Returns the worst offending coordinate in 0..1 viewport units (inside = within 0.05..0.95).
+ */
+export function headFrameProblems(rig: Rig): string[] {
+  const camSo = findSceneObjectByName('Camera Object');
+  const cam = camSo ? (camSo.getComponent('Component.Camera') as Camera) : null;
+  if (!cam) throw new Error('Camera Object has no Camera');
+  const problems: string[] = [];
+  const members = rig.app.audienceMembers();
+  const count = rig.session.config.audienceCount;
+  for (let i = 0; i < count; i++) {
+    let head: SceneObject | null = null;
+    for (let k = 0; k < members[i].getChildrenCount(); k++) if (members[i].getChild(k).name === 'Head') head = members[i].getChild(k);
+    if (!head) throw new Error(`Head of member ${i} not found`);
+    const c = head.getTransform().getWorldPosition();
+    const right = members[i].getTransform().right.uniformScale(20);
+    const up = vec3.up().uniformScale(20);
+    for (const p of [c.add(right), c.sub(right), c.add(up), c.sub(up)]) {
+      const sp = cam.worldSpaceToScreenSpace(p);
+      if (sp.x < 0.05 || sp.x > 0.95 || sp.y < 0.05 || sp.y > 0.95) problems.push(`member ${i} head edge at (${sp.x.toFixed(2)}, ${sp.y.toFixed(2)})`);
+    }
+  }
+  return problems;
 }
 
 export async function tap(rig: Rig, name: string): Promise<void> {

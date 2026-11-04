@@ -27,6 +27,8 @@ const PHONE_H = 14;
 const PHONE_CORNER = 1.6;
 const CONE_STEPS = 4;
 const PHONE_RGB: [number, number, number] = [1.0, 0.8, 0.3];
+/** Cycle 4 (D1): the 'zzz' stands straight above its own head (x offset 0; it used to sit 14 cm to the right, between two heads). */
+const ZZZ_ABOVE_HEAD_CM = 30;
 /** 'zzz' marker: lavender, above the sunk head and clear of the head (and of the nudge chevron on its side). Title2 at 420 cm is about 7 cm tall in the silhouette's space. */
 const ZZZ_RGB = new vec4(0.85, 0.85, 1.0, 1);
 const ZZZ_DIST = 420;
@@ -98,7 +100,7 @@ export class AudienceRig {
       }
       cone.getTransform().setLocalRotation(quat.angleAxis(-Math.PI / 10, new vec3(1, 0, 0)));
       phoneRig.enabled = false;
-      const zzz = child(root, 'Zzz', new vec3(14, 170, 20));
+      const zzz = child(root, 'Zzz', new vec3(0, 170, 20));
       const zzzText = addText(zzz, 'ZzzText', 'zzz', 'Title2', 14, 8, ZZZ_DIST, ZZZ_RGB, new vec3(0, 0, 0));
       zzz.enabled = false;
       const ring = child(root, 'PerkRing', new vec3(0, HEAD_REST_Y, 14));
@@ -180,9 +182,16 @@ export class AudienceRig {
     const z = look.zzz * fade;
     if (m.zzz.enabled !== z > 0.01) m.zzz.enabled = z > 0.01;
     if (z > 0.01) {
-      m.zzz.getTransform().setLocalPosition(new vec3(headPos.x + 14, headPos.y + 32, headPos.z + 6));
+      m.zzz.getTransform().setLocalPosition(new vec3(headPos.x, headPos.y + ZZZ_ABOVE_HEAD_CM, headPos.z + 6));
       m.zzzText.textFill.color = new vec4(ZZZ_RGB.x, ZZZ_RGB.y, ZZZ_RGB.z, z);
     }
+  }
+
+  /** World position of member `i`'s visible "zzz" marker, or null when it is hidden (the nudge chevron keeps clear of it). */
+  zzzWorld(i: number): vec3 | null {
+    const m = this.members[i];
+    if (!m || !m.zzz.enabled) return null;
+    return m.zzz.getTransform().getWorldPosition();
   }
 
   /** Hide every phone (used when the audience is hidden). */

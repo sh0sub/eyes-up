@@ -106,7 +106,7 @@ const PILL_Y = 11;
  * The room meter floats between the heads and the card. Raised 6 cm (was 4 cm below the anchor, now 6 cm above; Cycle 2: with 3 members 42 cm apart the outer halos reached the label) so lit halos
  * (burst ring up to 1.6x) no longer cover it; the card is lifted by the same amount so the two never overlap.
  */
-const METER_BELOW_ANCHOR_CM = -10;
+const METER_BELOW_ANCHOR_CM = -8;
 const CARD_LIFT_CM = 14;
 /**
  * Cycle 3 (S4): a faint dark rounded plate stands 40 cm behind the audience so the busy wall frames do not sit behind heads and bodies.
@@ -119,8 +119,11 @@ const SCRIM_CENTER_ABOVE_FLOOR_CM = 78;
 const SCRIM_CORNER_CM = 9;
 const SCRIM_COLOR = new vec4(0.03, 0.05, 0.16, 0.35);
 /** Room meter plate extents about its centre (cm, local): track 52 + label 28 + padding, 3 + padding tall (RoomMeter.ts). */
-const METER_HALF_W_CM = 42;
-const METER_HALF_H_CM = 3.6;
+const METER_HALF_W_CM = 47;
+const METER_HALF_H_CM = 4.4;
+/** Footprint of a "zzz" marker in the member's space (cm), kept clear by the nudge chevron. */
+const ZZZ_HALF_W_CM = 11;
+const ZZZ_HALF_H_CM = 6;
 /** Halo alpha above this counts as lit: the chevron then stays above the head line. */
 const LIT_HALO_ALPHA = 0.55;
 /** Lit halo ring radius around a head, cm (rest scale 36 cm, diameter). */
@@ -288,6 +291,21 @@ export class EyesUpApp extends BaseScriptComponent {
     return this.scripted;
   }
 
+  /**
+   * LEAF hook (Cycle 4, D1): scripted gaze re-synced to the live camera pose, level (yaw only), so a scenario never inherits the
+   * gaze that the previous run left behind. Returns the provider.
+   */
+  resetScriptedGaze(): ScriptedGazeProvider {
+    const g = this.useScriptedGazeNow();
+    const t = this.camera.getTransform();
+    const p = t.getWorldPosition();
+    const b = t.back;
+    g.setOrigin({ x: p.x, y: p.y, z: p.z });
+    const flat = new vec3(b.x, 0, b.z);
+    g.setForward(flat.length > 1e-4 ? { x: flat.x, y: 0, z: flat.z } : { x: 0, y: 0, z: -1 });
+    return g;
+  }
+
   /** LEAF hook: the ScriptedGazeProvider (null until scripted gaze is on). */
   getScriptedGaze(): ScriptedGazeProvider | null {
     return this.scripted;
@@ -410,6 +428,15 @@ export class EyesUpApp extends BaseScriptComponent {
       // The whole silhouette (head to floor) is kept clear, not just the head: the chevron belongs on the wall above it.
       const half = Math.max(r, MEMBER_BODY_HALF_W_CM * k * sc);
       rects.push({ minX: p.x * k - half, maxX: p.x * k + half, minY: -1000, maxY: p.y * k + r });
+    });
+    // A visible "zzz" is a small obstacle of its own, also in the lit-only fallback (a slumped member is not lit).
+    this.audience.forEach((so, i) => {
+      const z = so.enabled && this.rig ? this.rig.zzzWorld(i) : null;
+      if (!z) return;
+      const p = inv.multiplyPoint(z);
+      if (p.z > -5) return;
+      const k = CHEVRON_PLANE_CM / -p.z;
+      rects.push({ minX: p.x * k - ZZZ_HALF_W_CM * k, maxX: p.x * k + ZZZ_HALF_W_CM * k, minY: p.y * k - ZZZ_HALF_H_CM * k, maxY: p.y * k + ZZZ_HALF_H_CM * k });
     });
     return rects;
   }

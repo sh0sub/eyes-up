@@ -43,7 +43,7 @@ export interface Tunables {
 
   /** plan: stage distance in front of the head (2.5 m). */
   stageDistanceCm: number;
-  /** plan: floor is this far below the head (머리 -160 cm). Cycle 3 (S4): 154, the stage stands 6 cm higher so slumped heads (which sink 30 cm) stay inside the preview frame. */
+  /** plan: floor is this far below the head (머리 -160 cm). Cycle 3 (S4): 154; Cycle 4 (D1) kept 154: 149 pushed the cue card out of the top of the preview frame. Heads (upright and slumped, which sink 49 cm with the squash and lean) stay inside a 10 % margin (core/Framing.ts, tested). */
   floorOffsetCm: number;
   /** plan: spacing between audience members along the arc (0.6 m). */
   audienceSpacingCm: number;

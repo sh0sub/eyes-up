@@ -70,8 +70,9 @@ export function compareLabel(r: GameResult): string {
   return `Best so far ${r.bestPrevious.score} · ${r.bestPrevious.grade}`;
 }
 
-/** Room meter tone: 'good' ≥ 0.66 (cyan), 'mid' ≥ 0.33 (amber), else 'low' (coral). */
+/** Room meter tone: 'good' ≥ 0.60 (cyan; the amber to cyan switch of the meter, Cycle 4 D4), 'mid' ≥ 0.33 (amber), else 'low' (coral). */
+export const METER_GOOD_AT = 0.6;
 export type MeterTone = 'good' | 'mid' | 'low';
 export function meterTone(level: number): MeterTone {
-  return level >= 0.66 ? 'good' : level >= 0.33 ? 'mid' : 'low';
+  return level >= METER_GOOD_AT ? 'good' : level >= 0.33 ? 'mid' : 'low';
 }

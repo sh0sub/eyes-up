@@ -1,6 +1,7 @@
 import { scenariosIndex } from 'Leaf.lspkg/Scenarios/decorator/ScenarioIndexDecorator';
 import { ScenarioMetadata } from 'Leaf.lspkg/Scenarios/scenario/ScenarioMetadata';
 import { CaptureGame } from './CaptureGame';
+import { CaptureLoop } from './CaptureLoop';
 import { CaptureNudgeHold } from './CaptureNudgeHold';
 import { CapturePodium } from './CapturePodium';
 import { CaptureSummary } from './CaptureSummary';
@@ -39,6 +40,8 @@ export class LeafIndex extends BaseScriptComponent {
     { id: 'finish_gives_grade', typename: FinishGivesGrade.getTypeName() },
     // game layer capture helper for the walkthrough screenshots, not a done criterion
     { id: 'capture_game', typename: CaptureGame.getTypeName() },
+    // Cycle 4 (A2): Run 1 vs Run 2 numbers for the learning-loop table, capture helper, not a done criterion
+    { id: 'capture_loop', typename: CaptureLoop.getTypeName() },
     // pass 3: ~75 s showcase for the demo video, not a done criterion
     { id: 'demo_reel', typename: DemoReel.getTypeName() },
   ];

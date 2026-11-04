@@ -3,9 +3,9 @@
  * Pass 4 layout follows artifact S5: "Nice work — m:ss" + Balance badge, "target m:ss · deck",
  * three zone rows (name · bar · %, amber when out of 15–35 %), three stat boxes (longest look-away
  * with timestamp, Cards "2 of 5", Nudges "1"; Cycle 2 folded them into one line), a one-line tip, Again / Done.
- * Pass 5 adds S5's gaze timeline strip (③) between the zone bars and the stat boxes, a mint check
- * icon left of the title and a "Session complete" chip above the panel. The panel grew 40 → 53 cm
- * tall to fit the strip (D27).
+ * Pass 5 adds S5's gaze timeline strip (③) and a mint check icon left of the title. Cycle 4 (D3) dropped the
+ * "Session complete" toast and the stat line, enlarged zone labels (1.3x), made the timeline about 2x taller
+ * and the buttons 5.6 cm tall (Again widest and primary).
  * Logic: core/SummaryModel.ts and core/GazeTimeline.ts (unit-tested).
  *
  * Each zone bar is a cyan surface quad (EyesUpUI.addSurface) inside a pivot that sits at the bar's
@@ -18,7 +18,6 @@ import { SummaryContext, summaryState, BAR_FILL_SECONDS } from './core/SummaryMo
 import { gazeTimeline } from './core/GazeTimeline';
 import { Grade } from './core/GameScore';
 import {
-  BOX_MINT,
   BOX_AMBER_SOLID,
   BOX_SOLID,
   TEXT_TIP,
@@ -30,7 +29,6 @@ import {
   addBlock,
   addBox,
   addButton,
-  addIcon,
   addIconCell,
   addSurface,
   addText,
@@ -57,20 +55,26 @@ const BUTTON_PLATE = new vec4(0.08, 0.11, 0.18, 1);
 const BUTTON_PLATE_FRAME = new vec4(0.6, 0.78, 0.95, 0.9);
 const W = 50;
 /** Game pass: 53 -> 60 cm to fit the grade row (attention score, grade, best-previous). */
-const H = 64;
-/** Whole-panel scale: the Summary used to clip its top in the preview frame. */
-const PANEL_SCALE = 1.2;
+/** Cycle 4 (D3): 64 -> 74 cm; the stat line and the toast chip are gone, the timeline is about 2x taller. */
+const H = 74;
+/** Whole-panel scale: the Summary used to clip its top in the preview frame (1.2 -> 1.15 so the taller panel still fits). */
+const PANEL_SCALE = 1.12;
 const DIST = 150;
 const BAR_W = 23;
-const BAR_H = 1.6;
+const BAR_H = 2.2;
 /** Timeline block: 44 × 7.4 cm. Row labels on the left, a 40 cm strip, nudge markers below. */
 const TL_W = W - 6;
-const TL_H = 9.2;
+/** Cycle 4 (D3): 9.2 -> 15 cm, rows 1.9 -> 3.4 cm tall (1.8x), so segments and the coral look-away read at thumbnail size. */
+const TL_H = 15;
 const TL_X0 = -18.5;
 const TL_STRIP_W = 40;
-const TL_ROW_Y = [3.5, 1.2, -1.1];
-const TL_ROW_H = 1.9;
-const TL_NUDGE_Y = -3.4;
+const TL_ROW_Y = [4.4, 0.8, -2.8];
+const TL_ROW_H = 3.4;
+const TL_NUDGE_Y = -5.8;
+/** Zone labels and percentages: 92 -> 120 (about 1.3x). Buttons: 5.6 cm tall targets, Again is the widest. */
+const ZONE_TEXT_SIZE = 120;
+const BUTTON_H = 5.6;
+const BUTTON_TEXT_SIZE = 92;
 
 @component
 export class SummaryPanel extends BaseScriptComponent {
@@ -87,7 +91,6 @@ export class SummaryPanel extends BaseScriptComponent {
   private zoneBars: SceneObject[] = [];
   private timelineBlock: SceneObject | null = null;
   private timelineDyn: SceneObject | null = null;
-  private statsText!: Text;
   private tipText!: Text;
 
   private onAgain: (() => void) | null = null;
@@ -102,11 +105,7 @@ export class SummaryPanel extends BaseScriptComponent {
     this.panel = makePanel(this.getSceneObject(), W, H, 2.0, 1.3);
     this.panel.root.getTransform().setLocalScale(new vec3(PANEL_SCALE, PANEL_SCALE, PANEL_SCALE));
     const c = this.panel.content;
-    // "Session complete" chip above the panel (artifact S5).
-    const chip = child(this.panel.root, 'CompleteChip', new vec3(0, H / 2 + 2.8, 0.6));
-    addSurface(chip, 20, 3.4, 0, BOX_MINT[0], BOX_MINT[1]);
-    addIcon(chip, 'check_circle', 2.0, new vec3(-7.2, 0, 0.08));
-    addText(chip, 'CompleteChipText', 'Session complete', 'Headline2', 15, 3.4, DIST, TEXT_MINT, new vec3(1.2, 0, 0.08));
+    // Cycle 4 (D3): the "Session complete" toast above the panel is gone (it overlapped the panel edge and added nothing the title does not say).
     // Header: check icon + title (artifact S5 ①). Balance moved into the game tile's sub-line.
     const header = flexRow(c, 'SummaryHeader', W - 4, 5.6, 1.2);
     addIconCell(header, 'SummaryCheck', 'check_circle', 3.4, 3.6, 5.6);
@@ -114,42 +113,43 @@ export class SummaryPanel extends BaseScriptComponent {
     this.titleText.size = 100; // larger than the stat tiles, smaller than the tip (127) and the grade (520)
     this.titleText.horizontalAlignment = HorizontalAlignment.Left;
     // Game layer: a big grade tile (the payoff) + attention score, room engagement, balance and best-previous.
-    const game = flexRow(c, 'GameRow', W - 6, 13, 1.2);
-    this.gradeText = addBox(game, 'GradeBadge', '-', 'Title1', 14, 13, DIST, TEXT_MINT, BOX_SOLID);
+    const game = flexRow(c, 'GameRow', W - 6, 12, 1.2);
+    this.gradeText = addBox(game, 'GradeBadge', '-', 'Title1', 14, 12, DIST, TEXT_MINT, BOX_SOLID);
     this.gradeText.size = 520; // about 2x the earlier 260: the grade is the hero of the game layer
-    this.gameText = addBox(game, 'GameText', '', 'Headline1', W - 6 - 14 - 1.2, 13, DIST, TEXT_PRIMARY, BOX_SOLID);
+    this.gameText = addBox(game, 'GameText', '', 'Headline1', W - 6 - 14 - 1.2, 12, DIST, TEXT_PRIMARY, BOX_SOLID);
     this.gameText.size = 96; // between the title (100 would crowd it) and the stat tiles: 3 short lines still fit the 28.8 cm tile
     // Zone rows: name · bar · percent (artifact S5 ②).
     for (const name of ['Left', 'Center', 'Right']) {
-      const row = flexRow(c, `Zone${name}`, W - 6, 3.4, 1.2);
-      const zn = textRow(row, `Zone${name}Name`, name, 'Headline1', 10, 3.4, DIST);
-      zn.size = 92; // zone labels and percentages are what the Summary is read for: larger than Headline1 (74 at this distance)
+      const row = flexRow(c, `Zone${name}`, W - 6, 4.4, 1.2);
+      const zn = textRow(row, `Zone${name}Name`, name, 'Headline1', 11, 4.4, DIST);
+      zn.size = ZONE_TEXT_SIZE; // zone labels and percentages are what the Summary is read for: larger than Headline1 (74 at this distance)
       this.zoneNames.push(zn);
-      const barCell = flexRow(row, `Zone${name}BarCell`, BAR_W, 3, 0);
+      const barCell = flexRow(row, `Zone${name}BarCell`, BAR_W - 1, 3, 0);
       addSurface(child(barCell, 'Track', new vec3(0, 0, 0.05)), BAR_W, BAR_H, 0, BAR_TRACK, null);
       const pivot = child(barCell, `Zone${name}Bar`, new vec3(-BAR_W / 2, 0, 0.1));
       const bar = child(pivot, 'Fill', new vec3(BAR_W / 2, 0, 0));
       addSurface(bar, BAR_W, BAR_H, 0, BAR_FILL, null);
       this.zoneBars.push(pivot);
-      const zp = textRow(row, `Zone${name}Text`, '0%', 'Headline1', 8.4, 3.4, DIST);
-      zp.size = 92;
+      const zp = textRow(row, `Zone${name}Text`, '0%', 'Headline1', 9.4, 4.4, DIST);
+      zp.size = ZONE_TEXT_SIZE;
       this.zoneTexts.push(zp);
     }
     // Gaze timeline strip (artifact S5 ③), drawn in show().
     this.timelineBlock = addBlock(c, 'GazeTimeline', TL_W, TL_H);
-    // Stat tiles collapsed to one line (Cycle 2 M2): longest look-away, Cards and Nudges read as one row at 2.5 m.
-    this.statsText = addBox(c, 'StatsText', '', 'Headline2', W - 6, 4.4, DIST, TEXT_PRIMARY, BOX_SOLID);
+    // Cycle 4 (D3): the one-line stat row is gone; the longest look-away is the coral box in the timeline, the grade and tip carry the rest.
     // The coaching tip is the second-largest text on the panel (after the grade).
-    this.tipText = addBox(c, 'TipText', '', 'Title2', W - 6, 5.2, DIST, TEXT_TIP, BOX_AMBER_SOLID);
+    this.tipText = addBox(c, 'TipText', '', 'Title2', W - 6, 6.2, DIST, TEXT_TIP, BOX_AMBER_SOLID);
+    this.tipText.size = 140;
     // An opaque dark plate (own frame) behind the buttons, so they never read as part of the wall art behind the panel's lower edge.
-    const buttons = flexRow(c, 'SummaryButtons', W - 6, 6.2, 2);
-    addSurface(child(buttons, 'ButtonPlate', new vec3(0, 0, -0.1)), W - 6, 6.2, 0, BUTTON_PLATE, BUTTON_PLATE_FRAME);
+    const buttons = flexRow(c, 'SummaryButtons', W - 6, BUTTON_H + 1.8, 1.6);
+    addSurface(child(buttons, 'ButtonPlate', new vec3(0, 0, -0.1)), W - 6, BUTTON_H + 1.8, 0, BUTTON_PLATE, BUTTON_PLATE_FRAME);
     const big = { labelRole: 'Headline1' as const };
-    addButton(buttons, 'AgainButton', 'Again', 13, 4.6, DIST, () => this.onAgain?.(), { icon: 'replay', ...big });
-    addButton(buttons, 'DoneButton', 'Done', 13, 4.6, DIST, () => this.onDone?.(), { icon: 'check', primary: true, ...big });
+    // Again is the practice loop: the widest, primary (cyan) button. Done and Re-place are secondary.
+    addButton(buttons, 'AgainButton', 'Again', 17, BUTTON_H, DIST, () => this.onAgain?.(), { icon: 'replay', primary: true, labelRole: 'Title2' });
+    addButton(buttons, 'DoneButton', 'Done', 11, BUTTON_H, DIST, () => this.onDone?.(), { icon: 'check', ...big }).label.size = BUTTON_TEXT_SIZE;
     // Pass 6 (artifact F2): Re-place (same size and type role as Again / Done), reachable here once the rehearsal is over (the podium
     // hides it during Rehearsal). Seats the stage again where you now face and restarts the talk.
-    addButton(buttons, 'SummaryReplaceButton', 'Re-place', 13, 4.6, DIST, () => this.onReplace?.(), big);
+    addButton(buttons, 'SummaryReplaceButton', 'Re-place', 12, BUTTON_H, DIST, () => this.onReplace?.(), big).label.size = BUTTON_TEXT_SIZE;
     // Hidden state is applied in UpdateEvent, after every UIKit element ran OnStart (G3).
     this.createEvent('UpdateEvent').bind(() => {
       if (this.panel.root.enabled !== this.wantVisible) this.panel.root.enabled = this.wantVisible;
@@ -205,7 +205,6 @@ export class SummaryPanel extends BaseScriptComponent {
       }
       if (this.zoneBars[i]) this.zoneBars[i].getTransform().setLocalScale(new vec3(Math.max(0.001, z.bar), 1, 1));
     });
-    this.statsText.text = s.statsLine;
     this.tipText.text = s.tip;
     this.gradeText.text = s.gradeLabel || '-';
     this.gradeText.textFill.color = s.grade ? GRADE_COLOR[s.grade] : TEXT_SECONDARY;
@@ -235,13 +234,13 @@ export class SummaryPanel extends BaseScriptComponent {
     }
     const labels: Array<() => void> = [];
     if (tl.longest) {
-      const lw = Math.max(3.0, (tl.longest.end - tl.longest.start) * TL_STRIP_W);
+      const lw = Math.max(4.4, (tl.longest.end - tl.longest.start) * TL_STRIP_W);
       // Keep the box inside the strip even when the look-away is shorter than its label.
       const cx = Math.min(TL_X0 + TL_STRIP_W - lw / 2, Math.max(TL_X0 + lw / 2, xOf((tl.longest.start + tl.longest.end) / 2)));
       const y = TL_ROW_Y[tl.longest.zone];
       addSurface(child(root, 'Longest', new vec3(cx, y, 0.2)), lw, TL_ROW_H + 0.5, 0, CORAL_FILL, CORAL);
       const label = tl.longest.label;
-      labels.push(() => addText(root, 'LongestLabel', label, 'Headline2', lw, TL_ROW_H + 0.5, DIST, CORAL, new vec3(cx, y, 0.3)));
+      labels.push(() => addText(root, 'LongestLabel', label, 'Headline1', lw, TL_ROW_H + 0.5, DIST, CORAL, new vec3(cx, y, 0.3)).size = 96);
     }
     tl.nudges.forEach((f) => {
       const x = xOf(f);
@@ -250,8 +249,8 @@ export class SummaryPanel extends BaseScriptComponent {
     });
     labels.forEach((f) => f());
     ['L', 'C', 'R'].forEach((n, z) => {
-      const rl = addText(root, `Row${n}`, n, 'Headline1', 2.5, TL_ROW_H + 0.4, DIST, amberRows[z] ? TEXT_AMBER : TEXT_PRIMARY, new vec3(-20.6, TL_ROW_Y[z], 0.1));
-      rl.size = 80;
+      const rl = addText(root, `Row${n}`, n, 'Headline1', 2.5, TL_ROW_H + 0.4, DIST, amberRows[z] ? TEXT_AMBER : TEXT_PRIMARY, new vec3(-20.8, TL_ROW_Y[z], 0.1));
+      rl.size = 110;
     });
   }
 }

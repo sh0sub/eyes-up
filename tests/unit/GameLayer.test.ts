@@ -172,7 +172,7 @@ describe('score and grade', () => {
   });
 
   it('meter tone: cyan, amber, coral', () => {
-    expect([1, 0.66, 0.5, 0.33, 0.1].map(meterTone)).toEqual(['good', 'good', 'mid', 'mid', 'low']);
+    expect([1, 0.66, 0.6, 0.59, 0.5, 0.33, 0.1].map(meterTone)).toEqual(['good', 'good', 'good', 'mid', 'mid', 'mid', 'low']);
   });
 
   it('summary state carries score, grade and compare labels', () => {

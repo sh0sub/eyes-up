@@ -11,25 +11,28 @@ h1{margin:0;font-size:42px;letter-spacing:-.01em}
 .k{font-size:15px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#4a5cd6}
 .t{font-size:27px;font-weight:800;margin:4px 0 12px}
 .pair{display:flex;gap:12px}
-.pair div.im{flex:1;height:270px;border-radius:12px;background-color:#6b665f;background-repeat:no-repeat;position:relative}
+.pair div.im{flex:1;height:230px;border-radius:12px;background-color:#6b665f;background-repeat:no-repeat;position:relative}
 .cap{position:absolute;left:8px;bottom:8px;background:#20232d;color:#fff;font-size:17px;font-weight:700;border-radius:7px;padding:4px 9px}
 .note{font-size:18px;color:var(--muted);margin-top:10px;line-height:1.4}
 .big{font-size:84px;font-weight:800;color:var(--cy);line-height:1;letter-spacing:-.02em}
 .big2{font-size:76px;font-weight:800;line-height:1}
 .strip{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:6px}
 .strip .s{position:relative}
-.strip .im{height:250px;border-radius:12px;background-size:cover;background-position:center;background-color:#6b665f}
+.strip .im{height:172px;border-radius:12px;background-size:cover;background-position:center;background-color:#6b665f}
 .strip .n{font-size:20px;font-weight:800;margin-top:8px}
 .arrow{color:#4a5cd6}
 .checks{margin-top:20px;display:flex;align-items:center;gap:40px;padding:14px 28px}
 .checks .c{display:flex;align-items:center;gap:18px}
 .checks .big,.checks .big2{font-size:64px}
 .checks .note{margin:0;max-width:300px}
+.r2{grid-template-columns:560px 1fr}
+.checks2 .c{display:flex;align-items:center;gap:16px;margin-top:8px}.checks2 .big{font-size:54px}.checks2 .big2{font-size:54px}.checks2 .note{margin:0;font-size:16px;max-width:220px}
+.runs{width:100%;border-collapse:collapse;margin-top:8px;font-size:21px}.runs th{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:#4a5cd6;text-align:left;padding:4px 8px}.runs td{padding:8px;border-top:1px solid #e3e6f3;font-weight:700}.runs td:first-child{color:var(--muted)}.g.c1{color:#d9582b}.g.a1{color:#0a9b73}
 .foot{font-size:18px;color:var(--muted);margin-top:16px}
 </style>
 <div class="wrap">
 <h1>Eyes Up: process at a glance</h1>
-<div class="sub">Three fixes found by looking at the Interactive Preview, checked by 10 LEAF scenarios and 168 tests.</div>
+<div class="sub">Three fixes found by looking at the Interactive Preview, checked by 10 LEAF scenarios and 172 tests.</div>
 <div class="row r1">
  <div class="card"><div class="k">Fix 1 &middot; Halo</div><div class="t">Pale halo washed out, saturated cyan reads</div>
   <div class="pair">
@@ -38,7 +41,7 @@ h1{margin:0;font-size:42px;letter-spacing:-.01em}
   </div>
   <div class="note">Additive displays punish pale colors. The lit state keeps the red channel low.</div></div>
  <div class="card"><div class="k">Fix 2 &middot; Gaze hit area</div><div class="t">Cone replaced by the real pill rectangle</div>
-  <svg viewBox="0 0 560 290" width="100%" height="270" style="background:#f4f6fb;border-radius:12px">
+  <svg viewBox="0 0 560 290" width="100%" height="230" style="background:#f4f6fb;border-radius:12px">
    <g font-family="Helvetica,Arial" font-size="15" fill="#5b6070">
    <text x="20" y="26" font-weight="700" fill="#14161f">Before: cone</text><text x="300" y="26" font-weight="700" fill="#14161f">After: pill rectangle</text></g>
    <path d="M20 150 L250 70 L250 230 Z" fill="#e8920c" opacity=".25"/><rect x="190" y="125" width="64" height="50" rx="10" fill="#6b7280"/>
@@ -52,13 +55,20 @@ h1{margin:0;font-size:42px;letter-spacing:-.01em}
  <div class="card"><div class="k">Fix 3 &middot; Game layer</div><div class="t">A jury note became the game layer</div>
   <div class="pair">
    <div class="im" style="background-image:url('halo-cyan-prev.png');background-size:620px auto;background-position:-175px -139px"><span class="cap">Before: grey on grey</span></div>
-   <div class="im" style="background-image:url('../../devpost/screenshots/10-engagement-slump.png');background-size:400px auto;background-position:-75px 0"><span class="cap">After: slump, meter, grade</span></div>
+   <div class="im" style="background-image:url('../../devpost/screenshots/10-engagement-slump.png');background-size:430px auto;background-position:-95px -12px"><span class="cap">After: slump, meter, grade</span></div>
   </div>
   <div class="note">Our own review: no emotional hook. Members now slump when ignored and perk up when looked at.</div></div>
 </div>
-<div class="card checks"><div><div class="k">Checks &middot; logic in Node, Lens in LEAF</div></div>
- <div class="c"><span class="big">10 / 10</span><span class="note">LEAF scenarios PASSED in the Interactive Preview</span></div>
- <div class="c"><span class="big2">168</span><span class="note">unit and integration tests, typecheck and lint clean</span></div></div>
+<div class="row r2">
+ <div class="card checks2"><div class="k">Checks &middot; logic in Node, Lens in LEAF</div>
+  <div class="c"><span class="big">10 / 10</span><span class="note">LEAF scenarios PASSED in the Interactive Preview</span></div>
+  <div class="c"><span class="big2">172</span><span class="note">unit and integration tests, typecheck and lint clean</span></div></div>
+ <div class="card"><div class="k">Learning loop &middot; Run 1 vs Run 2 (scripted gaze, illustrative, not a user study)</div>
+  <table class="runs"><tr><th></th><th>Grade</th><th>Balance</th><th>Left / Center / Right</th><th>Longest look-away</th><th>Tip shown</th></tr>
+   <tr><td>Run 1</td><td class="g c1">C &middot; 39</td><td>46</td><td>0 / 30 / 70 %</td><td>28 s left</td><td>look left more</td></tr>
+   <tr><td>Run 2</td><td class="g a1">A &middot; 84</td><td>89</td><td>41 / 26 / 33 %</td><td>12 s right</td><td>look at the center more</td></tr></table>
+  <div class="note">Real values from LEAF scenario <b>capture_loop</b> in the Interactive Preview: Run 1 ignores the left, Run 2 follows the tip. Not a measure of learning.</div></div>
+</div>
 <div class="card" style="margin-top:20px"><div class="k">The loop the Lens teaches</div><div class="t">Setup <span class="arrow">&rarr;</span> Look <span class="arrow">&rarr;</span> Nudge <span class="arrow">&rarr;</span> Cue card <span class="arrow">&rarr;</span> Podium <span class="arrow">&rarr;</span> Summary <span class="arrow">&rarr;</span> Again</div>
  <div class="strip">
   <div class="s"><div class="im" style="background-image:url('../../devpost/screenshots/01-setup-panel.png')"></div><div class="n">1 Setup</div></div>

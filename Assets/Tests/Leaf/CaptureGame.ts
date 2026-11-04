@@ -8,7 +8,7 @@
  */
 import { Scenario } from 'Leaf.lspkg/Scenarios/scenario/Scenario';
 import { sleep } from 'Leaf.lspkg/Utils/common/Utils';
-import { lookAtMember, muteLeafOverlay, setUp, startAndWaitForRehearsal } from './EyesUpLeafHelpers';
+import { headFrameProblems, lookAtMember, muteLeafOverlay, setUp, startAndWaitForRehearsal } from './EyesUpLeafHelpers';
 
 @component
 export class CaptureGame extends Scenario {
@@ -20,6 +20,7 @@ export class CaptureGame extends Scenario {
       lookAtMember(rig, 2);
       await sleep(19000);
       print(`[capture_game] slumped room ${rig.session.roomAttention.toFixed(2)} eng ${rig.session.engagementValues.map((v) => v.toFixed(2)).join(',')}`);
+      print(`[capture_game] slumped framing problems: ${headFrameProblems(rig).join('; ') || 'none'}`);
       await sleep(4000); // hold: slumped member 1 beside the lit member 2
       // Member 0 perks up and recovers first, so the room meter climbs well above the slump still (10).
       lookAtMember(rig, 0);

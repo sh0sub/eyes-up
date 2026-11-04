@@ -11,4 +11,4 @@ CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 "$CHROME" --headless=new --hide-scrollbars --window-size=1800,1200 --allow-file-access-from-files --screenshot=$PWD/devpost/screenshots/09-process-at-a-glance.png file://$PWD/scripts/gallery/process-image.html
 ```
 
-The numbers in `process-image.html` (10 LEAF scenarios, 168 tests) must match `npm run check` and `devpost/leaf-results.md`.
+The numbers in `process-image.html` (10 LEAF scenarios, 172 tests) must match `npm run check` and `devpost/leaf-results.md`.
