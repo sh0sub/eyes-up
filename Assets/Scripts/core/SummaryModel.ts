@@ -5,6 +5,7 @@
  * Bars fill over 0.6 s.
  */
 import { StatsSnapshot } from '../SessionStats';
+import { GameResult, Grade, compareLabel } from './GameScore';
 import { ZONE_NAMES, ZoneName } from './Tunables';
 import { clamp01, formatMSS } from './math';
 
@@ -22,6 +23,8 @@ export interface SummaryContext {
   deckName: string;
   /** Cards in the deck; shows "2 of 5" for the card-expands tile (artifact S5). */
   cardCount?: number;
+  /** Game layer: attention score and grade of this run (omitted in older callers/tests). */
+  game?: GameResult | null;
 }
 
 export interface SummaryState {
@@ -42,6 +45,15 @@ export interface SummaryState {
   balanceScore: number;
   /** One line from the weakest zone, e.g. "Next time, look left more." */
   tip: string;
+  /** Game layer: grade letter ("A") or '' without a result. */
+  gradeLabel: string;
+  grade: Grade | null;
+  /** "Attention 78" or ''. */
+  scoreLabel: string;
+  /** "Room engaged 91%" or ''. */
+  engagementLabel: string;
+  /** "New best! (was 72)" / "Best so far 78 · A" / '' on a first run. */
+  compareLabel: string;
 }
 
 export function zoneOutOfRange(percent: number): boolean {
@@ -84,5 +96,10 @@ export function summaryState(s: StatsSnapshot, shownSeconds: number, ctx?: Summa
     balanceLabel: `${s.balanceScore}`,
     balanceScore: s.balanceScore,
     tip: summaryTip(s.zonePercents),
+    gradeLabel: ctx?.game ? ctx.game.grade : '',
+    grade: ctx?.game ? ctx.game.grade : null,
+    scoreLabel: ctx?.game ? `Attention ${ctx.game.score}` : '',
+    engagementLabel: ctx?.game ? `Room engaged ${ctx.game.engagementPercent}%` : '',
+    compareLabel: ctx?.game ? compareLabel(ctx.game) : '',
   };
 }

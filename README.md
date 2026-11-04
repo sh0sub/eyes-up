@@ -4,12 +4,13 @@
 
 **Eyes Up** is a presentation rehearsal coach for Spectacles. It seats a small virtual audience in your room, lights up whoever you look at, nudges you toward the side you ignore, and hides your notes until you need them.
 
-**Pitch:** people rehearse staring at slides, so the room never gets practice. On Spectacles a virtual audience sits 2.5 m ahead, lights up where you look, and chimes and points when you ignore one side for 8 seconds. LEAF 8/8 and 139 tests pass in the Interactive Preview; gaze = head direction, driven by the LEAF harness, not tested on a device. Process at a glance: `devpost/screenshots/09-process-at-a-glance.png`.
+**Pitch:** people rehearse staring at slides, so the room never gets practice. On Spectacles a virtual audience sits 2.5 m ahead, lights up where you look, and chimes and points when you ignore one side for 8 seconds. Members you ignore slump and light a phone, members you look at perk up, a room meter and an S/A/B/C grade close the run. LEAF 10/10 and 158 tests pass in the Interactive Preview; gaze = head direction, driven by the LEAF harness, not tested on a device. Process at a glance: `devpost/screenshots/09-process-at-a-glance.png`.
 
 Built for Learn AR with SPECS (deadline 2026-11-09 PST). New Lens built with CLAD and the Lens Studio MCP skill pack; preview-only is acceptable, no device required.
 
 - Audience placement with camera transform, gaze via head rotation
 - Halo on the watched audience member, chime plus arrow for the neglected side
+- Game layer: audience engagement (slump, phone glow, perk-up burst), room attention meter, attention score with an S/A/B/C grade and a best-previous compare (session memory only)
 - Cue card on pinch only
 
 ## Status
@@ -18,7 +19,7 @@ Built for Learn AR with SPECS (deadline 2026-11-09 PST). New Lens built with CLA
 - **8 LEAF scenarios pass** in the Interactive Preview: `start_places_audience`, `gaze_fills_halo`,
   `neglect_triggers_nudge`, `next_shows_card_then_pill`, `dwell_expands_pill`, `finish_shows_summary`,
   `repeated_nudge`, `finish_pulses_at_time` (results: `devpost/leaf-results.md`). Node checks:
-  `npm run check` (typecheck, lint, 139 vitest tests).
+  `npm run check` (typecheck, lint, 158 vitest tests).
 - **Preview only, not tested on a Spectacles device.** Gaze is head rotation, simulated by LEAF in tests.
 - **Nudge chevron placement rule** (`Assets/Scripts/core/ChevronPlacement.ts`): the chevron keeps its
   edge-of-view spot, and panels (podium, cue card) are projected into its view plane each frame so it

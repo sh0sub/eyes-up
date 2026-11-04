@@ -1,13 +1,16 @@
 import { scenariosIndex } from 'Leaf.lspkg/Scenarios/decorator/ScenarioIndexDecorator';
 import { ScenarioMetadata } from 'Leaf.lspkg/Scenarios/scenario/ScenarioMetadata';
+import { CaptureGame } from './CaptureGame';
 import { CaptureNudgeHold } from './CaptureNudgeHold';
 import { CapturePodium } from './CapturePodium';
 import { CaptureSummary } from './CaptureSummary';
 import { DemoReel } from './DemoReel';
 import { DwellExpandsPill } from './DwellExpandsPill';
+import { FinishGivesGrade } from './FinishGivesGrade';
 import { FinishPulsesAtTime } from './FinishPulsesAtTime';
 import { FinishShowsSummary } from './FinishShowsSummary';
 import { GazeFillsHalo } from './GazeFillsHalo';
+import { NeglectDisengagesThenRecovers } from './NeglectDisengagesThenRecovers';
 import { NeglectTriggersNudge } from './NeglectTriggersNudge';
 import { NextShowsCardThenPill } from './NextShowsCardThenPill';
 import { RepeatedNudge } from './RepeatedNudge';
@@ -31,6 +34,11 @@ export class LeafIndex extends BaseScriptComponent {
     { id: 'capture_summary', typename: CaptureSummary.getTypeName() },
     // pass 5: Finish pulse at time-up (S4), extra check beyond the 7 done criteria
     { id: 'finish_pulses_at_time', typename: FinishPulsesAtTime.getTypeName() },
+    // game layer: engagement slump / recovery, and the grade on the Summary
+    { id: 'neglect_disengages_then_recovers', typename: NeglectDisengagesThenRecovers.getTypeName() },
+    { id: 'finish_gives_grade', typename: FinishGivesGrade.getTypeName() },
+    // game layer capture helper for the walkthrough screenshots, not a done criterion
+    { id: 'capture_game', typename: CaptureGame.getTypeName() },
     // pass 3: ~75 s showcase for the demo video, not a done criterion
     { id: 'demo_reel', typename: DemoReel.getTypeName() },
   ];

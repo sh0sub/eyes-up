@@ -16,15 +16,18 @@
  * (RenderMeshVisual). If the `audience` / `halos` arrays are not wired, they are collected from
  * `audienceRoot` at awake.
  */
+import { AudienceRig } from './AudienceRig';
 import { HaloVisual } from './AttentionMeter';
 import { CueCardView } from './CueCardController';
 import { getDeck } from './DeckData';
 import { chevronAlpha, chevronPulse } from './NudgeController';
 import { CameraGazeProvider, ScriptedGazeProvider, SwitchableGazeProvider } from './GazeProvider';
 import { PODIUM_H_CM, PODIUM_W_CM, Podium } from './Podium';
+import { RoomMeter } from './RoomMeter';
 import { SetupPanel } from './SetupPanel';
 import { StageLayout } from './StagePlacer';
 import { SummaryPanel } from './SummaryPanel';
+import { AudienceLook } from './core/AudienceLook';
 import { AudienceView, EyesUpSession, SessionViews } from './core/EyesUpSession';
 import { PillRect } from './core/PillHit';
 import { ChevronBox, PlaneRect, placeChevron } from './core/ChevronPlacement';
@@ -71,7 +74,7 @@ const SETUP_DISTANCE_CM = 110;
 const SETUP_BELOW_EYES_CM = -10;
 const SUMMARY_DISTANCE_CM = 150;
 /** Round 6: raised so the stat tiles and tip clear the room's wall art (additive display: art shows through any fill). */
-const SUMMARY_ABOVE_EYES_CM = 20;
+const SUMMARY_ABOVE_EYES_CM = 16;
 /** design: panels follow the head only while the preview/device pose settles, then stay put. */
 const PANEL_SETTLE_SECONDS = 1.0;
 
@@ -80,23 +83,30 @@ const PANEL_SETTLE_SECONDS = 1.0;
  * (size 240, was 200) and two bullets (140, was 130), and a cyan countdown line that empties over the 4 s.
  * The pill keeps 90 % of card scale (was 40 %) so the 3-word tag reads from the start position.
  */
-const CARD_W = 64;
-const CARD_H = 26;
-/** The card sits above the anchor (bottom edge 2 cm below it) so it clears the audience's heads. */
-const CARD_CENTER_Y = 11;
-const CARD_TITLE_Y = 18.5;
-const CARD_BODY_Y = 9;
-const CARD_COUNTDOWN_Y = 1.4;
-const CARD_COUNTDOWN_W = 58;
-const CARD_TITLE_SIZE = 240;
-const CARD_BODY_SIZE = 140;
-const PILL_SCALE = 1.3;
-const PILL_H = 10;
-const PILL_Y = 10;
+/**
+ * Game pass (jury: "cue card text too small at Spectacles scale"): title 240 -> 290, bullets 140 -> 180, card
+ * 64 x 26 -> 84 x 34 cm, pill height 10 -> 12 cm. The pill's effective size is 290 x 1.2 = 348 (was 240 x 1.3 = 312).
+ */
+const CARD_W = 84;
+const CARD_H = 34;
+/** The card sits above the anchor (bottom edge 1 cm below it) so it clears the audience's heads and the room meter. */
+const CARD_CENTER_Y = 16;
+const CARD_TITLE_Y = 25.5;
+const CARD_BODY_Y = 13.2;
+const CARD_COUNTDOWN_Y = 1.6;
+const CARD_COUNTDOWN_W = 78;
+const CARD_TITLE_SIZE = 290;
+const CARD_BODY_SIZE = 180;
+const PILL_SCALE = 1.2;
+const PILL_H = 12;
+const PILL_Y = 11;
+/** The room meter floats this far below the card anchor (between the heads and the card). */
+const METER_BELOW_ANCHOR_CM = 4;
 /** Measured in Preview: ≈ 0.0124 cm per size unit per glyph for Inter titles (size 200 → 2.5 cm). */
 const PILL_GLYPH_CM = 0.0124 * CARD_TITLE_SIZE;
-const CARD_FILL = new vec4(0.17, 0.23, 0.33, 0.9);
-const CARD_FRAME = new vec4(0.6, 0.85, 1.0, 0.8);
+/** Game pass (jury: grey-on-grey): a deeper indigo card with a bright cyan frame; white text keeps its contrast. */
+const CARD_FILL = new vec4(0.1, 0.18, 0.46, 0.93);
+const CARD_FRAME = new vec4(0.5, 0.88, 1.0, 0.95);
 
 @component
 export class EyesUpApp extends BaseScriptComponent {
@@ -137,6 +147,8 @@ export class EyesUpApp extends BaseScriptComponent {
   private scripted: ScriptedGazeProvider | null = null;
   private panelAge = 0;
   private views!: SessionViews;
+  private rig: AudienceRig | null = null;
+  private meter: RoomMeter | null = null;
   private cardBg: SceneObject | null = null;
   private pillBg: SceneObject | null = null;
   /** Width (cm, before world scale) of the current pill backing. */
@@ -176,6 +188,9 @@ export class EyesUpApp extends BaseScriptComponent {
       if (h) h.mainMaterial = h.mainMaterial.clone();
     });
     if (this.stageLineVisual) this.stageLineVisual.mainMaterial = this.stageLineVisual.mainMaterial.clone();
+
+    this.rig = new AudienceRig(this.audience);
+    this.meter = new RoomMeter();
 
     this.cameraGaze = new CameraGazeProvider(this.camera.getTransform());
     this.gaze = new SwitchableGazeProvider(this.cameraGaze);
@@ -254,6 +269,11 @@ export class EyesUpApp extends BaseScriptComponent {
     return this.scripted;
   }
 
+  /** LEAF/debug hook: the Audience_i roots, left to right. */
+  audienceMembers(): SceneObject[] {
+    return this.audience;
+  }
+
   /** LEAF/debug hook: read-only access to the session. */
   getSession(): EyesUpSession {
     return this.session;
@@ -308,6 +328,7 @@ export class EyesUpApp extends BaseScriptComponent {
     if (this.countdownPivot && this.cueCard.enabled) {
       this.countdownPivot.getTransform().setLocalScale(new vec3(Math.max(0.001, this.session.cardCountdown), 1, 1));
     }
+    if (this.meter && this.meter.root.enabled) faceTowards(this.meter.root, this.headPosition(), true);
     this.pulseChevron(dt);
   }
 
@@ -464,9 +485,11 @@ export class EyesUpApp extends BaseScriptComponent {
       targetSeconds: this.session.targetSeconds,
       deckName: getDeck(this.session.config.deckId).name,
       cardCount: getDeck(this.session.config.deckId).sections.length,
+      game: this.session.game,
     });
     const onStage = phase === 'Placing' || phase === 'Rehearsal' || phase === 'Finishing';
     this.stageLine.enabled = onStage;
+    this.meter?.setVisible(onStage);
     if (!onStage) this.cueCard.enabled = false;
     if (phase === 'Summary') {
       // Pass 3: the Summary panel is translucent (and the display additive), so lit halos behind it
@@ -487,11 +510,14 @@ export class EyesUpApp extends BaseScriptComponent {
     this.edgeHintLeft.enabled = false;
     this.edgeHintRight.enabled = false;
     this.stageLine.enabled = false;
+    this.meter?.setVisible(false);
     this.summaryPanel.show(null);
   }
 
-  private play(a: AudioComponent | undefined): void {
-    if (a) a.play(1);
+  private play(a: AudioComponent | undefined, volume?: number): void {
+    if (!a) return;
+    if (volume !== undefined) a.volume = volume;
+    a.play(1);
   }
 
   private makeViews(): SessionViews {
@@ -500,6 +526,10 @@ export class EyesUpApp extends BaseScriptComponent {
     let fade = 1;
     let applause = 1;
     const lastHalo: HaloVisual[] = [];
+    const lastLook: AudienceLook[] = [];
+    const applyLook = (i: number) => {
+      if (lastLook[i] && this.rig) this.rig.apply(i, lastLook[i], fade);
+    };
     const applyMember = (i: number) => {
       const v = lastHalo[i];
       if (!v || !this.audience[i]) return;
@@ -520,6 +550,10 @@ export class EyesUpApp extends BaseScriptComponent {
           }
         });
         setPos(this.cueCard, layout.cardAnchor);
+        this.meter?.placeAt(
+          new vec3(layout.cardAnchor.x, layout.cardAnchor.y - METER_BELOW_ANCHOR_CM, layout.cardAnchor.z),
+          head,
+        );
         setPos(this.stageLine, layout.stageCenter);
         faceTowards(this.stageLine, head, true);
       },
@@ -527,6 +561,7 @@ export class EyesUpApp extends BaseScriptComponent {
       setFade: (a) => {
         fade = a;
         lastHalo.forEach((_, i) => applyMember(i));
+        lastLook.forEach((_, i) => applyLook(i));
       },
       setApplauseScale: (s) => {
         applause = s;
@@ -535,6 +570,10 @@ export class EyesUpApp extends BaseScriptComponent {
       applyHalo: (i, v) => {
         lastHalo[i] = v;
         applyMember(i);
+      },
+      applyLook: (i, look) => {
+        lastLook[i] = look;
+        applyLook(i);
       },
     };
 
@@ -591,7 +630,8 @@ export class EyesUpApp extends BaseScriptComponent {
         },
       },
       stageLineAudio: { playTimeUpTone: () => this.play(this.toneAudio) },
-      sfx: { playTick: () => this.play(this.tickAudio), playApplause: () => this.play(this.applauseAudio) },
+      sfx: { playTick: () => this.play(this.tickAudio), playApplause: (v) => this.play(this.applauseAudio, v) },
+      roomMeter: this.meter ?? undefined,
     };
   }
 }

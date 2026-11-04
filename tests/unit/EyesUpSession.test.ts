@@ -207,3 +207,54 @@ describe('EyesUpSession / EyesUpApp core (M1 #3, #7)', () => {
     expect(applauseScale(2, 1.5)).toBe(1);
   });
 });
+
+describe('game layer in the session', () => {
+  it('a neglected member slumps, the room meter drops, and looking recovers it with a perk-up', () => {
+    const { s, scene, tick, lookAtMember } = toRehearsal();
+    lookAtMember(0);
+    tick(18);
+    expect(s.engagementValues[4]).toBeLessThan(0.5);
+    expect(scene.looks[4].headDropCm).toBeLessThan(-8);
+    expect(scene.looks[4].phoneGlow).toBeGreaterThan(0);
+    expect(s.engagementValues[0]).toBe(1);
+    expect(scene.meter!.level).toBeLessThan(0.8);
+    expect(scene.meter!.tone).not.toBe('low');
+    const before = scene.meter!.level;
+    lookAtMember(4);
+    tick(2);
+    expect(s.engagementValues[4]).toBe(1);
+    expect(scene.events.some((e) => e.type === 'perkUp' && e.index === 4)).toBe(true);
+    expect(scene.meter!.level).toBeGreaterThan(before);
+  });
+
+  it('Finish yields a score and grade; applause scales with it; best-previous is remembered across Again', () => {
+    const { s, scene, tick, lookAtMember } = toRehearsal();
+    for (const i of [0, 2, 5, 1, 3, 4]) {
+      lookAtMember(i);
+      tick(1.5);
+    }
+    expect(s.finish()).toBe(true);
+    const first = s.game!;
+    expect(first.bestPrevious).toBeNull();
+    expect(first.score).toBeGreaterThan(40);
+    expect(scene.applauseVolume).toBeCloseTo(0.3 + 0.7 * (first.score / 100), 6);
+    tick(1.6);
+    expect(s.phase).toBe('Summary');
+    expect(s.again()).toBe(true);
+    tick(0.6);
+    expect(s.game).toBeNull();
+    // a run that ignores the room scores lower and sees the earlier best
+    lookAtMember(0);
+    tick(30);
+    s.finish();
+    const second = s.game!;
+    expect(second.score).toBeLessThan(first.score);
+    expect(second.bestPrevious?.score).toBe(first.score);
+    expect(second.newBest).toBe(false);
+  });
+
+  it('a lowest-score finish gives a smaller applause pulse than a high-score one', () => {
+    expect(Math.abs(applauseScale(0.125, 1.5, 0.09) - 1)).toBeGreaterThan(Math.abs(applauseScale(0.125, 1.5, 0.02) - 1));
+    expect(applauseScale(0.125, 1.5)).toBeCloseTo(applauseScale(0.125, 1.5, 0.05), 12);
+  });
+});

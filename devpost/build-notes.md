@@ -807,3 +807,51 @@ first.
 The nudge chevron keeps its spot at the edge of the view. Each frame the podium and cue card are
 projected into the same plane, so the chevron slides aside, or is hidden (the chime still plays),
 instead of ever covering a panel. Unit tested.
+
+## Cycle 4: game layer, contrast and text size (2026-11-04)
+
+Jury weaknesses (design 7.5, technical 7.5, innovation 6.8, presentation 7): grey-on-grey visuals, low
+emotional hook, cue card text too small at Spectacles scale. This cycle adds a light game layer without
+removing the halo, nudge, cue card, podium or Summary.
+
+### What changed
+
+| Area | Change | Where |
+|---|---|---|
+| Engagement | Per member 0..1. Grace 5 s unseen, then 20 s to 0, 1.5 s to recover, perk-up (0.7 s burst) when looked at below 0.7. New tunables in `Tunables.ts` | `core/Engagement.ts`, tests `tests/unit/GameLayer.test.ts` |
+| Look | `audienceLook(engagement, burst)`: head sinks 22 cm and creeps 8 cm toward the speaker, body leans up to 13 degrees (about 10 % squash), colour sky blue to violet, amber phone glow below 60 %, halo ring follows the head and pulses on a burst | `core/AudienceLook.ts`, Lens adapter `AudienceRig.ts` |
+| Room meter | Mean engagement, tone cyan / amber / coral. Bar 52 cm plus "Room n%" label, 4 cm below the card anchor | `RoomMeter.ts`, `core/GameScore.meterTone` |
+| Score | `balance x (0.35 + 0.65 x avg room engagement)`, grade S >= 85, A >= 70, B >= 50 | `core/GameScore.ts`, `core/SummaryModel.ts`, grade tile and game text in `SummaryPanel.ts` (panel 53 to 61 cm) |
+| Replay | Best earlier score in `EyesUpSession.best`, session memory only | `core/EyesUpSession.ts` |
+| Applause | Pulse amplitude 0.02 to 0.09 and volume 0.3 to 1 with the score | `applauseScale(t, duration, amplitude)`, `EyesUpApp.play(a, volume)` |
+| Contrast | Silhouette (0.55, 0.68, 0.85 @ 0.35) to (0.2, 0.6, 1.0 @ 0.72), `HALO_DIM` to (0.3, 0.45, 0.92), `HALO_MIN_ALPHA` 0.15 to 0.3, card fill indigo (0.1, 0.18, 0.46) with cyan frame | `core/AudienceLook.ts`, `AttentionMeter.ts`, `EyesUpApp.ts` |
+| Text | Card 64 x 26 to 84 x 34 cm, title 240 to 290, bullets 140 to 180, pill scale 1.3 to 1.2 at title 290 (effective 312 to 348), pill height 10 to 12 cm | `EyesUpApp.ts` |
+| LEAF | New `neglect_disengages_then_recovers`, `finish_gives_grade`, capture helper `capture_game` | `Assets/Tests/Leaf/` |
+
+### Decisions
+
+- **D34: engagement is separate from the halo attention.** Attention is "where you look now" (fills in 1 s, drains in 12 s). Engagement is "who you have been losing" and starts full, so the room looks alive at the start and slumps only under neglect. Reusing attention would have meant every member starts dim.
+- **D35: the head droop is a position change, not a pitch.** The Head is an ellipsoid, so rotating it is invisible. The head sinks and creeps forward, the body (a box) rotates about the feet.
+- **D36: score multiplies by balance.** Members start engaged, so an additive score would have given a session that never looked up a B. Multiplying keeps it at 0.
+- **D37: best-previous is in-memory.** No file or storage use; closing the Lens forgets it, and the Summary says "Replay to set a best" on a first run.
+- **D38: meter placement.** The stage line sits at the floor and is out of view when looking at the audience, and the podium shows only when looking down, so neither is glanceable. The bar sits between the heads and the card, which the eyes already visit.
+- The halo ring and phone glow were first left at their rest position and looked detached from a slumped head. The halo now follows the head, and the phone glow was shrunk from 14 x 22 to 8 x 13 cm after it read as an orange card.
+
+### Verification
+
+`npm run check`: typecheck, ESLint, 158 tests. Ten LEAF scenarios PASSED one at a time in the Interactive Preview,
+no E/F lines from project scripts. Every screenshot in `devpost/screenshots` 02 to 06, 10 and 11 was looked at
+(captured with the Lens Studio window grabbed during `capture_game`, camera set with `MovePreviewCamera` to look at
+(0, -12, -250); Summary at (0, 18, -150); podium at (0, -30, -55)). Not verified: legibility and motion on real
+optics, the audible applause volume difference, the best-previous label in a live second run.
+
+### Environment incident (Lens Studio restart)
+
+After the first Lens Studio restart in this project, the Interactive Preview threw
+`OpacityFactor uniform is missing from material` from UIKit's BackPlate and Button visuals on every frame
+("Rendering failed 5 times in a row"), so no UI drew and LEAF returned empty scenario lists. The same project had run for days without it,
+probably because UIKit had been live-imported in that session (not proven). Moving `Cache/` aside did not help. Re-importing the same
+UIKit 4.0.0 from the Asset Library (InstallLensStudioPackage, asset name UIKit) created `UIKit 2.lspkg`; after
+moving the original `UIKit.lspkg` and its `.meta` aside (backup kept outside the repo) and renaming the new files to
+`UIKit.lspkg`, the error was gone. The package bytes are identical (git shows only `Packages/UIKit.lspkg.meta`
+changed).

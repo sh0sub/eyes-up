@@ -34,11 +34,23 @@ more.") close the loop: look, get feedback, adjust, run it again (Again keeps th
 | Does 8 s of neglect trigger a left chime and chevron, and clear when you look? | Logic proven | LEAF `neglect_triggers_nudge`, `repeated_nudge` |
 | Does Next show the card, then a tag after 4 s, and does a 1 s dwell reopen it? | Logic proven | LEAF `next_shows_card_then_pill`, `dwell_expands_pill` |
 | Does Finish show a Summary whose zones sum to 100 and whose time reads m:ss? | Logic proven | LEAF `finish_shows_summary` |
-| Do the timing rules hold under edge cases (gaps, ties, no gaze at all)? | Logic proven | 139 Node tests, typecheck and lint clean |
+| Does a neglected member slump, recover when looked at, and does Finish show a grade? | Logic proven | LEAF `neglect_disengages_then_recovers`, `finish_gives_grade` |
+| Do the timing rules hold under edge cases (gaps, ties, no gaze at all)? | Logic proven | 158 Node tests, typecheck and lint clean |
+| Is the attention score a fair measure of speaking skill? | **Unproven** | A design heuristic (balance x engagement), not validated |
 | Are panels legible and comfortable at real distance on Spectacles optics? | **Feel unproven** | Preview only, tuned from preview screenshots |
 | Does the spatial chime clearly come from the left or right? | **Feel unproven** | Cannot be judged in the editor |
 | Is a head-rotation gaze ray accurate enough to count as "looking at a person"? | **Feel unproven** | Preview injects gaze; a device has no eye tracking in this Lens |
 | Is wearing it for a 3 minute talk comfortable? | **Feel unproven** | No device |
+
+## Design note to fix (cycle 4)
+
+| Design note (own review of the preview) | Fix | Evidence |
+|---|---|---|
+| Grey on grey: silhouettes (0.55, 0.68, 0.85 at 0.35 alpha) and the unlit halo vanish against the room | Silhouettes are saturated sky blue at 0.72 alpha, the unlit halo ring is bluer and twice as opaque, the cue card is indigo with a cyan frame | `walkthrough/02-audience.png`, `04-cue-card.png` |
+| Little fun or emotional hook: the audience only glows when you look | The audience reacts to being ignored: members slump and light a phone, then perk up in a cyan burst when you look. A room meter and an S/A/B/C grade give a number to beat | `walkthrough/07-engagement-slump.png`, `08-perk-up.png`, `06-summary.png` |
+| Cue card and tag text too small at Spectacles scale | Card 84 x 34 cm, title size 290, bullets 180, tag effective size +12 % | `walkthrough/04-cue-card.png` |
+
+Habit 4 (guide attention) got a second channel: the neglected side now also looks neglected.
 
 ## Process notes
 

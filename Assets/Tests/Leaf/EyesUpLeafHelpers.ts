@@ -96,3 +96,25 @@ export function textOf(name: string): string {
   const t = so.getComponent('Component.Text') as Text;
   return t ? t.text : '';
 }
+
+/** Text of the box named `name` (UIKit boxes keep their Text on a child called "Label"). */
+export function boxTextOf(name: string): string {
+  const so = findSceneObjectByName(name);
+  if (!so) throw new Error(`${name} not found`);
+  for (let i = 0; i < so.getChildrenCount(); i++) {
+    const c = so.getChild(i);
+    const t = c.getComponent('Component.Text') as Text;
+    if (t) return t.text;
+  }
+  return '';
+}
+
+/** Local Y of the Head child of audience member `i` (the game layer sinks it as the member disengages). */
+export function headYOf(rig: Rig, i: number): number {
+  const member = rig.app.audienceMembers()[i];
+  for (let k = 0; k < member.getChildrenCount(); k++) {
+    const c = member.getChild(k);
+    if (c.name === 'Head') return c.getTransform().getLocalPosition().y;
+  }
+  throw new Error(`Head of member ${i} not found`);
+}

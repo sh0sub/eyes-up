@@ -16,6 +16,7 @@
 import { StatsSnapshot } from './SessionStats';
 import { SummaryContext, summaryState, BAR_FILL_SECONDS } from './core/SummaryModel';
 import { gazeTimeline } from './core/GazeTimeline';
+import { Grade } from './core/GameScore';
 import {
   BOX_MINT,
   BOX_AMBER_SOLID,
@@ -46,8 +47,15 @@ const BAR_TRACK = new vec4(0.3, 0.38, 0.5, 0.6);
 const CORAL = new vec4(1.0, 0.45, 0.4, 1);
 const CORAL_FILL = new vec4(0.42, 0.14, 0.13, 0.95);
 const NUDGE_AMBER = new vec4(1.0, 0.75, 0.3, 1);
+const GRADE_COLOR: Record<Grade, vec4> = {
+  S: new vec4(1.0, 0.86, 0.4, 1),
+  A: new vec4(0.55, 1.0, 0.8, 1),
+  B: new vec4(0.55, 0.85, 1.0, 1),
+  C: new vec4(1.0, 0.62, 0.42, 1),
+};
 const W = 50;
-const H = 53;
+/** Game pass: 53 -> 60 cm to fit the grade row (attention score, grade, best-previous). */
+const H = 61;
 const DIST = 150;
 const BAR_W = 27;
 const BAR_H = 1.2;
@@ -69,6 +77,8 @@ export class SummaryPanel extends BaseScriptComponent {
   private titleText!: Text;
   private targetText!: Text;
   private balanceText!: Text;
+  private gradeText!: Text;
+  private gameText!: Text;
   /** [left, center, right] zone names and percent labels. */
   private zoneNames: Text[] = [];
   private zoneTexts: Text[] = [];
@@ -103,6 +113,11 @@ export class SummaryPanel extends BaseScriptComponent {
     this.titleText = textRow(header, 'TimeText', 'Nice work — 0:00', 'Title2', W - 20, 5.6, DIST);
     this.titleText.horizontalAlignment = HorizontalAlignment.Left;
     this.balanceText = addBox(header, 'BalanceBadge', '0\nBalance', 'Headline1', 9.5, 5.6, DIST, TEXT_MINT, BOX_MINT);
+    // Game layer: grade tile + attention score, room engagement and best-previous compare.
+    const game = flexRow(c, 'GameRow', W - 6, 8, 1.2);
+    this.gradeText = addBox(game, 'GradeBadge', '-', 'Title1', 10, 8, DIST, TEXT_MINT, BOX_SOLID);
+    this.gradeText.size = 260; // the grade is the hero of the game layer: larger than the Title1 role
+    this.gameText = addBox(game, 'GameText', '', 'Headline2', W - 6 - 10 - 1.2, 8, DIST, TEXT_PRIMARY, BOX_SOLID);
     this.targetText = textRow(c, 'TargetText', 'target 0:00', 'Subheadline', W - 4, 2.2, DIST, TEXT_SECONDARY);
     // Line the target up under the title (title cell starts 4.8 cm in from the header's left edge).
     this.targetText.horizontalAlignment = HorizontalAlignment.Left;
@@ -195,6 +210,11 @@ export class SummaryPanel extends BaseScriptComponent {
     this.cardsText.text = `Cards\n${s.cardsLabel}`;
     this.nudgesText.text = `Nudges\n${s.nudgesLabel}`;
     this.tipText.text = s.tip;
+    this.gradeText.text = s.gradeLabel || '-';
+    this.gradeText.textFill.color = s.grade ? GRADE_COLOR[s.grade] : TEXT_SECONDARY;
+    this.gameText.text = s.scoreLabel
+      ? `${s.scoreLabel} · ${s.engagementLabel}\n${s.compareLabel || 'Replay to set a best'}`
+      : '';
   }
 
   /**

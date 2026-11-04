@@ -175,6 +175,7 @@ declare namespace Audio {
 }
 declare class AudioComponent extends Component {
   playbackMode: Audio.PlaybackMode;
+  volume: number;
   play(loops: number): void;
   stop(fade: boolean): void;
 }

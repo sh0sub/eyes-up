@@ -1,5 +1,6 @@
 import { HaloVisual } from '../../Assets/Scripts/AttentionMeter';
-import { SessionEvent, SessionViews } from '../../Assets/Scripts/core/EyesUpSession';
+import { AudienceLook } from '../../Assets/Scripts/core/AudienceLook';
+import { RoomMeterVisual, SessionEvent, SessionViews } from '../../Assets/Scripts/core/EyesUpSession';
 import { Side } from '../../Assets/Scripts/NudgeController';
 import { StageLayout } from '../../Assets/Scripts/StagePlacer';
 import { StageLineVisual } from '../../Assets/Scripts/StageLine';
@@ -17,6 +18,10 @@ export class FakeScene {
   chimes: Side[] = [];
   stageLine: StageLineVisual = { progress: 0, amber: false, pulse: 0 };
   sfx: string[] = [];
+  looks: AudienceLook[] = [];
+  meter: RoomMeterVisual | null = null;
+  meterVisible = false;
+  applauseVolume: number | null = null;
   events: SessionEvent[] = [];
 
   views(): SessionViews {
@@ -30,6 +35,7 @@ export class FakeScene {
         setFade: (a) => (this.fade = a),
         setApplauseScale: (s) => this.applauseScales.push(s),
         applyHalo: (i, v) => (this.halos[i] = v),
+        applyLook: (i, l) => (this.looks[i] = l),
       },
       cueCard: {
         showCard: (s) => (this.card = { mode: 'card', text: s.title }),
@@ -40,7 +46,14 @@ export class FakeScene {
       edgeHint: { show: (s) => (this.edgeHint = s), hide: () => (this.edgeHint = null) },
       stageLine: { apply: (v) => (this.stageLine = v) },
       stageLineAudio: { playTimeUpTone: () => this.sfx.push('tone') },
-      sfx: { playTick: () => this.sfx.push('tick'), playApplause: () => this.sfx.push('applause') },
+      sfx: {
+        playTick: () => this.sfx.push('tick'),
+        playApplause: (v) => {
+          this.sfx.push('applause');
+          this.applauseVolume = v ?? null;
+        },
+      },
+      roomMeter: { apply: (m) => (this.meter = m), setVisible: (v) => (this.meterVisible = v) },
     };
   }
 }

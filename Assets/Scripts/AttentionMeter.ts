@@ -27,9 +27,10 @@ export interface HaloView {
  * old cyan-white (0.85, 0.97, 1.0) washed out to a pale disc on the additive display, so the lit
  * end keeps red low. Not black, per Spectacles UI guidance.
  */
-export const HALO_DIM: readonly [number, number, number] = [0.3, 0.4, 0.58];
+export const HALO_DIM: readonly [number, number, number] = [0.3, 0.45, 0.92];
 export const HALO_BRIGHT: readonly [number, number, number] = [0.18, 0.86, 1.0];
-export const HALO_MIN_ALPHA = 0.15;
+/** Game pass: 0.15 -> 0.3 so an unwatched halo is still a visible blue ring, not grey-on-grey. */
+export const HALO_MIN_ALPHA = 0.3;
 export const HALO_MAX_SCALE = 1.05;
 
 export type AttentionTunables = Pick<Tunables, 'fillSeconds' | 'drainSeconds'>;
@@ -81,14 +82,15 @@ export class AttentionMeter {
   }
 }
 
-export function haloVisualFor(attention: number): HaloVisual {
+/** `burstAlpha` (0..1) comes from the engagement perk-up burst (core/AudienceLook.ts). */
+export function haloVisualFor(attention: number, burstAlpha = 0): HaloVisual {
   const a = clamp01(attention);
   return {
     color: [
       lerp(HALO_DIM[0], HALO_BRIGHT[0], a),
       lerp(HALO_DIM[1], HALO_BRIGHT[1], a),
       lerp(HALO_DIM[2], HALO_BRIGHT[2], a),
-      lerp(HALO_MIN_ALPHA, 1, a),
+      Math.min(1, lerp(HALO_MIN_ALPHA, 1, a) + burstAlpha),
     ],
     scale: lerp(1, HALO_MAX_SCALE, a),
   };

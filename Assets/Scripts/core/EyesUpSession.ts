@@ -6,7 +6,7 @@
  * view adapters that touch SceneObjects. Tests and the integration test drive it directly with a
  * ScriptedGazeProvider and fake views.
  */
-import { AttentionMeter, HaloView } from '../AttentionMeter';
+import { AttentionMeter, HaloView, haloVisualFor } from '../AttentionMeter';
 import { CardEvent, CueCardController, CueCardView } from '../CueCardController';
 import { DEFAULT_DECK_ID, getDeck } from '../DeckData';
 import { GazeProvider } from '../GazeProvider';
@@ -16,6 +16,9 @@ import { SessionStats, StatsSnapshot } from '../SessionStats';
 import { StageLayout, computeStageLayout } from '../StagePlacer';
 import { StageLine, StageLineAudio, StageLineEvent, StageLineView } from '../StageLine';
 import { AppAction, AppStateMachine, Phase } from './AppStateMachine';
+import { AudienceLook, audienceLook } from './AudienceLook';
+import { EngagementModel } from './Engagement';
+import { GameResult, MeterTone, applauseAmplitude, applauseVolume, gameResult, meterTone } from './GameScore';
 import { PillRect, uprightPillRect } from './PillHit';
 import { Tunables, ZONES, Zone, makeTunables, zoneOf } from './Tunables';
 import { Vec3Like, add, scale, sub } from './math';
@@ -42,11 +45,27 @@ export interface AudienceView extends HaloView {
   setFade(alpha: number): void;
   /** Applause pulse scale (0.95..1.05) during Finishing, 1 otherwise. */
   setApplauseScale(scale: number): void;
+  /** Game layer: slump / dim / phone glow / perk-up burst for member `i` (optional, Lens side only). */
+  applyLook?(index: number, look: AudienceLook): void;
 }
 
 export interface SfxView {
   playTick(): void;
-  playApplause(): void;
+  /** `volume` 0.3..1 scales with the attention score (game layer). */
+  playApplause(volume?: number): void;
+}
+
+/** Game layer: the glanceable room attention meter (0..1 level, tone picks the colour). */
+export interface RoomMeterVisual {
+  level: number;
+  tone: MeterTone;
+  /** Whole percent, e.g. 86. */
+  percent: number;
+}
+
+export interface RoomMeterView {
+  apply(visual: RoomMeterVisual): void;
+  setVisible(visible: boolean): void;
 }
 
 export interface SessionViews {
@@ -57,6 +76,7 @@ export interface SessionViews {
   stageLine?: StageLineView;
   stageLineAudio?: StageLineAudio;
   sfx?: SfxView;
+  roomMeter?: RoomMeterView;
 }
 
 export type SessionEvent =
@@ -64,7 +84,8 @@ export type SessionEvent =
   | CardEvent
   | NudgeEvent
   | StageLineEvent
-  | { type: 'finishPrompt' };
+  | { type: 'finishPrompt' }
+  | { type: 'perkUp'; index: number };
 
 export type SubState = 'Nudge' | 'CardExpanded' | 'TimeUp';
 
@@ -73,6 +94,7 @@ export class EyesUpSession {
   private readonly sm = new AppStateMachine();
   private readonly tracker: GazeTracker;
   private readonly attention: AttentionMeter;
+  private readonly engagement: EngagementModel;
   private readonly stats = new SessionStats();
   private readonly nudge: NudgeController;
   private readonly card: CueCardController;
@@ -85,6 +107,9 @@ export class EyesUpSession {
   private _elapsed = 0;
   private finishPrompted = false;
   private _summary: StatsSnapshot | null = null;
+  private _game: GameResult | null = null;
+  /** Session memory only: the best finished run since this Lens started. */
+  private best: { score: number; grade: GameResult['grade'] } | null = null;
 
   constructor(
     private readonly gaze: GazeProvider,
@@ -94,6 +119,7 @@ export class EyesUpSession {
     this.t = makeTunables(tunables);
     this.tracker = new GazeTracker(this.t);
     this.attention = new AttentionMeter(this.t);
+    this.engagement = new EngagementModel(this.t);
     this.nudge = new NudgeController(this.t, views.nudgeAudio, views.edgeHint);
     this.card = new CueCardController(this.t, views.cueCard);
     this.line = new StageLine(views.stageLine, views.stageLineAudio);
@@ -124,6 +150,21 @@ export class EyesUpSession {
 
   get attentionValues(): readonly number[] {
     return this.attention.attention;
+  }
+
+  /** Per-member engagement 0..1 (game layer). */
+  get engagementValues(): readonly number[] {
+    return this.engagement.engagement;
+  }
+
+  /** Mean engagement of the room now, 0..1 (the room attention meter). */
+  get roomAttention(): number {
+    return this.engagement.room;
+  }
+
+  /** Score / grade of the finished run (null until Finish). */
+  get game(): GameResult | null {
+    return this._game;
   }
 
   get cardMode() {
@@ -246,12 +287,14 @@ export class EyesUpSession {
   finish(): boolean {
     if (!this.sm.can('finish')) return false;
     this._summary = this.stats.snapshot();
+    this._game = gameResult(this._summary.balanceScore, this.engagement.roomAverage, this.best);
+    if (!this.best || this._game.score > this.best.score) this.best = { score: this._game.score, grade: this._game.grade };
     const cancelled = this.nudge.cancel();
     if (cancelled) this.emit(cancelled);
     this.card.hide();
     this.tracker.setPillTarget(null);
     this.phaseTime = 0;
-    this.views.sfx?.playApplause();
+    this.views.sfx?.playApplause(applauseVolume(this._game.score));
     return this.sm.dispatch('finish');
   }
 
@@ -269,7 +312,9 @@ export class EyesUpSession {
         this.rehearsalFrame(dt);
         break;
       case 'Finishing':
-        this.views.audience?.setApplauseScale(applauseScale(this.phaseTime, this.t.applauseSeconds));
+        this.views.audience?.setApplauseScale(
+          applauseScale(this.phaseTime, this.t.applauseSeconds, applauseAmplitude(this._game?.score ?? 50)),
+        );
         if (this.phaseTime >= this.t.applauseSeconds - 1e-9) {
           this.views.audience?.setApplauseScale(1);
           this.phaseTime = 0;
@@ -294,12 +339,16 @@ export class EyesUpSession {
     if (cancelled) this.emit(cancelled);
     this.nudge.reset();
     this._summary = null;
+    this._game = null;
+    this.engagement.reset(n);
     this.phaseTime = 0;
     this.views.audience?.place(this._layout, n);
     this.views.audience?.setVisible(true);
     this.views.audience?.setFade(0);
     this.views.audience?.setApplauseScale(1);
     this.attention.applyTo(this.views.audience ?? NO_HALO);
+    this.applyGame();
+    this.views.roomMeter?.setVisible(true);
     return this.sm.dispatch(action);
   }
 
@@ -320,7 +369,8 @@ export class EyesUpSession {
     const frame = this.tracker.update(dt, this.gaze);
 
     this.attention.update(dt, frame.looking);
-    if (this.views.audience) this.attention.applyTo(this.views.audience);
+    for (const index of this.engagement.update(dt, frame.looking)) this.emit({ type: 'perkUp', index });
+    this.applyGame();
     this.stats.update(dt, frame.gazeZone);
 
     const origin = this.gaze.origin;
@@ -355,6 +405,23 @@ export class EyesUpSession {
     }
   }
 
+  /** Push halo, silhouette look and the room meter to the views. */
+  private applyGame(): void {
+    const view = this.views.audience;
+    if (view) {
+      const att = this.attention.attention;
+      const eng = this.engagement.engagement;
+      const burst = this.engagement.burst;
+      for (let i = 0; i < att.length; i++) {
+        const look = audienceLook(eng[i], burst[i]);
+        view.applyHalo(i, haloVisualFor(att[i], look.haloBurstAlpha));
+        view.applyLook?.(i, look);
+      }
+    }
+    const level = this.engagement.room;
+    this.views.roomMeter?.apply({ level, tone: meterTone(level), percent: Math.round(100 * level) });
+  }
+
   private currentPillRect(layout: StageLayout): PillRect | null {
     const view = this.views.cueCard;
     if (view && view.pillRect) return view.pillRect();
@@ -383,8 +450,8 @@ function zoneCenter(points: readonly Vec3Like[], zone: Zone): Vec3Like {
   return n > 0 ? scale(sum, 1 / n) : sum;
 }
 
-/** Applause pulse: scale 0.95 <-> 1.05, three times over `duration` (plan S3). */
-export function applauseScale(t: number, duration: number): number {
+/** Applause pulse: scale 1 ± amplitude (0.05 = plan S3; the game layer scales it 0.02 to 0.09 with the score), three times over `duration` (plan S3). */
+export function applauseScale(t: number, duration: number, amplitude = 0.05): number {
   if (t <= 0 || t >= duration) return 1;
-  return 1 + 0.05 * Math.sin((2 * Math.PI * 3 * t) / duration);
+  return 1 + amplitude * Math.sin((2 * Math.PI * 3 * t) / duration);
 }

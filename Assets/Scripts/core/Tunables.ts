@@ -30,6 +30,17 @@ export interface Tunables {
   /** design: gaze is "in a zone" if the nearest audience member is within this angle. */
   zoneAngleDeg: number;
 
+  /** design (game layer): an unseen member keeps full engagement this long before it starts to slip. */
+  engageGraceSeconds: number;
+  /** design: once slipping, engagement falls from 1 to 0 in this many seconds without a look. */
+  disengageSeconds: number;
+  /** design: a look recovers engagement from 0 to 1 in this many seconds. */
+  recoverSeconds: number;
+  /** design: a member below this engagement bursts (perks up) the moment they are looked at. */
+  perkUpBelow: number;
+  /** design: the cyan perk-up burst lasts this long. */
+  burstSeconds: number;
+
   /** plan: stage distance in front of the head (2.5 m). */
   stageDistanceCm: number;
   /** plan: floor is this far below the head (머리 -160 cm). */
@@ -72,6 +83,11 @@ export const DEFAULT_TUNABLES: Readonly<Tunables> = Object.freeze({
   dwellSeconds: 1,
   pillMarginDeg: 1.5,
   zoneAngleDeg: 15,
+  engageGraceSeconds: 5,
+  disengageSeconds: 20,
+  recoverSeconds: 1.5,
+  perkUpBelow: 0.7,
+  burstSeconds: 0.7,
 
   stageDistanceCm: 250,
   floorOffsetCm: 160,
