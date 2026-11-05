@@ -11,7 +11,7 @@
 import { AudienceLook, PHONE_Y_CM } from './core/AudienceLook';
 import { FADE_ROWS, SHADOW_LAYERS, bodyFadePixels, headDepthScale, shadowBars } from './core/BodyFade';
 import { DEFAULT_TUNABLES } from './core/Tunables';
-import { addCircleRing, addSurface, addText, child } from './EyesUpUI';
+import { addCircleRing, addDot, addSurface, addText, child } from './EyesUpUI';
 
 /** Cycle 6 (D2): the soft shadow sits where the body has faded out, just above the bottom of the preview frame (about 57 cm above the feet). */
 const SHADOW_Y = 74;
@@ -128,7 +128,10 @@ export class AudienceRig {
       const coneVisuals: RenderMeshVisual[] = [];
       for (let k = 0; k < CONE_STEPS; k++) {
         const w = PHONE_W + 7 * (k + 1);
-        coneVisuals.push(addSurface(child(cone, `Cone${k}`, new vec3(0, 7 + 9 * k, -0.2 - 0.05 * k)), w, 12, 0, clear, null));
+        // Design cycle 3 (F1): nested ellipses instead of stacked rectangles, so the glow has no axis-aligned edges.
+        const step = child(cone, `Cone${k}`, new vec3(0, 7 + 9 * k, -0.2 - 0.05 * k));
+        step.getTransform().setLocalScale(new vec3(1, (12 + 4 * k) / w, 1));
+        coneVisuals.push(addDot(step, 'Glow', w / 2, new vec3(0, 0, 0), clear));
       }
       cone.getTransform().setLocalRotation(quat.angleAxis(-Math.PI / 10, new vec3(1, 0, 0)));
       phoneRig.enabled = false;

@@ -107,14 +107,18 @@ const ICONS: Record<IconName, Texture> = {
  * stroke at 35 %, continuous rounded corners. Setup, cue card, pill, podium, Summary and the room
  * meter pill all use it. The previous blue-grey fill washed out to lavender on the additive display.
  */
-export const PANEL_FILL = new vec4(0x07 / 255, 0x0d / 255, 0x22 / 255, 0.88);
+export const PANEL_FILL = new vec4(0x07 / 255, 0x0d / 255, 0x22 / 255, 0.9);
 export const PANEL_STROKE = new vec4(0x9c / 255, 0xc4 / 255, 1, 0.55);
 export const PANEL_RADIUS_CM = 1.6;
 export const PANEL_STROKE_CM = 0.24;
-/** Cycle 2 (E1): the 35 % black dimmer behind every panel and the audience (Preview only; additive glasses draw nothing for black). */
-export const DIMMER_COLOR = new vec4(0, 0, 0, 0.35);
+/**
+ * Cycle 3 (F1): fixed draw order. The audience (bodies, heads, halos, phones, shadows) draws first at AUDIENCE_RENDER_ORDER, every panel
+ * backdrop next at PANEL_BACKDROP_ORDER, then buttons / strokes / text on top. There is no full-screen dimmer any more: each panel is its
+ * own 90 % rounded plate, so no axis-aligned lighter / darker patches sort against the room.
+ */
+export const AUDIENCE_RENDER_ORDER = -20;
+export const PANEL_BACKDROP_ORDER = -10;
 const BUTTON_STROKE_CM = 0.18;
-const DIMMER_MARGIN_CM = 12;
 const SURFACE_FILL = PANEL_FILL;
 const SURFACE_BORDER = PANEL_STROKE;
 /** Button faces: brighter blue-grey than the surface, with a light frame. */
@@ -379,9 +383,9 @@ export function makePanel(host: SceneObject, widthCm: number, heightCm: number, 
   const backPlate = root.createComponent(BackPlate.getTypeName()) as BackPlate;
   backPlate.style = 'dark';
   backPlate.size = new vec2(widthCm, heightCm);
-  const dim = addRoundedSurface(child(root, 'Dimmer', new vec3(0, 0, -0.4)), widthCm + 2 * DIMMER_MARGIN_CM, heightCm + 2 * DIMMER_MARGIN_CM, 0, DIMMER_COLOR, null, PANEL_RADIUS_CM + DIMMER_MARGIN_CM);
-  dim.setRenderOrder(-5);
-  addRoundedSurface(root, widthCm, heightCm, 0, SURFACE_FILL, SURFACE_BORDER, PANEL_RADIUS_CM); // drawn before Content
+  const backdrop = addRoundedSurface(root, widthCm, heightCm, 0, SURFACE_FILL, SURFACE_BORDER, PANEL_RADIUS_CM); // drawn before Content
+  backdrop.setRenderOrder(PANEL_BACKDROP_ORDER);
+  (root.getChild(root.getChildrenCount() - 1).getComponent('Component.RenderMeshVisual') as RenderMeshVisual | null)?.setRenderOrder(PANEL_BACKDROP_ORDER + 1); // its stroke ring
 
   const content = child(root, 'Content', new vec3(0, 0, CONTENT_Z));
   const flex = content.createComponent(FlexLayout.getTypeName()) as FlexLayout;

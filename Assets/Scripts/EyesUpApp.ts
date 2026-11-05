@@ -27,15 +27,15 @@ import { RoomMeter } from './RoomMeter';
 import { SetupPanel } from './SetupPanel';
 import { StageLayout } from './StagePlacer';
 import { SummaryPanel } from './SummaryPanel';
-import { AudienceLook } from './core/AudienceLook';
+import { AudienceLook, HEAD_UP_Y } from './core/AudienceLook';
 import { AudienceView, EyesUpSession, SessionViews } from './core/EyesUpSession';
 import { SUMMARY_CENTER_Y_CM, SUMMARY_DISTANCE_CM } from './core/Framing';
 import { PillRect } from './core/PillHit';
 import { ChevronBox, PlaneRect, placeChevron } from './core/ChevronPlacement';
 import { podiumState } from './core/PodiumModel';
 import { Vec3Like } from './core/math';
-import { ACCENT_CYAN, DIMMER_COLOR, PANEL_FILL, addCircleRing, PANEL_STROKE, TEXT_LABEL, TEXT_PRIMARY, TEXT_SECONDARY, addDot, addIcon, addRoundedSurface, addSurface, child, faceTowards } from './EyesUpUI';
-import { METER_HEIGHT_CM, METER_WIDTH_CM } from './RoomMeter';
+import { ACCENT_CYAN, AUDIENCE_RENDER_ORDER, PANEL_FILL, addCircleRing, PANEL_STROKE, TEXT_LABEL, TEXT_PRIMARY, TEXT_SECONDARY, addDot, addIcon, addRoundedSurface, addSurface, child, faceTowards } from './EyesUpUI';
+import { METER_ABOVE_CM, METER_CAPSULE_H_CM, METER_WIDTH_CM } from './RoomMeter';
 
 /**
  * Pass 5 nudge chevron (artifact S3): a 6 × 6 cm amber double chevron ("‹‹" / "››", Material
@@ -133,26 +133,22 @@ const PILL_TEXT_SIZE = 290;
  * The room meter floats between the heads and the card, 9.5 cm above the card anchor (its bottom edge is 3 cm above the lit halo's top edge).
  * Cycle 1 (D3): the card's bottom edge is 2.6 cm above the meter's top edge (the old gap was about 1 cm after the card got padding).
  */
-const METER_BELOW_ANCHOR_CM = -9.5;
-const CARD_LIFT_CM = 19;
 /**
- * Cycle 3 (S4): a faint dark rounded plate stands 40 cm behind the audience so the busy wall frames do not sit behind heads and bodies.
- * It is an alpha-blended plate for the Preview; on an additive display a dark plate adds nothing (black is clear), so it costs nothing there.
+ * Cycle 3 (F8): the capsule floats 4 cm above the tallest (lit) head top; the card keeps the old 9.5 cm centre-to-centre offset plus the
+ * label row that now sits above the capsule (2.6 cm gap above the label).
  */
-const SCRIM_BEHIND_CM = 40;
-const SCRIM_PAD_CM = 40;
-const SCRIM_HEIGHT_CM = 205;
-const SCRIM_CENTER_ABOVE_FLOOR_CM = 78;
-const SCRIM_CORNER_CM = 9;
-const SCRIM_COLOR = DIMMER_COLOR;
-/** Room meter extents about its centre (cm, local), from RoomMeter.ts: pill + gap + track, pill height. */
+const METER_ABOVE_HEAD_CM = 4;
+const METER_CARD_OFFSET_CM = 9.5 + (METER_ABOVE_CM - 3.3);
+/** Room meter extents about its centre (cm, local), from RoomMeter.ts: capsule width, capsule plus label row above it. */
 const METER_HALF_W_CM = METER_WIDTH_CM / 2;
-const METER_HALF_H_CM = METER_HEIGHT_CM / 2;
+const METER_HALF_H_CM = METER_ABOVE_CM;
 /** Footprint of a "zzz" marker in the member's space (cm), kept clear by the nudge chevron. */
 const ZZZ_HALF_W_CM = 11;
 const ZZZ_HALF_H_CM = 6;
 /** Lit halo ring radius around a head, cm (rest scale 36 cm, diameter). */
 const LIT_HALO_RADIUS_CM = 22;
+/** Top of the lit halo above the floor: resting head height plus the halo radius. */
+const LIT_HEAD_TOP_CM = HEAD_UP_Y + LIT_HALO_RADIUS_CM;
 /** Measured in Preview: ≈ 0.0124 cm per size unit per glyph for Inter titles (size 200 → 2.5 cm). */
 const PILL_GLYPH_CM = 0.0124 * PILL_TEXT_SIZE;
 
@@ -197,7 +193,6 @@ export class EyesUpApp extends BaseScriptComponent {
   private views!: SessionViews;
   private rig: AudienceRig | null = null;
   private meter: RoomMeter | null = null;
-  private scrim: SceneObject | null = null;
   private cardBg: SceneObject | null = null;
   private pillBg: SceneObject | null = null;
   /** Width (cm, before world scale) of the current pill backing. */
@@ -249,8 +244,9 @@ export class EyesUpApp extends BaseScriptComponent {
     if (this.stageLineVisual) this.stageLineVisual.mainMaterial = this.stageLineVisual.mainMaterial.clone();
 
     this.rig = new AudienceRig(this.audience);
+    // Cycle 3 (F1): every audience layer draws before (behind) every panel backdrop.
+    this.audience.forEach((a) => this.orderMeshes(a, AUDIENCE_RENDER_ORDER));
     this.meter = new RoomMeter();
-    this.scrim = this.buildScrim();
 
     this.cameraGaze = new CameraGazeProvider(this.camera.getTransform());
     this.gaze = new SwitchableGazeProvider(this.cameraGaze);
@@ -712,7 +708,6 @@ export class EyesUpApp extends BaseScriptComponent {
     const onStage = phase === 'Placing' || phase === 'Rehearsal' || phase === 'Finishing';
     this.stageLine.enabled = onStage;
     this.meter?.setVisible(onStage);
-    if (this.scrim) this.scrim.enabled = onStage;
     if (!onStage) this.cueCard.enabled = false;
     if (phase === 'Summary') {
       // Pass 3: the Summary panel is translucent (and the display additive), so lit halos behind it
@@ -727,41 +722,6 @@ export class EyesUpApp extends BaseScriptComponent {
     }
   }
 
-  /** Cycle 3 (S4): a rounded, faint dark plate (three non-overlapping quads, so the alpha does not double up) behind the audience. */
-  private buildScrim(): SceneObject {
-    const root = global.scene.createSceneObject('AudienceScrim');
-    root.enabled = false;
-    return root;
-  }
-
-  private placeScrim(layout: StageLayout, count: number, head: vec3): void {
-    const root = this.scrim;
-    if (!root) return;
-    while (root.getChildrenCount() > 0) root.getChild(0).destroy();
-    const first = layout.seats[0];
-    const last = layout.seats[count - 1];
-    const span = Math.hypot(last.x - first.x, last.z - first.z);
-    const w = span + 80 + 2 * SCRIM_PAD_CM;
-    const h = SCRIM_HEIGHT_CM;
-    const c = SCRIM_CORNER_CM;
-    const parts: [string, number, number, number][] = [
-      ['Mid', 0, w - 2 * c, h],
-      ['Left', -(w - c) / 2, c, h - 2 * c],
-      ['Right', (w - c) / 2, c, h - 2 * c],
-    ];
-    parts.forEach(([name, x, pw, ph]) => {
-      const v = addSurface(child(root, name, new vec3(x, 0, 0)), pw, ph, 0, SCRIM_COLOR, null);
-      v.setRenderOrder(-5);
-    });
-    const floorY = layout.stageCenter.y;
-    const fx = layout.facing.x;
-    const fz = layout.facing.z;
-    root.getTransform().setWorldPosition(
-      new vec3(layout.stageCenter.x + fx * SCRIM_BEHIND_CM, floorY + SCRIM_CENTER_ABOVE_FLOOR_CM, layout.stageCenter.z + fz * SCRIM_BEHIND_CM),
-    );
-    faceTowards(root, head, true);
-  }
-
   private hideStage(): void {
     this.audience.forEach((a) => (a.enabled = false));
     this.cueCard.enabled = false;
@@ -769,7 +729,6 @@ export class EyesUpApp extends BaseScriptComponent {
     this.edgeHintRight.enabled = false;
     this.stageLine.enabled = false;
     this.meter?.setVisible(false);
-    if (this.scrim) this.scrim.enabled = false;
     this.summaryPanel.show(null);
   }
 
@@ -808,14 +767,11 @@ export class EyesUpApp extends BaseScriptComponent {
             baseScale[i] = baseScale[i] ?? so.getTransform().getLocalScale().x;
           }
         });
-        setPos(this.cueCard, { x: layout.cardAnchor.x, y: layout.cardAnchor.y + CARD_LIFT_CM, z: layout.cardAnchor.z });
-        this.meter?.placeAt(
-          new vec3(layout.cardAnchor.x, layout.cardAnchor.y - METER_BELOW_ANCHOR_CM, layout.cardAnchor.z),
-          head,
-        );
+        const meterY = layout.stageCenter.y + LIT_HEAD_TOP_CM + METER_ABOVE_HEAD_CM + METER_CAPSULE_H_CM / 2;
+        setPos(this.cueCard, { x: layout.cardAnchor.x, y: meterY + METER_CARD_OFFSET_CM, z: layout.cardAnchor.z });
+        this.meter?.placeAt(new vec3(layout.cardAnchor.x, meterY, layout.cardAnchor.z), head);
         setPos(this.stageLine, layout.stageCenter);
         faceTowards(this.stageLine, head, true);
-        this.placeScrim(layout, count, head);
       },
       setVisible: (v) => this.audience.forEach((so, i) => (so.enabled = v && i < (this.session ? this.session.config.audienceCount : 0))),
       setFade: (a) => {

@@ -19,10 +19,10 @@ Rehearse your talk with your eyes on the room, not on your notes.
 **Learn:** spread your eye contact across the whole room. **For:** students, founders, anyone with a talk or an interview coming up.
 
 ![Ignored members sink, tilt, lose colour, light a phone and show zzz; the member you look at stays lit](screenshots/10-engagement-slump.png)
-*Neglect: two ignored members slump and light a phone, the room meter falls to 43 %.*
+*Neglect: two ignored members slump and light a phone, the room meter falls to 40 %.*
 
 ![Looking at a slumped member lifts the head with a cyan ring pulse and the meter climbs](screenshots/11-perk-up.png)
-*Eyes up: look at one and it perks up with a cyan ring, the meter climbs to 81 %.*
+*Eyes up: look at one and it perks up with a cyan ring, the meter climbs to 89 %.*
 
 ![Why only on glasses: plan from above next to a Preview frame, three design rules](screenshots/14-glasses-scale.png)
 *Why glasses: the room at real scale, in your view.*
@@ -47,7 +47,7 @@ Eyes Up is a presentation rehearsal coach for Spectacles. Setup is three pinches
 - **Nudge:** ignore one side for 8 seconds and a soft chime plays from that side while an amber double chevron appears at the edge of your view.
 - **Notes:** your next talking point floats above the audience for 4 seconds, then shrinks to a three-word tag. Look at it for a second and it opens again.
 - **Podium:** look down like a wristwatch for Prev, Next, Finish, a section counter and the talk timer.
-- **Audience and room:** ignored members slump (head sinks and tilts, colour mutes, "zzz", phone glow); look at them and they perk up with a cyan ring burst. A room meter shows how engaged everyone is: a white tick at 50 %, amber below 60 % and cyan from 60 %.
+- **Audience and room:** ignored members slump (head sinks and tilts, colour mutes, "zzz", phone glow); look at them and they perk up with a cyan ring burst. A room meter shows how engaged everyone is: one capsule with a tick and a "target" caption at 70 %: cyan at 70 % or above, amber below, coral below 40 %.
 - **Summary:** applause that scales with your score, then an S / A / B / C grade, left / center / right split, gaze timeline, longest look-away and one tip. Again keeps your settings and shows your best earlier score from this session.
 
 ### Why only on glasses
@@ -65,7 +65,7 @@ Design rules: **placement** (stage 2.5 m ahead, three members 42 cm apart so the
 Every caption describes what the image shows in the Interactive Preview (preview only, gaze driven by the LEAF harness, not tested on a device). Captured from one fixed preview camera pose toward the plain curtain wall, so the room reads against a quiet background.
 
 1. `devpost/screenshots/00-hero-eyes-up.png`: Eyes Up. Neglect (two members slumped with "zzz", room meter amber) beside the perk-up (cyan ring burst, meter cyan), with the Learn / For line.
-2. `devpost/screenshots/10b-slump-to-perk-up.png`: One image, two moments: ignored members sink, tilt, drain colour and light a phone (meter 43 %); look at one and it perks up with a cyan ring (meter 81 %).
+2. `devpost/screenshots/10b-slump-to-perk-up.png`: One image, two moments: ignored members sink, tilt, drain colour and light a phone (meter 40 %); look at one and it perks up with a cyan ring (meter 89 %).
 3. `devpost/screenshots/14-glasses-scale.png`: Why only on glasses: plan seen from above (you, 2.5 m arc, three members 42 cm apart, your view cone) beside a Preview frame, with three rules (placement, targets of 3 cm or larger, show only when needed) and where each is visible.
 4. `devpost/screenshots/06-summary.png`: The payoff: a large grade, attention score, room and balance, zone split, gaze timeline with the longest look-away, one tip, and Again as the single filled button (`06b-summary-grade-zones.png` is the close crop).
 5. `devpost/screenshots/12-run-compare.png`: The learning loop: Run 1 (C 39) beside Run 2 (A 84) with each tip. Scripted gaze, illustrative, not a user study.
@@ -75,7 +75,7 @@ Every caption describes what the image shows in the Interactive Preview (preview
 
 Separate stills of the two moments in image 2 are `10-engagement-slump.png` and `11-perk-up.png`.
 
-**More screenshots** (text links only): `devpost/screenshots/01-setup-panel.png` (Setup: talk length, audience size with 3 selected, deck, Start rehearsal), `02-audience-lit-halo.png` (the member you face lights up in cyan within about a second), `04-cue-card.png` (the cue card, then the room meter 3 cm below it), `05-podium.png` (Prev, Next, Finish, section counter and talk timer).
+**More screenshots** (text links only): `devpost/screenshots/01-setup-panel.png` (Setup: talk length, audience size with 3 selected, deck, Start rehearsal), `02-audience-lit-halo.png` (the member you face lights up in cyan within about a second), `04-cue-card.png` (the cue card, then the room meter just below it), `05-podium.png` (Prev, Next, Finish, section counter and talk timer).
 
 ## The learning loop: Run 1 vs Run 2
 
