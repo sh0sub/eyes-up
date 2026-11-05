@@ -271,3 +271,13 @@ Mockup deviations (artifact S1 to S5), kept because they read better on glasses:
 - S4 Card: 110 x 28.5 cm (artifact 50 x 18, cycle 5: 100 x 26), left-aligned with accent bar, counter and dots (artifact: centred title and bullets).
 - S5 Summary: rounded navy tiles and plate; Again leads with Heading, other buttons Body (artifact: one size).
 - Room meter has no outer plate; "Room NN%" sits in its own capsule left of the track (cycle 4 note: no plate can be darker than the wall in the Preview).
+
+## Design cycle 2 (2026-11-05): luminous dark material (E1)
+
+Verified in the Interactive Preview, Interactive scene "Evening Room" (the darkest of the six; "Sunlit Room" washed every panel to grey-lavender). `npm run check` 183/183, 10 of 10 LEAF PASSED.
+
+| id | screen | problem | change | status | evidence |
+|---|---|---|---|---|---|
+| E1 | all panels, buttons | panels read grey-lavender over a beige room, additive rule not met | `PANEL_FILL` #070D22 at 88 %, `PANEL_STROKE` #9CC4FF at 55 %, 0.24 cm (about 2 px). Idle button #101A3A with #5E86D6 0.18 cm stroke; selected segment #12324F with #5FD4FF 0.24 cm stroke and a 40 % cyan glow ring; 35 % black dimmer (`DIMMER_COLOR`) behind every panel (12 cm margin, `makePanel`) and behind the audience (the existing scrim, now pure black) | match, with 2 deviations | 01, 02, 03, 04, 05, 06, 10, 11 retaken |
+
+Deviations: (1) the dimmer is a plate behind each panel and the audience, not one full-screen plane, so it never covers the room outside the UI. (2) The Preview draws these quads like an additive display, so a dark fill only shows as much as the room behind it is dark; the real gain comes from the Evening Room capture. On glasses black is clear anyway, so the dimmer costs nothing there. The Primary / amber / mint action buttons keep their cycle-1 faces. Stills 12 (run compare) and 13 (CLAD / MCP) still show the earlier look.

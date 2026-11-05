@@ -107,17 +107,26 @@ const ICONS: Record<IconName, Texture> = {
  * stroke at 35 %, continuous rounded corners. Setup, cue card, pill, podium, Summary and the room
  * meter pill all use it. The previous blue-grey fill washed out to lavender on the additive display.
  */
-export const PANEL_FILL = new vec4(0x0b / 255, 0x12 / 255, 0x30 / 255, 0.78);
-export const PANEL_STROKE = new vec4(0x7f / 255, 0xb0 / 255, 1, 0.35);
+export const PANEL_FILL = new vec4(0x07 / 255, 0x0d / 255, 0x22 / 255, 0.88);
+export const PANEL_STROKE = new vec4(0x9c / 255, 0xc4 / 255, 1, 0.55);
 export const PANEL_RADIUS_CM = 1.6;
-export const PANEL_STROKE_CM = 0.18;
+export const PANEL_STROKE_CM = 0.24;
+/** Cycle 2 (E1): the 35 % black dimmer behind every panel and the audience (Preview only; additive glasses draw nothing for black). */
+export const DIMMER_COLOR = new vec4(0, 0, 0, 0.35);
+const BUTTON_STROKE_CM = 0.18;
+const DIMMER_MARGIN_CM = 12;
 const SURFACE_FILL = PANEL_FILL;
 const SURFACE_BORDER = PANEL_STROKE;
 /** Button faces: brighter blue-grey than the surface, with a light frame. */
-const BUTTON_FACE = new vec4(0.12, 0.2, 0.44, 0.95);
+const BUTTON_FACE = new vec4(0x10 / 255, 0x1a / 255, 0x3a / 255, 0.95);
 const BUTTON_FACE_HOVER = new vec4(0.2, 0.32, 0.62, 1);
 const BUTTON_FACE_PRESS = new vec4(0.3, 0.46, 0.82, 1);
-const BUTTON_BORDER = new vec4(0.5, 0.69, 1, 0.85);
+const BUTTON_BORDER = new vec4(0x5e / 255, 0x86 / 255, 0xd6 / 255, 1);
+/** Cycle 2 (E1): selected segment = deep teal face, cyan 2 px stroke, cyan glow. */
+const SELECTED_FACE = new vec4(0x12 / 255, 0x32 / 255, 0x4f / 255, 0.97);
+const SELECTED_HOVER = new vec4(0.1, 0.27, 0.42, 1);
+const SELECTED_PRESS = new vec4(0.14, 0.38, 0.56, 1);
+const SELECTED_BORDER = new vec4(0x5f / 255, 0xd4 / 255, 1, 1);
 /** Primary action (Start / Finish / Again): cyan-teal face. */
 const PRIMARY_FACE = new vec4(0.18, 0.5, 0.62, 0.95);
 const PRIMARY_FACE_HOVER = new vec4(0.25, 0.64, 0.78, 1);
@@ -284,10 +293,10 @@ const MINT_BORDER = new vec4(0.5, 1.0, 0.8, 0.95);
 
 type FaceSet = [vec4, vec4, vec4, vec4];
 /** Cycle 5 (R1): secondary buttons are outlines (dark face, light frame) so the one filled cyan button is the obvious next step. */
-const OUTLINE_FACE = new vec4(0.04, 0.07, 0.19, 0.9);
+const OUTLINE_FACE = new vec4(0x10 / 255, 0x1a / 255, 0x3a / 255, 0.92);
 const OUTLINE_FACE_HOVER = new vec4(0.14, 0.22, 0.46, 1);
 const OUTLINE_FACE_PRESS = new vec4(0.24, 0.36, 0.7, 1);
-const OUTLINE_BORDER = new vec4(0.5, 0.69, 1, 0.9);
+const OUTLINE_BORDER = new vec4(0x5e / 255, 0x86 / 255, 0xd6 / 255, 1);
 const FACES: Record<'normal' | 'primary' | 'amber' | 'mint' | 'outline', FaceSet> = {
   outline: [OUTLINE_FACE, OUTLINE_FACE_HOVER, OUTLINE_FACE_PRESS, OUTLINE_BORDER],
   normal: [BUTTON_FACE, BUTTON_FACE_HOVER, BUTTON_FACE_PRESS, BUTTON_BORDER],
@@ -298,7 +307,7 @@ const FACES: Record<'normal' | 'primary' | 'amber' | 'mint' | 'outline', FaceSet
 
 const BUTTON_RADIUS_CM = 1.1;
 /** Selected segments get a soft cyan glow ring around the face (D1: "optional cyan glow on the active element"). */
-const GLOW_COLOR = new vec4(0.35, 0.9, 1.0, 0.3);
+const GLOW_COLOR = new vec4(0.37, 0.83, 1.0, 0.4);
 
 /** Themes a button's face; returns `setSelected` (cyan face + frame + glow, artifact S1 segments). */
 function themeButton(button: Button, so: SceneObject, w: number, h: number, kind: keyof typeof FACES): (selected: boolean) => void {
@@ -306,7 +315,7 @@ function themeButton(button: Button, so: SceneObject, w: number, h: number, kind
   const border = FACES[kind][3];
   const radius = Math.min(BUTTON_RADIUS_CM, h / 2);
   const surfaceRoot = child(so, 'Surface', new vec3(0, 0, 0.02));
-  const surface = addRoundedSurface(surfaceRoot, w, h, 0, face, border, radius);
+  const surface = addRoundedSurface(surfaceRoot, w, h, 0, face, border, radius, BUTTON_STROKE_CM);
   const frame = surfaceRoot.getChild(1).getComponent('Component.RenderMeshVisual') as RenderMeshVisual;
   const glow = meshVisual(surfaceRoot, 'Glow', roundedRingMesh(w + 0.9, h + 0.9, radius + 0.45, 0.45), -0.02, GLOW_COLOR);
   glow.getSceneObject().enabled = false;
@@ -316,9 +325,10 @@ function themeButton(button: Button, so: SceneObject, w: number, h: number, kind
   button.onTriggerDown.add(() => set(press));
   button.onTriggerUp.add(() => set(hover));
   return (selected: boolean) => {
-    [face, hover, press] = FACES[selected ? 'primary' : kind];
+    if (selected) [face, hover, press] = [SELECTED_FACE, SELECTED_HOVER, SELECTED_PRESS];
+    else [face, hover, press] = FACES[kind];
     set(face);
-    frame.mainPass.baseColor = selected ? PRIMARY_BORDER : border;
+    frame.mainPass.baseColor = selected ? SELECTED_BORDER : border;
     glow.getSceneObject().enabled = selected;
   };
 }
@@ -369,6 +379,8 @@ export function makePanel(host: SceneObject, widthCm: number, heightCm: number, 
   const backPlate = root.createComponent(BackPlate.getTypeName()) as BackPlate;
   backPlate.style = 'dark';
   backPlate.size = new vec2(widthCm, heightCm);
+  const dim = addRoundedSurface(child(root, 'Dimmer', new vec3(0, 0, -0.4)), widthCm + 2 * DIMMER_MARGIN_CM, heightCm + 2 * DIMMER_MARGIN_CM, 0, DIMMER_COLOR, null, PANEL_RADIUS_CM + DIMMER_MARGIN_CM);
+  dim.setRenderOrder(-5);
   addRoundedSurface(root, widthCm, heightCm, 0, SURFACE_FILL, SURFACE_BORDER, PANEL_RADIUS_CM); // drawn before Content
 
   const content = child(root, 'Content', new vec3(0, 0, CONTENT_Z));

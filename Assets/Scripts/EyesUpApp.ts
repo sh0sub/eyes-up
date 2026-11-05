@@ -34,7 +34,7 @@ import { PillRect } from './core/PillHit';
 import { ChevronBox, PlaneRect, placeChevron } from './core/ChevronPlacement';
 import { podiumState } from './core/PodiumModel';
 import { Vec3Like } from './core/math';
-import { ACCENT_CYAN, PANEL_FILL, addCircleRing, PANEL_STROKE, TEXT_LABEL, TEXT_PRIMARY, TEXT_SECONDARY, addDot, addIcon, addRoundedSurface, addSurface, child, faceTowards } from './EyesUpUI';
+import { ACCENT_CYAN, DIMMER_COLOR, PANEL_FILL, addCircleRing, PANEL_STROKE, TEXT_LABEL, TEXT_PRIMARY, TEXT_SECONDARY, addDot, addIcon, addRoundedSurface, addSurface, child, faceTowards } from './EyesUpUI';
 import { METER_HEIGHT_CM, METER_WIDTH_CM } from './RoomMeter';
 
 /**
@@ -144,7 +144,7 @@ const SCRIM_PAD_CM = 40;
 const SCRIM_HEIGHT_CM = 205;
 const SCRIM_CENTER_ABOVE_FLOOR_CM = 78;
 const SCRIM_CORNER_CM = 9;
-const SCRIM_COLOR = new vec4(0.03, 0.05, 0.16, 0.35);
+const SCRIM_COLOR = DIMMER_COLOR;
 /** Room meter extents about its centre (cm, local), from RoomMeter.ts: pill + gap + track, pill height. */
 const METER_HALF_W_CM = METER_WIDTH_CM / 2;
 const METER_HALF_H_CM = METER_HEIGHT_CM / 2;
