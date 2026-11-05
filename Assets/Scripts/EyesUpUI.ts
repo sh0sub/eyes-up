@@ -119,6 +119,13 @@ export const PANEL_STROKE_CM = 0.24;
 export const AUDIENCE_RENDER_ORDER = -20;
 export const PANEL_BACKDROP_ORDER = -10;
 const BUTTON_STROKE_CM = 0.18;
+/**
+ * Cycle 4 (G5): the shared panel material's soft outer glow, a 1 cm cyan falloff at 20 % (three stepped bands: 20 / 12 / 5 %) just
+ * outside the stroke, so a panel reads as light on the additive display. Drawn after the audience, before the panel fill.
+ */
+export const PANEL_GLOW_CM = 1;
+const PANEL_GLOW_BANDS = [0.2, 0.12, 0.05];
+export const PANEL_GLOW_ORDER = PANEL_BACKDROP_ORDER - 1;
 const SURFACE_FILL = PANEL_FILL;
 const SURFACE_BORDER = PANEL_STROKE;
 /** Button faces: brighter blue-grey than the surface, with a light frame. */
@@ -266,6 +273,18 @@ export function addRoundedSurface(parent: SceneObject, w: number, h: number, z: 
   return f;
 }
 
+/** Cycle 4 (G5): the panel glow (concentric rounded bands around a w x h panel); `order` is the render order of every band. Returns the root. */
+export function addPanelGlow(parent: SceneObject, w: number, h: number, radius: number, z: number, order: number = PANEL_GLOW_ORDER): SceneObject {
+  const root = child(parent, 'Glow', new vec3(0, 0, z));
+  const band = PANEL_GLOW_CM / PANEL_GLOW_BANDS.length;
+  PANEL_GLOW_BANDS.forEach((a, k) => {
+    const grow = PANEL_GLOW_CM - k * band; // outer edge, in cm beyond the panel edge
+    const v = meshVisual(root, `Band${k}`, roundedRingMesh(w + 2 * grow, h + 2 * grow, radius + grow, band), 0, new vec4(0x5f / 255, 0xd4 / 255, 1, a));
+    v.setRenderOrder(order);
+  });
+  return root;
+}
+
 /** A ring (circle outline) of outer radius `radius` cm and `thickness` cm, centred on `parent`. */
 export function addCircleRing(parent: SceneObject, name: string, radius: number, thickness: number, z: number, color: vec4): RenderMeshVisual {
   return meshVisual(child(parent, name), 'Ring', roundedRingMesh(radius * 2, radius * 2, radius, thickness), z, color);
@@ -383,6 +402,7 @@ export function makePanel(host: SceneObject, widthCm: number, heightCm: number, 
   const backPlate = root.createComponent(BackPlate.getTypeName()) as BackPlate;
   backPlate.style = 'dark';
   backPlate.size = new vec2(widthCm, heightCm);
+  addPanelGlow(root, widthCm, heightCm, PANEL_RADIUS_CM, 0);
   const backdrop = addRoundedSurface(root, widthCm, heightCm, 0, SURFACE_FILL, SURFACE_BORDER, PANEL_RADIUS_CM); // drawn before Content
   backdrop.setRenderOrder(PANEL_BACKDROP_ORDER);
   (root.getChild(root.getChildrenCount() - 1).getComponent('Component.RenderMeshVisual') as RenderMeshVisual | null)?.setRenderOrder(PANEL_BACKDROP_ORDER + 1); // its stroke ring

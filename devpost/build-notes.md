@@ -963,3 +963,12 @@ Visual design only; logic untouched apart from the meter tone thresholds (cyan f
 - **F8.** `RoomMeter.ts` rewritten as one capsule with a 70 % tick and a "target" caption; `EyesUpApp.ts` places it 4 cm above the lit head top (`LIT_HEAD_TOP_CM`) on the audience centre line and keeps the cue card 9.5 cm above it as before.
 - **Captures.** Window recordings of `capture_game`, `capture_nudge_hold`, `capture_summary`, podium pass; all frames looked at. 00, 01 to 06, 06b, 09, 10, 10b, 11, 14 and walkthrough 01 to 08 refreshed (10b numbers corrected to 40 % / 89 %; `submission.md` captions updated). Screenshot 11 now uses a pre-peak burst frame.
 - **Known.** Podium and Summary panels still read as a lighter plate in the Preview (additive). Flat floor-shadow bars remain.
+
+## Design cycle 4 (2026-11-06): G5 and G9
+
+Visual design only; no logic changes. `npm run check`: 183 tests green. All 10 LEAF scenarios PASSED (`scripts/video/leaf-all.sh`). Preview only, not tested on a Spectacles device.
+
+- **G5.** `EyesUpUI.ts`: new `addPanelGlow` (1 cm cyan falloff, three bands at 20 / 12 / 5 %, render order -11) added behind the Setup, podium and Summary backdrops (`makePanel`) and the cue card (`EyesUpApp.ts buildCueCard`). The panel fill and stroke were already #070D22 at 90 % and #9CC4FF at 55 %. Evening Room stays the capture environment (disclosed in `docs/spec-matrix.md`).
+- **G9.** `EyesUpApp.ts`: chevron disc radius 7 cm, icon 9.4 cm, hint block centred vertically, outer edge 3 cm inside the Lens frustum (computed from camera fov and aspect; the Preview camera reports aspect 0.88, narrower than the room image the Preview paints). Chevron placement tests unchanged and green.
+- **Captures.** Window recordings of `capture_nudge_hold`, `capture_game`, `capture_summary`, `capture_podium` (camera pitched down for the podium); frames looked at. devpost 01, 03, 04, 05, 06 and walkthrough 01, 03, 04, 05, 06 refreshed. The demo video was not re-recorded.
+- **Known.** The glow is faint over the dark brown Preview room; podium and Summary still read as a lighter plate in the Preview; in some frames (upright heads, no zzz) the chevron lands over a member's body instead of the wall above.

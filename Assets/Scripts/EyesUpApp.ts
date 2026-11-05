@@ -34,7 +34,7 @@ import { PillRect } from './core/PillHit';
 import { ChevronBox, PlaneRect, placeChevron } from './core/ChevronPlacement';
 import { podiumState } from './core/PodiumModel';
 import { Vec3Like } from './core/math';
-import { ACCENT_CYAN, AUDIENCE_RENDER_ORDER, PANEL_FILL, addCircleRing, PANEL_STROKE, TEXT_LABEL, TEXT_PRIMARY, TEXT_SECONDARY, addDot, addIcon, addRoundedSurface, addSurface, child, faceTowards } from './EyesUpUI';
+import { ACCENT_CYAN, AUDIENCE_RENDER_ORDER, PANEL_FILL, addCircleRing, addPanelGlow, PANEL_STROKE, TEXT_LABEL, TEXT_PRIMARY, TEXT_SECONDARY, addDot, addIcon, addRoundedSurface, addSurface, child, faceTowards } from './EyesUpUI';
 import { METER_ABOVE_CM, METER_CAPSULE_H_CM, METER_WIDTH_CM } from './RoomMeter';
 
 /**
@@ -42,22 +42,22 @@ import { METER_ABOVE_CM, METER_CAPSULE_H_CM, METER_WIDTH_CM } from './RoomMeter'
  * keyboard_double_arrow_*) above a "left" / "right" caption. The hint's scene Text (±20 cm, 100 cm
  * ahead of the camera) becomes the caption; the icon is added at awake 4 cm above it.
  */
-const CHEVRON_CM = 7.6;
-const CHEVRON_ICON_Y = 6.9;
+const CHEVRON_CM = 9.4;
+const CHEVRON_ICON_Y = 9;
 /**
  * Cycle 1 (D9): a dark backing circle (r 5.6 cm) with an amber hairline behind the double chevron, so it reads on a beige room, a "Look left" /
  * "Look right" caption in Body, and the 1 Hz pulse. Extents about the hint origin (cm), used for placement only.
  */
-const CHEVRON_BACK_R = 5.6;
-const CHEVRON_EXT_HALF_W = 5.9;
+const CHEVRON_BACK_R = 7;
+const CHEVRON_EXT_HALF_W = 7.3;
 const CHEVRON_EXT_BELOW = 2.3;
-const CHEVRON_EXT_ABOVE = 12.8;
+const CHEVRON_EXT_ABOVE = 16.3;
 /** A member's body is about this wide (half, cm in the stage) for the chevron's keep-clear rects. */
 const MEMBER_BODY_HALF_W_CM = 26;
 /** Round 7: hint x offset (was 20) and drop so the backing clears the opening pill's corner in the nudge still. */
 const CHEVRON_X_CM = 21.5;
-/** Round 7: hint dropped this far so the backing's top edge sits below the pill's bottom edge. */
-const CHEVRON_DROP_CM = 8.5;
+/** Cycle 4 (G9): the disc + caption block sits at the vertical centre of the frame, its outer edge this far from the FOV edge (cm in the plane). */
+const CHEVRON_EDGE_GAP_CM = 3;
 /** Hint plane: the chevron is head-locked 100 cm ahead; panels are projected into that plane for placement. */
 const CHEVRON_PLANE_CM = 100;
 /** Clear gap kept between the chevron backing and any panel (cm in the plane). */
@@ -221,7 +221,7 @@ export class EyesUpApp extends BaseScriptComponent {
     [this.edgeHintLeft, this.edgeHintRight].forEach((so, i) => {
       if (!so) return;
       const hp = so.getTransform().getLocalPosition();
-      this.hintBase[i] = new vec3((i === 0 ? -1 : 1) * CHEVRON_X_CM, hp.y - CHEVRON_DROP_CM, hp.z);
+      this.hintBase[i] = new vec3((i === 0 ? -1 : 1) * CHEVRON_X_CM, -(CHEVRON_BOX.above - CHEVRON_BOX.below) / 2, hp.z);
       so.getTransform().setLocalPosition(this.hintBase[i]);
       const t = so.getComponent('Component.Text') as Text;
       if (t) {
@@ -503,13 +503,15 @@ export class EyesUpApp extends BaseScriptComponent {
     const cam = this.camera.getComponent('Component.Camera') as Camera;
     const halfH = CHEVRON_PLANE_CM * Math.tan(cam.fov / 2);
     const base = this.hintBase[i];
+    const halfW = halfH * cam.aspect; // the Lens frustum (the Preview paints the room wider than the Lens renders)
+    base.x = (i === 0 ? -1 : 1) * (halfW - CHEVRON_EDGE_GAP_CM - CHEVRON_BOX.halfW);
     const place = (extra: PlaneRect[]) =>
       placeChevron(
         i === 0 ? 'left' : 'right',
         { x: base.x, y: base.y },
         CHEVRON_BOX,
         [...panels, ...extra],
-        { margin: CHEVRON_PANEL_MARGIN_CM, viewHalfW: halfH * cam.aspect, viewHalfH: halfH },
+        { margin: CHEVRON_PANEL_MARGIN_CM, viewHalfW: halfW, viewHalfH: halfH },
       );
     const withMeter = (rects: PlaneRect[]) => (meterRect ? [...rects, meterRect] : rects);
     // Heads and halos are hard no-go (Cycle 6, D1): prefer wall clear of whole silhouettes and the meter, then clear of heads and the meter, then of heads only.
@@ -568,6 +570,7 @@ export class EyesUpApp extends BaseScriptComponent {
   private buildCueCard(): void {
     if (!this.cueCard || !this.cueCardTitle || !this.cueCardBody) return;
     this.cardBg = child(this.cueCard, 'CardBg', new vec3(0, 0, -0.6));
+    addPanelGlow(child(this.cardBg, 'SurfaceGlow', new vec3(0, CARD_CENTER_Y, -0.05)), CARD_W, CARD_H, CARD_RADIUS, 0, -1);
     addRoundedSurface(child(this.cardBg, 'Surface', new vec3(0, CARD_CENTER_Y, 0)), CARD_W, CARD_H, 0, PANEL_FILL, PANEL_STROKE, CARD_RADIUS);
     addRoundedSurface(child(this.cardBg, 'Accent', new vec3(CARD_ACCENT_X, CARD_TITLE_Y, 0.1)), 0.9, 6.6, 0, ACCENT_CYAN, null, 0.45);
     this.countdownPivot = child(this.cardBg, 'Countdown', new vec3(-CARD_COUNTDOWN_W / 2, CARD_COUNTDOWN_Y, 0.1));
