@@ -251,3 +251,23 @@ Verified in the Lens Studio 5.24.1 Interactive Preview with window captures that
 | A4 | 29 s vs 28 s | log uses the Summary formatter, all images read 28 s | done | `13-clad-mcp.png`, `12-run-compare.png` |
 
 `npm run check` 183 tests; 10 of 10 LEAF scenarios PASSED. Preview only, gaze driven by LEAF, not tested on a device.
+
+## Design cycle 1 (2026-11-05): visual design
+
+Verified in the Lens Studio 5.24.1 Interactive Preview with window captures that were looked at. `npm run check` 183/183, no logic changes. Preview only, gaze driven by LEAF, not tested on a device.
+
+| id | screen | problem | change | status | evidence |
+|---|---|---|---|---|---|
+| D1 | all panels | pale grey-lavender square panels, broken-corner borders | shared panel material: navy #0B1230 at 78 %, rounded runtime meshes, 0.18 cm #7FB0FF 35 % stroke, cyan glow ring on the selected segment | partial (preview) | `EyesUpUI.ts` (`addRoundedSurface`), 01 / 04 / 05 / 06. On the additive Preview navy reads as a faint tint, not a dark plate; the chevron disc uses a luminous blue for that reason |
+| D2 | all | inconsistent, tiny text | 4 steps: Title 104, Heading 72, Body 60, Caption 46 at 110 cm; SETUP chip and units at Caption or larger; primary actions one step up | match, with 2 deviations | Body 0.9 / Caption 0.7 cm instead of 0.8 / 0.6 (stills still small); Start, Next, Again are Heading / Title, not Body, so the one filled button leads. Summary hero sizes unchanged |
+| D3 | perk-up, room meter | ring crossed the Room label, meter against the card, track like the card | ring mesh capped at scale 2.1, 2.6 cm gap, dark track + saturated fill, Room % in a capsule pill | match | 11-perk-up, 04, 10 |
+| D4 | cue card, pill | title on the border, centred ragged bullets, pill = card | 2.8 cm padding, left-aligned Heading + cyan bar, Body bullets with cyan dots, n / N counter, capsule pill with cyan dot, 0.25 s fade + scale | match | 04-cue-card, 02, 10 |
+| D9 | nudge chevron | small, amber on beige, weak caption | dark-blue backing disc with amber rim, "Look left" / "Look right", 1 Hz pulse, 3 s | partial | 03-nudge-chevron. Glyph 10 -> 7.6 cm (mark 11.2 cm with the disc): the viewport is +-28.9 cm wide at the 100 cm plane; x = +-21.5, not at the very edge |
+
+Mockup deviations (artifact S1 to S5), kept because they read better on glasses:
+
+- S1 Setup: panel corners rounded, SETUP chip kept but at Caption; segment values and Start are Heading (artifact: small); no other layout change.
+- S3 Nudge: caption "Look left" / "Look right" (artifact: "left" / "right"), round dark disc behind the chevron (artifact: no backing).
+- S4 Card: 110 x 28.5 cm (artifact 50 x 18, cycle 5: 100 x 26), left-aligned with accent bar, counter and dots (artifact: centred title and bullets).
+- S5 Summary: rounded navy tiles and plate; Again leads with Heading, other buttons Body (artifact: one size).
+- Room meter has no outer plate; "Room NN%" sits in its own capsule left of the track (cycle 4 note: no plate can be darker than the wall in the Preview).

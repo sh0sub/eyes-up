@@ -54,15 +54,15 @@ export class SetupPanel extends BaseScriptComponent {
     const c = this.panel.content;
     // Pass 4 (artifact S1): title with a "SETUP" pill on the right.
     const titleRow = flexRow(c, 'SetupTitleRow', W - 4, 4.4, 1);
-    textRow(titleRow, 'SetupTitle', this.title, 'Title2', W - 15, 4.4, DIST).horizontalAlignment = HorizontalAlignment.Left;
-    addBox(titleRow, 'SetupPill', SETUP_PILL, 'Subheadline', 9, 2.6, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
-    textRow(c, 'SetupSubtitle', this.subtitle, 'HeadlineXL', W - 4, 3, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
+    textRow(titleRow, 'SetupTitle', this.title, 'Title', W - 15, 4.4, DIST).horizontalAlignment = HorizontalAlignment.Left;
+    addBox(titleRow, 'SetupPill', SETUP_PILL, 'Caption', 9, 2.6, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
+    textRow(c, 'SetupSubtitle', this.subtitle, 'Body', W - 4, 3, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
     // Pass 6 (artifact S1): segmented 3/5/10 and 3/6/9 controls (selected = cyan), deck list, mint Start.
-    const seg = { labelRole: 'HeadlineXL' as const };
+    const seg = { labelRole: 'Heading' as const };
     this.lengthSeg = this.segmentRow(c, 'Length', 'Talk length', LENGTH_OPTIONS, 'min', (v) => this.model.setLengthSlider(optionToSlider(LENGTH_OPTIONS, v)), seg);
     this.audienceSeg = this.segmentRow(c, 'Audience', 'Audience', AUDIENCE_OPTIONS, 'people', (v) => this.model.setAudienceSlider(optionToSlider(AUDIENCE_OPTIONS, v)), seg);
     const deckRow = flexRow(c, 'DeckRow', W - 4, 5.2, 1);
-    textRow(deckRow, 'DeckLabel', 'Deck', 'HeadlineXL', LABEL_W, 5.2, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
+    textRow(deckRow, 'DeckLabel', 'Deck', 'Heading', LABEL_W, 5.2, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
     this.deckButtons = DECKS.map((d) => {
       const id = d.id;
       const btn = addButton(
@@ -76,12 +76,12 @@ export class SetupPanel extends BaseScriptComponent {
           this.model.selectDeck(id);
           this.refresh();
         },
-        { labelRole: 'Headline2' },
+        { labelRole: 'Body' },
       );
       return { id, setSelected: btn.setSelected };
     });
     // Artifact F14 (stretch): type a talk outline on the AR keyboard (core/DeckImport.ts format).
-    const imp = addButton(deckRow, 'ImportDeckButton', 'Import\ntext', 7, 5.2, DIST, () => this.importDeck(), { labelRole: 'Headline2' });
+    const imp = addButton(deckRow, 'ImportDeckButton', 'Import\ntext', 7, 5.2, DIST, () => this.importDeck(), { labelRole: 'Body' });
     this.importLabel = imp.label;
     this.deckButtons.push({ id: IMPORTED_DECK_ID, setSelected: imp.setSelected });
     // Start + the artifact caption side by side (keeps the panel inside 40 × 30 cm).
@@ -97,10 +97,10 @@ export class SetupPanel extends BaseScriptComponent {
         if (this.exitTime >= 0) return;
         this.exitTime = 0; // 0.3 s shrink, then hand the config to EyesUpApp
       },
-      { icon: 'play_arrow', mint: true, labelRole: 'HeadlineXL' },
+      { icon: 'play_arrow', mint: true, labelRole: 'Heading' },
     );
     // The panel's Text never wraps (Overflow), so the caption breaks after "ahead".
-    textRow(startRow, 'SetupCaption', SETUP_CAPTION.replace(' of ', '\nof '), 'Headline1', 16, 5.6, DIST, TEXT_LABEL);
+    textRow(startRow, 'SetupCaption', SETUP_CAPTION.replace(' of ', '\nof '), 'Caption', 16, 5.6, DIST, TEXT_LABEL);
     // Visibility is applied in UpdateEvent (after every UIKit element has run OnStart): disabling
     // a UIKit host before its OnStart stops it from ever initializing (specs-build-ui G3).
     this.createEvent('UpdateEvent').bind(() => {
@@ -141,10 +141,10 @@ export class SetupPanel extends BaseScriptComponent {
     options: readonly number[],
     unit: string,
     pick: (value: number) => void,
-    btn: { labelRole: 'HeadlineXL' },
+    btn: { labelRole: 'Heading' },
   ): Array<{ value: number; setSelected: (on: boolean) => void }> {
     const row = flexRow(parent, `${name}Row`, W - 4, 4.2, 1);
-    textRow(row, `${name}Label`, label, 'HeadlineXL', LABEL_W, 4.2, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
+    textRow(row, `${name}Label`, label, 'Heading', LABEL_W, 4.2, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
     const segs = options.map((value) => {
       const b = addButton(
         row,
@@ -161,7 +161,7 @@ export class SetupPanel extends BaseScriptComponent {
       );
       return { value, setSelected: b.setSelected };
     });
-    textRow(row, `${name}Unit`, unit, 'Headline2', ROW_W - LABEL_W - 3 * 6.2 - 4, 4.2, DIST, TEXT_LABEL);
+    textRow(row, `${name}Unit`, unit, 'Body', ROW_W - LABEL_W - 3 * 6.2 - 4, 4.2, DIST, TEXT_LABEL);
     return segs;
   }
 

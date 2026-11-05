@@ -71,7 +71,7 @@ Every caption describes what the image shows in the Interactive Preview (preview
 5. `devpost/screenshots/12-run-compare.png`: The learning loop: Run 1 (C 39) beside Run 2 (A 84) with each tip. Scripted gaze, illustrative, not a user study.
 6. `devpost/screenshots/09-process-at-a-glance.png`: Process: three fixes found in the Preview (halo, hit area, game layer), the loop table, 10 of 10 LEAF scenarios, 183 tests.
 7. `devpost/screenshots/13-clad-mcp.png`: How CLAD and the Lens Studio MCP were used: architecture strip, four real steps, real log lines.
-8. `devpost/screenshots/03-nudge-chevron.png`: The nudge: an amber double chevron and "left" appear for the side you ignored, clear of the "zzz".
+8. `devpost/screenshots/03-nudge-chevron.png`: The nudge: an amber double chevron on a dark disc and "Look left" appear for the side you ignored, clear of the "zzz".
 
 Separate stills of the two moments in image 2 are `10-engagement-slump.png` and `11-perk-up.png`.
 

@@ -34,29 +34,34 @@ import { PillRect } from './core/PillHit';
 import { ChevronBox, PlaneRect, placeChevron } from './core/ChevronPlacement';
 import { podiumState } from './core/PodiumModel';
 import { Vec3Like } from './core/math';
-import { ACCENT_CYAN, addIcon, addSurface, child, faceTowards } from './EyesUpUI';
+import { ACCENT_CYAN, PANEL_FILL, addCircleRing, PANEL_STROKE, TEXT_LABEL, TEXT_PRIMARY, TEXT_SECONDARY, addDot, addIcon, addRoundedSurface, addSurface, child, faceTowards } from './EyesUpUI';
+import { METER_HEIGHT_CM, METER_WIDTH_CM } from './RoomMeter';
 
 /**
  * Pass 5 nudge chevron (artifact S3): a 6 × 6 cm amber double chevron ("‹‹" / "››", Material
  * keyboard_double_arrow_*) above a "left" / "right" caption. The hint's scene Text (±20 cm, 100 cm
  * ahead of the camera) becomes the caption; the icon is added at awake 4 cm above it.
  */
-const CHEVRON_CM = 10;
-const CHEVRON_ICON_Y = 6.5;
-/** Cycle 2 (M5): no box around the chevron; it is the icon plus caption. These are their extents about the hint origin (cm), used for placement only. */
-const CHEVRON_EXT_HALF_W = 5.5;
-const CHEVRON_EXT_BELOW = 1.5;
-const CHEVRON_EXT_ABOVE = 11.5;
+const CHEVRON_CM = 7.6;
+const CHEVRON_ICON_Y = 6.9;
+/**
+ * Cycle 1 (D9): a dark backing circle (r 5.6 cm) with an amber hairline behind the double chevron, so it reads on a beige room, a "Look left" /
+ * "Look right" caption in Body, and the 1 Hz pulse. Extents about the hint origin (cm), used for placement only.
+ */
+const CHEVRON_BACK_R = 5.6;
+const CHEVRON_EXT_HALF_W = 5.9;
+const CHEVRON_EXT_BELOW = 2.3;
+const CHEVRON_EXT_ABOVE = 12.8;
 /** A member's body is about this wide (half, cm in the stage) for the chevron's keep-clear rects. */
 const MEMBER_BODY_HALF_W_CM = 26;
 /** Round 7: hint x offset (was 20) and drop so the backing clears the opening pill's corner in the nudge still. */
-const CHEVRON_X_CM = 21;
+const CHEVRON_X_CM = 21.5;
 /** Round 7: hint dropped this far so the backing's top edge sits below the pill's bottom edge. */
-const CHEVRON_DROP_CM = 6.5;
+const CHEVRON_DROP_CM = 8.5;
 /** Hint plane: the chevron is head-locked 100 cm ahead; panels are projected into that plane for placement. */
 const CHEVRON_PLANE_CM = 100;
 /** Clear gap kept between the chevron backing and any panel (cm in the plane). */
-const CHEVRON_PANEL_MARGIN_CM = 1.5;
+const CHEVRON_PANEL_MARGIN_CM = 1;
 /** Backing extents about the hint origin at the largest pulse scale (1.05). */
 const CHEVRON_BOX: ChevronBox = {
   halfW: CHEVRON_EXT_HALF_W * 1.05,
@@ -65,7 +70,10 @@ const CHEVRON_BOX: ChevronBox = {
 };
 const CHEVRON_TEXT = new vec4(1.0, 0.82, 0.35, 1);
 /** ≈ 1.5 cm caption at 100 cm (S3: "left" 1.5 cm). */
-const CHEVRON_CAPTION_SIZE = 150;
+const CHEVRON_CAPTION_SIZE = 140;
+/** Additive display: a near-black backing adds no light, so the disc is a deep luminous blue that the amber chevron stands out from. */
+const CHEVRON_BACK_FILL = new vec4(0.06, 0.1, 0.4, 0.92);
+const CHEVRON_BACK_RING = new vec4(1.0, 0.78, 0.35, 0.7);
 
 /** Stage line colors (design): cool white while running, amber at 0 s. Never black. */
 const LINE_COLOR: [number, number, number] = [0.75, 0.85, 1.0];
@@ -88,26 +96,44 @@ const PANEL_SETTLE_SECONDS = 1.0;
  * Game pass (jury: "cue card text too small at Spectacles scale"): title 240 -> 290, bullets 140 -> 180, card
  * 64 x 26 -> 84 x 34 cm, pill height 10 -> 12 cm. The pill's effective size is 290 x 1.2 = 348 (was 240 x 1.3 = 312).
  */
-const CARD_W = 100;
-const CARD_H = 26;
-/** The card sits above the anchor (bottom edge 1 cm below it) so it clears the audience's heads and the room meter. */
-const CARD_CENTER_Y = 12;
-const CARD_TITLE_Y = 20.2;
-const CARD_BODY_Y = 9.8;
-const CARD_COUNTDOWN_Y = 0.9;
-const CARD_COUNTDOWN_W = 94;
-const CARD_TITLE_SIZE = 330;
-const CARD_BODY_SIZE = 235;
-const PILL_SCALE = 1.2;
-const PILL_H = 12;
-const PILL_Y = 11;
+const CARD_W = 110;
 /**
- * The room meter floats between the heads and the card. Raised 6 cm (was 4 cm below the anchor, now 6 cm above; Cycle 2: with 3 members 42 cm apart the outer halos reached the label) so lit halos
- * (burst ring up to 1.6x) no longer cover it; the card is lifted by the same amount so the two never overlap.
+ * Cycle 1 (D4): 26 -> 28.5 cm so the title has clear room above it, with a 2.8 cm inner padding (1.2 cm at the 110 cm reference scale).
+ * The card's top edge stays where it was (floor + 219 cm, inside the preview frame); its bottom edge is 2.6 cm above the room meter's top edge.
  */
-const METER_BELOW_ANCHOR_CM = -12;
-/** Cycle 6 (D3): meter -8 -> -12 (4 cm higher) so the lit halo of the tallest head is at least 2 cm clear of the meter plate (it touched), card 17 -> 19 cm so the gap between meter and card stays 2.6 cm; the opening card would clip at the top edge, so the stage is 3 cm lower (floorOffsetCm 152). */
-/** Cycle 5 (R5): lifted 14 -> 17 cm so the meter plate and the card are 3.6 cm apart (they used to touch); the card is 3 cm shorter, so its top edge is where it was. */
+const CARD_H = 28.5;
+const CARD_PAD = 2.8;
+const CARD_CENTER_Y = 10.55;
+const CARD_RADIUS = 2.6;
+/** Left text column (title and bullets share it); the cyan accent bar and the bullet dots share the column to its left. */
+const CARD_TEXT_X = -CARD_W / 2 + CARD_PAD + 3.6;
+const CARD_ACCENT_X = -CARD_W / 2 + CARD_PAD + 0.5;
+const CARD_RIGHT_X = CARD_W / 2 - CARD_PAD;
+const CARD_TITLE_Y = 18.6;
+/** First bullet centre and spacing (3 bullets use the tighter step). */
+const CARD_BULLET_Y = 10.8;
+const CARD_BULLET_STEP = 6.2;
+const CARD_BULLET_STEP_3 = 5.0;
+const CARD_COUNTDOWN_Y = -2.3;
+const CARD_COUNTDOWN_W = CARD_W - 2 * CARD_PAD;
+/** Hierarchy at 2.5 m (Cycle 1, D2): Heading title 320, Body bullets 225, Caption counter 175 (the 72 : 60 : 46 steps of the type scale, scaled for the card's distance). */
+const CARD_TITLE_SIZE = 320;
+const CARD_BODY_SIZE = 225;
+const CARD_COUNTER_SIZE = 175;
+const MAX_BULLETS = 3;
+const PILL_SCALE = 1.2;
+const PILL_H = 10;
+const PILL_Y = 11;
+/** The cyan dot inside the pill: radius and the width reserved for it. */
+const PILL_DOT_R = 1.2;
+const PILL_DOT_ZONE = 5;
+/** Pill text is the card title one notch quieter, so the pill weighs less than the card. */
+const PILL_TEXT_SIZE = 290;
+/**
+ * The room meter floats between the heads and the card, 9.5 cm above the card anchor (its bottom edge is 3 cm above the lit halo's top edge).
+ * Cycle 1 (D3): the card's bottom edge is 2.6 cm above the meter's top edge (the old gap was about 1 cm after the card got padding).
+ */
+const METER_BELOW_ANCHOR_CM = -9.5;
 const CARD_LIFT_CM = 19;
 /**
  * Cycle 3 (S4): a faint dark rounded plate stands 40 cm behind the audience so the busy wall frames do not sit behind heads and bodies.
@@ -119,19 +145,16 @@ const SCRIM_HEIGHT_CM = 205;
 const SCRIM_CENTER_ABOVE_FLOOR_CM = 78;
 const SCRIM_CORNER_CM = 9;
 const SCRIM_COLOR = new vec4(0.03, 0.05, 0.16, 0.35);
-/** Room meter plate extents about its centre (cm, local): track 52 + label 28 + padding, 3 + padding tall (RoomMeter.ts). */
-const METER_HALF_W_CM = 47;
-const METER_HALF_H_CM = 4.4;
+/** Room meter extents about its centre (cm, local), from RoomMeter.ts: pill + gap + track, pill height. */
+const METER_HALF_W_CM = METER_WIDTH_CM / 2;
+const METER_HALF_H_CM = METER_HEIGHT_CM / 2;
 /** Footprint of a "zzz" marker in the member's space (cm), kept clear by the nudge chevron. */
 const ZZZ_HALF_W_CM = 11;
 const ZZZ_HALF_H_CM = 6;
 /** Lit halo ring radius around a head, cm (rest scale 36 cm, diameter). */
 const LIT_HALO_RADIUS_CM = 22;
 /** Measured in Preview: ≈ 0.0124 cm per size unit per glyph for Inter titles (size 200 → 2.5 cm). */
-const PILL_GLYPH_CM = 0.0124 * CARD_TITLE_SIZE;
-/** Game pass (jury: grey-on-grey): a deeper indigo card with a bright cyan frame; white text keeps its contrast. */
-const CARD_FILL = new vec4(0.09, 0.16, 0.44, 1);
-const CARD_FRAME = new vec4(0.5, 0.88, 1.0, 0.95);
+const PILL_GLYPH_CM = 0.0124 * PILL_TEXT_SIZE;
 
 @component
 export class EyesUpApp extends BaseScriptComponent {
@@ -180,12 +203,21 @@ export class EyesUpApp extends BaseScriptComponent {
   /** Width (cm, before world scale) of the current pill backing. */
   private pillWidth = 0;
   private countdownPivot: SceneObject | null = null;
+  /** Cycle 1 (D4): per-mode fade setters (card pieces, pill pieces) driven by the 0.25 s morph, plus the card's bullet pool. */
+  private cardFade: Array<(a: number) => void> = [];
+  private pillFade: Array<(a: number) => void> = [];
+  private lastMorph = 0;
+  private bulletTexts: Text[] = [];
+  private bulletDots: SceneObject[] = [];
+  private counterText: Text | null = null;
   /** Seconds since the chevron appeared (1 Hz pulse) and each side's base text color. */
   private hintAge = 0;
   private hintTexts: [Text | null, Text | null] = [null, null];
   private hintIcons: [Image | null, Image | null] = [null, null];
   private hintBase: [vec3, vec3] = [new vec3(0, 0, 0), new vec3(0, 0, 0)];
   private hintHidden: [boolean, boolean] = [false, false];
+  /** The chevron's backing circle and ring, faded with the pulse. */
+  private hintBacking: [RenderMeshVisual[], RenderMeshVisual[]] = [[], []];
   private hintColors: [vec4, vec4] = [new vec4(1, 1, 1, 1), new vec4(1, 1, 1, 1)];
 
   onAwake(): void {
@@ -198,13 +230,15 @@ export class EyesUpApp extends BaseScriptComponent {
       so.getTransform().setLocalPosition(this.hintBase[i]);
       const t = so.getComponent('Component.Text') as Text;
       if (t) {
-        t.text = i === 0 ? 'left' : 'right';
+        t.text = i === 0 ? 'Look left' : 'Look right';
         t.size = CHEVRON_CAPTION_SIZE;
         t.textFill.color = CHEVRON_TEXT;
         t.setRenderOrder(12);
         this.hintColors[i] = CHEVRON_TEXT;
       }
       this.hintTexts[i] = t;
+      const back = child(so, 'Backing', new vec3(0, CHEVRON_ICON_Y, -0.1));
+      this.hintBacking[i] = [addDot(back, 'Disc', CHEVRON_BACK_R, new vec3(0, 0, 0), CHEVRON_BACK_FILL), addCircleRing(back, 'Rim', CHEVRON_BACK_R, 0.35, 0.02, CHEVRON_BACK_RING)];
       const icon = addIcon(so, i === 0 ? 'double_arrow_left' : 'double_arrow_right', CHEVRON_CM, new vec3(0, CHEVRON_ICON_Y, 0));
       this.hintIcons[i] = icon;
     });
@@ -390,6 +424,7 @@ export class EyesUpApp extends BaseScriptComponent {
       // Icon material is premultiplied: scale every channel to fade.
       const img = this.hintIcons[i];
       if (img) img.mainMaterial.mainPass.baseColor = new vec4(a, a, a, a);
+      this.hintBacking[i].forEach((v, k) => (v.mainPass.baseColor = k === 0 ? new vec4(CHEVRON_BACK_FILL.x, CHEVRON_BACK_FILL.y, CHEVRON_BACK_FILL.z, CHEVRON_BACK_FILL.w * a) : new vec4(CHEVRON_BACK_RING.x, CHEVRON_BACK_RING.y, CHEVRON_BACK_RING.z, CHEVRON_BACK_RING.w * a)));
       const s = 0.9 + 0.15 * p;
       so.getTransform().setLocalScale(new vec3(s, s, s));
     });
@@ -492,34 +527,132 @@ export class EyesUpApp extends BaseScriptComponent {
     so.getTransform().setLocalPosition(new vec3(spot.x, spot.y, base.z));
   }
 
+  /** Registers every mesh under `root` (and `root` itself) for fading with `list`. */
+  private fadeMeshes(list: Array<(a: number) => void>, root: SceneObject): void {
+    const v = root.getComponent('Component.RenderMeshVisual') as RenderMeshVisual | null;
+    if (v) {
+      const c = v.mainPass.baseColor;
+      list.push((a) => (v.mainPass.baseColor = new vec4(c.x, c.y, c.z, c.w * a)));
+    }
+    for (let i = 0; i < root.getChildrenCount(); i++) this.fadeMeshes(list, root.getChild(i));
+  }
+
+  /** Explicit draw order for every mesh under `root` (alpha-blended meshes are otherwise sorted by depth, which let a card's fill cover a dot). */
+  private orderMeshes(root: SceneObject, order: number): void {
+    const v = root.getComponent('Component.RenderMeshVisual') as RenderMeshVisual | null;
+    if (v) v.setRenderOrder(order);
+    for (let i = 0; i < root.getChildrenCount(); i++) this.orderMeshes(root.getChild(i), order);
+  }
+
+  private fadeText(list: Array<(a: number) => void>, t: Text): void {
+    const c = t.textFill.color;
+    list.push((a) => (t.textFill.color = new vec4(c.x, c.y, c.z, c.w * a)));
+  }
+
+  /** A left-aligned card text (font taken from the scene's body Text), drawn over the backings. */
+  private cardText(parent: SceneObject, name: string, size: number, color: vec4, align: HorizontalAlignment, rect: Rect, local: vec3): Text {
+    const t = child(parent, name, local).createComponent('Component.Text') as Text;
+    t.font = this.cueCardBody.font;
+    t.size = size;
+    t.textFill.color = color;
+    t.horizontalAlignment = align;
+    t.verticalAlignment = VerticalAlignment.Center;
+    t.horizontalOverflow = HorizontalOverflow.Overflow;
+    t.verticalOverflow = VerticalOverflow.Overflow;
+    t.layoutRect = rect;
+    t.setRenderOrder(10);
+    return t;
+  }
+
   /**
-   * Pass 4: backing quad, countdown line and pill backing for the cue card. The texts get a later
-   * render order so they draw over the translucent backings (depthWrite is off on PanelSurface).
+   * Cycle 1 (D1, D4): the cue card on the shared panel material (navy 78 %, rounded, hairline stroke), with a 2.8 cm inner padding, a
+   * left-aligned Heading title beside one cyan accent bar, left-aligned Body bullets with cyan dots in the same column, an "n / N" counter
+   * in Caption, and the countdown line inside the bottom padding. The texts get a later render order so they draw over the backings.
    */
   private buildCueCard(): void {
     if (!this.cueCard || !this.cueCardTitle || !this.cueCardBody) return;
     this.cardBg = child(this.cueCard, 'CardBg', new vec3(0, 0, -0.6));
-    addSurface(child(this.cardBg, 'Surface', new vec3(0, CARD_CENTER_Y, 0)), CARD_W, CARD_H, 0, CARD_FILL, CARD_FRAME);
+    addRoundedSurface(child(this.cardBg, 'Surface', new vec3(0, CARD_CENTER_Y, 0)), CARD_W, CARD_H, 0, PANEL_FILL, PANEL_STROKE, CARD_RADIUS);
+    addRoundedSurface(child(this.cardBg, 'Accent', new vec3(CARD_ACCENT_X, CARD_TITLE_Y, 0.1)), 0.9, 6.6, 0, ACCENT_CYAN, null, 0.45);
     this.countdownPivot = child(this.cardBg, 'Countdown', new vec3(-CARD_COUNTDOWN_W / 2, CARD_COUNTDOWN_Y, 0.1));
-    addSurface(child(this.countdownPivot, 'Line', new vec3(CARD_COUNTDOWN_W / 2, 0, 0)), CARD_COUNTDOWN_W, 0.6, 0, ACCENT_CYAN, null);
+    addSurface(child(this.countdownPivot, 'Line', new vec3(CARD_COUNTDOWN_W / 2, 0, 0)), CARD_COUNTDOWN_W, 0.9, 0, ACCENT_CYAN, null);
+    const left = Rect.create(CARD_TEXT_X, CARD_RIGHT_X, -4, 4);
+    for (let i = 0; i < MAX_BULLETS; i++) {
+      this.bulletDots.push(addDot(this.cardBg, `BulletDot${i}`, 0.75, new vec3(CARD_ACCENT_X, 0, 0.1), ACCENT_CYAN).getSceneObject());
+      this.bulletTexts.push(this.cardText(this.cardBg, `Bullet${i}`, CARD_BODY_SIZE, TEXT_LABEL, HorizontalAlignment.Left, left, new vec3(0, 0, 0.6)));
+    }
+    this.counterText = this.cardText(this.cardBg, 'Counter', CARD_COUNTER_SIZE, TEXT_SECONDARY, HorizontalAlignment.Right, Rect.create(CARD_RIGHT_X - 20, CARD_RIGHT_X, -3, 3), new vec3(0, CARD_TITLE_Y, 0.6));
+    this.orderMeshes(this.cardBg, 4);
+    this.orderMeshes(this.cardBg.getChild(0), 3);
+    this.fadeMeshes(this.cardFade, this.cardBg);
+    this.bulletTexts.forEach((t) => this.fadeText(this.cardFade, t));
+    this.fadeText(this.cardFade, this.counterText);
     this.pillBg = child(this.cueCard, 'PillBg', new vec3(0, PILL_Y, -0.6));
     this.pillBg.enabled = false;
-    this.cueCardTitle.size = CARD_TITLE_SIZE;
-    this.cueCardBody.size = CARD_BODY_SIZE;
-    [this.cueCardTitle, this.cueCardBody].forEach((t) => t.setRenderOrder(10));
-    this.cueCardTitle.getSceneObject().getTransform().setLocalPosition(new vec3(0, CARD_TITLE_Y, 0));
-    this.cueCardBody.getSceneObject().getTransform().setLocalPosition(new vec3(0, CARD_BODY_Y, 0));
+    this.cueCardTitle.textFill.color = TEXT_PRIMARY;
+    this.fadeText(this.cardFade, this.cueCardTitle);
+    this.fadeText(this.pillFade, this.cueCardTitle);
+    this.cueCardTitle.setRenderOrder(10);
+    this.cueCardTitle.horizontalOverflow = HorizontalOverflow.Overflow;
+    this.cueCardTitle.verticalAlignment = VerticalAlignment.Center;
+    // The scene's own body Text is replaced by the bullet pool above.
+    this.cueCardBody.getSceneObject().enabled = false;
+    this.setCardLayout(null);
+  }
+
+  /** Cycle 1 (D4): fills the bullet pool and counter for a section (called when the card opens). */
+  private fillCard(points: string[], index: number, total: number): void {
+    const n = Math.min(points.length, MAX_BULLETS);
+    const step = n > 2 ? CARD_BULLET_STEP_3 : CARD_BULLET_STEP;
+    for (let i = 0; i < MAX_BULLETS; i++) {
+      const on = i < n;
+      this.bulletTexts[i].getSceneObject().enabled = on;
+      this.bulletDots[i].enabled = on;
+      if (!on) continue;
+      const y = CARD_BULLET_Y - i * step;
+      this.bulletTexts[i].text = points[i];
+      this.bulletTexts[i].getSceneObject().getTransform().setLocalPosition(new vec3(0, y, 0.6));
+      this.bulletDots[i].getTransform().setLocalPosition(new vec3(CARD_ACCENT_X, y + 0.2, 0.1));
+    }
+    if (this.counterText) this.counterText.text = `${index + 1} / ${total}`;
+  }
+
+  /** Fades the visible mode in with the morph: the card with m, the pill with 1 - m. */
+  private applyFades(): void {
+    const pill = !!this.pillBg && this.pillBg.enabled;
+    const a = pill ? 1 - this.lastMorph : this.lastMorph;
+    (pill ? this.pillFade : this.cardFade).forEach((f) => f(a));
   }
 
   private setCardLayout(pill: string | null): void {
+    const title = this.cueCardTitle;
+    const so = title.getSceneObject();
     if (this.cardBg) this.cardBg.enabled = pill === null;
-    this.cueCardTitle.getSceneObject().getTransform().setLocalPosition(new vec3(0, pill === null ? CARD_TITLE_Y : PILL_Y, 0));
+    if (pill === null) {
+      title.size = CARD_TITLE_SIZE;
+      title.horizontalAlignment = HorizontalAlignment.Left;
+      title.layoutRect = Rect.create(CARD_TEXT_X, CARD_RIGHT_X - 22, -5, 5);
+      so.getTransform().setLocalPosition(new vec3(0, CARD_TITLE_Y, 0));
+    } else {
+      title.size = PILL_TEXT_SIZE;
+      title.horizontalAlignment = HorizontalAlignment.Center;
+      title.layoutRect = Rect.create(-40, 40, -5, 5);
+      so.getTransform().setLocalPosition(new vec3(PILL_DOT_ZONE / 2, PILL_Y, 0));
+    }
     if (!this.pillBg) return;
     this.pillBg.enabled = pill !== null;
-    if (pill === null) return;
-    for (let i = this.pillBg.getChildrenCount() - 1; i >= 0; i--) this.pillBg.getChild(i).destroy();
-    this.pillWidth = pill.length * PILL_GLYPH_CM + 8;
-    addSurface(this.pillBg, this.pillWidth, PILL_H, 0, CARD_FILL, CARD_FRAME);
+    if (pill !== null) {
+      for (let i = this.pillBg.getChildrenCount() - 1; i >= 0; i--) this.pillBg.getChild(i).destroy();
+      this.pillWidth = pill.length * PILL_GLYPH_CM + 8 + PILL_DOT_ZONE;
+      addRoundedSurface(child(this.pillBg, 'Capsule'), this.pillWidth, PILL_H, 0, PANEL_FILL, PANEL_STROKE, PILL_H / 2);
+      addDot(this.pillBg, 'PillDot', PILL_DOT_R, new vec3(-this.pillWidth / 2 + PILL_H / 2, 0, 0.1), ACCENT_CYAN);
+      this.orderMeshes(this.pillBg, 4);
+      this.orderMeshes(this.pillBg.getChild(0), 3);
+      this.pillFade.length = 0;
+      this.fadeMeshes(this.pillFade, this.pillBg);
+      this.fadeText(this.pillFade, title);
+    }
+    this.applyFades();
   }
 
   /**
@@ -705,22 +838,25 @@ export class EyesUpApp extends BaseScriptComponent {
     };
 
     const cueCard: CueCardView = {
-      showCard: (section) => {
+      showCard: (section, index, total) => {
         this.cueCard.enabled = true;
         this.cueCardTitle.text = section.title;
-        this.cueCardBody.text = section.points.map((p) => `• ${p}`).join('\n');
-        this.cueCardBody.getSceneObject().enabled = true;
+        this.fillCard(section.points, index, total);
         this.setCardLayout(null);
       },
       showPill: (tag) => {
         this.cueCardTitle.text = tag;
-        this.cueCardBody.getSceneObject().enabled = false;
         this.setCardLayout(tag);
       },
-      hide: () => (this.cueCard.enabled = false),
+      hide: () => {
+        this.cueCard.enabled = false;
+        this.lastMorph = 0;
+      },
       applyMorph: (m) => {
-        const s = PILL_SCALE + (1 - PILL_SCALE) * m; // pass 4: pill is 90% of the card size (was 40%)
+        this.lastMorph = m;
+        const s = PILL_SCALE + (1 - PILL_SCALE) * m; // the pill is 1.2x the card's scale: the card shrinks to the pill, the pill pops out
         this.cueCard.getTransform().setLocalScale(new vec3(s, s, s));
+        this.applyFades();
       },
       pillRect: () => this.pillRect(),
     };

@@ -11,7 +11,7 @@
 import { AudienceLook, PHONE_Y_CM } from './core/AudienceLook';
 import { FADE_ROWS, SHADOW_LAYERS, bodyFadePixels, headDepthScale, shadowBars } from './core/BodyFade';
 import { DEFAULT_TUNABLES } from './core/Tunables';
-import { addSurface, addText, child } from './EyesUpUI';
+import { addCircleRing, addSurface, addText, child } from './EyesUpUI';
 
 /** Cycle 6 (D2): the soft shadow sits where the body has faded out, just above the bottom of the preview frame (about 57 cm above the feet). */
 const SHADOW_Y = 74;
@@ -52,12 +52,15 @@ const ZZZ_ABOVE_HEAD_CM = 30;
 /** 'zzz' marker: lavender, above the sunk head and clear of the head (and of the nudge chevron on its side). Title2 at 420 cm is about 7 cm tall in the silhouette's space. */
 const ZZZ_RGB = new vec4(0.85, 0.85, 1.0, 1);
 const ZZZ_DIST = 420;
-/** Perk-up ring pulse: a thin cyan ring of short bars (the display has no hollow disc), radius 20 cm at scale 1. */
-const RING_SEGMENTS = 24;
-const RING_RADIUS = 20;
-const RING_BAR_LEN = 6;
-const RING_BAR_THICK = 1.5;
-const RING_RGB: [number, number, number] = [0.35, 0.95, 1.0];
+/**
+ * Perk-up ring pulse (Cycle 1, D3): one smooth cyan ring mesh, radius 12 cm at scale 1, capped at
+ * scale 2.1 (outer edge about 26 cm from the head centre) so it never reaches the room meter row,
+ * which starts about 29 cm above the head centre. It used to grow to 48 cm and strike through "Room".
+ */
+const RING_RADIUS = 12;
+const RING_THICK = 1.7;
+const RING_MAX_SCALE = 2.1;
+const RING_RGB: [number, number, number] = [0.88, 1.0, 1.0];
 
 interface Member {
   body: SceneObject | null;
@@ -133,13 +136,7 @@ export class AudienceRig {
       const zzzText = addText(zzz, 'ZzzText', 'zzz', 'Title2', 14, 8, ZZZ_DIST, ZZZ_RGB, new vec3(0, 0, 0));
       zzz.enabled = false;
       const ring = child(root, 'PerkRing', new vec3(0, HEAD_REST_Y, 14));
-      const ringVisuals: RenderMeshVisual[] = [];
-      for (let k = 0; k < RING_SEGMENTS; k++) {
-        const a = (k / RING_SEGMENTS) * 2 * Math.PI;
-        const bar = child(ring, `Seg${k}`, new vec3(Math.cos(a) * RING_RADIUS, Math.sin(a) * RING_RADIUS, 0));
-        bar.getTransform().setLocalRotation(quat.angleAxis(a + Math.PI / 2, new vec3(0, 0, 1)));
-        ringVisuals.push(addSurface(bar, RING_BAR_LEN, RING_BAR_THICK, 0, new vec4(RING_RGB[0], RING_RGB[1], RING_RGB[2], 0), null));
-      }
+      const ringVisuals: RenderMeshVisual[] = [addCircleRing(ring, 'Circle', RING_RADIUS, RING_THICK, 0, new vec4(RING_RGB[0], RING_RGB[1], RING_RGB[2], 0))];
       ring.enabled = false;
       // Soft floor shadow: nested ellipses of horizontal bars behind the body.
       const shadowRoot = child(root, 'Shadow', new vec3(0, SHADOW_Y, SHADOW_Z));
@@ -216,7 +213,8 @@ export class AudienceRig {
     if (pa > 0.01) {
       const rt = m.ring.getTransform();
       rt.setLocalPosition(new vec3(headPos.x, headPos.y, headPos.z + 14));
-      rt.setLocalScale(new vec3(look.pulseScale, look.pulseScale, 1));
+      const rs = Math.min(look.pulseScale, RING_MAX_SCALE);
+      rt.setLocalScale(new vec3(rs, rs, 1));
       m.ringVisuals.forEach((v) => (v.mainPass.baseColor = new vec4(RING_RGB[0], RING_RGB[1], RING_RGB[2], pa)));
     }
     const glow = look.phoneGlow * fade;

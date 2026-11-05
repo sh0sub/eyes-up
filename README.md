@@ -53,7 +53,7 @@ Built for Learn AR with SPECS (deadline 2026-11-09 PST). Preview-only is accepta
   `repeated_nudge`, `finish_pulses_at_time`, `neglect_disengages_then_recovers`, `finish_gives_grade` (results: `devpost/leaf-results.md`). Node checks:
   `npm run check` (typecheck, lint, 183 vitest tests).
 - **Preview only, not tested on a Spectacles device.** Gaze is head rotation, simulated by LEAF in tests.
-- **Nudge chevron placement rule** (`Assets/Scripts/core/ChevronPlacement.ts`): the chevron is a bold double chevron with a caption and no box; it keeps its
+- **Nudge chevron placement rule** (`Assets/Scripts/core/ChevronPlacement.ts`): the chevron is a bold double chevron on a round dark backing disc with a "Look left" / "Look right" caption; it keeps its
   edge-of-view spot; panels (podium, cue card), the room meter and every member's whole silhouette are projected into its view
   plane each frame so it slides onto free wall (or, if there is none, avoids what it can) rather than covering them. Unit tested.
 - **Demo video:** 1:33, narrated and captioned, opening on the hero halo frame and a drawn "Eyes drop" card, then live preview footage (Setup, pinch, audience, halo; the disclosure shows for the first 2 s, then a PREVIEW pill stays on screen). Gaze, nudge and podium clips play in real time, the cue clip at x1.3 (badged on screen), the Summary is a still capture with a zoom to the timeline, and a card shows three real before/after pairs. `scripts/video/build-video.mjs` builds it from Lens Studio preview footage. YouTube: **TODO_PASTE_PUBLIC_YOUTUBE_URL_HERE**

@@ -167,6 +167,21 @@ declare class RenderMesh extends Asset {
   readonly aabbMin: vec3;
   readonly aabbMax: vec3;
 }
+declare enum MeshTopology {
+  Triangles,
+}
+declare enum MeshIndexType {
+  UInt16,
+}
+declare class MeshBuilder {
+  constructor(layout: Array<{ name: string; components: number }>);
+  topology: MeshTopology;
+  indexType: MeshIndexType;
+  appendVerticesInterleaved(verts: number[]): void;
+  appendIndices(indices: number[]): void;
+  updateMesh(): void;
+  getMesh(): RenderMesh;
+}
 declare class RenderMeshVisual extends Component {
   mesh: RenderMesh;
   mainPass: Pass;

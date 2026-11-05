@@ -53,8 +53,8 @@ const GRADE_COLOR: Record<Grade, vec4> = {
   B: new vec4(0.55, 0.85, 1.0, 1),
   C: new vec4(1.0, 0.62, 0.42, 1),
 };
-const BUTTON_PLATE = new vec4(0.08, 0.11, 0.18, 1);
-const BUTTON_PLATE_FRAME = new vec4(0.6, 0.78, 0.95, 0.9);
+const BUTTON_PLATE = new vec4(0.03, 0.05, 0.15, 0.9);
+const BUTTON_PLATE_FRAME = new vec4(0.5, 0.69, 1.0, 0.45);
 const W = SUMMARY_PANEL_W_CM;
 /**
  * Game pass: 53 -> 60 cm to fit the grade row; Cycle 4 (D3): 74 cm. Cycle 5 (R1): 78 cm for the bigger grade, tip, a legend line and taller buttons.
@@ -77,7 +77,6 @@ const TL_NUDGE_Y = -5.8;
 /** Zone labels and percentages: 92 -> 120 (about 1.3x). Buttons: 5.6 cm tall targets, Again is the widest. */
 const ZONE_TEXT_SIZE = 120;
 const BUTTON_H = 6.6;
-const BUTTON_TEXT_SIZE = 92;
 
 @component
 export class SummaryPanel extends BaseScriptComponent {
@@ -148,15 +147,15 @@ export class SummaryPanel extends BaseScriptComponent {
     this.tipText.size = 148; // Cycle 5 (R1): a bigger amber bar, the second-largest text after the grade
     // An opaque dark plate (own frame) behind the buttons, so they never read as part of the wall art behind the panel's lower edge.
     const buttons = flexRow(c, 'SummaryButtons', W - 6, BUTTON_H + 1.8, 1.6);
-    addSurface(child(buttons, 'ButtonPlate', new vec3(0, 0, -0.1)), W - 6, BUTTON_H + 1.8, 0, BUTTON_PLATE, BUTTON_PLATE_FRAME);
-    const big = { labelRole: 'Headline1' as const };
+    addSurface(child(buttons, 'ButtonPlate', new vec3(0, 0, -0.1)), W - 6, BUTTON_H + 1.8, 0, BUTTON_PLATE, BUTTON_PLATE_FRAME, 1.4);
+    const big = { labelRole: 'Body' as const };
     // Again is the practice loop: the widest, primary (cyan) button. Done and Re-place are secondary.
     // Cycle 5 (R1): Again is the only filled cyan button and says what it is for; Done and Move stage are outlines.
-    addButton(buttons, 'AgainButton', 'Again', 17, BUTTON_H, DIST, () => this.onAgain?.(), { icon: 'replay', primary: true, labelRole: 'Title2', subline: 'beat your grade' });
-    addButton(buttons, 'DoneButton', 'Done', 9.4, BUTTON_H, DIST, () => this.onDone?.(), { icon: 'check', outline: true, ...big }).label.size = BUTTON_TEXT_SIZE;
+    addButton(buttons, 'AgainButton', 'Again', 17, BUTTON_H, DIST, () => this.onAgain?.(), { icon: 'replay', primary: true, labelRole: 'Heading', subline: 'beat your grade' });
+    addButton(buttons, 'DoneButton', 'Done', 9.4, BUTTON_H, DIST, () => this.onDone?.(), { icon: 'check', outline: true, ...big });
     // Pass 6 (artifact F2): Re-place (same size and type role as Again / Done), reachable here once the rehearsal is over (the podium
     // hides it during Rehearsal). Seats the stage again where you now face and restarts the talk.
-    addButton(buttons, 'SummaryReplaceButton', 'Move stage', 13, BUTTON_H, DIST, () => this.onReplace?.(), { outline: true, ...big }).label.size = BUTTON_TEXT_SIZE;
+    addButton(buttons, 'SummaryReplaceButton', 'Move stage', 13, BUTTON_H, DIST, () => this.onReplace?.(), { outline: true, ...big });
     // Hidden state is applied in UpdateEvent, after every UIKit element ran OnStart (G3).
     this.createEvent('UpdateEvent').bind(() => {
       if (this.panel.root.enabled !== this.wantVisible) this.panel.root.enabled = this.wantVisible;

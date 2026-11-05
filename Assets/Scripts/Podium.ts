@@ -47,21 +47,21 @@ export class Podium extends BaseScriptComponent {
     // Re-place lives in the info row (hidden during Rehearsal) so the button row stays centered.
     const info = flexRow(c, 'PodiumInfo', W - 2, 3.8, 2);
     this.replaceButton = addButton(info, 'ReplaceButton', 'Re-place', 7.2, 3.8, DIST, () => this.handlers?.replace(), {
-      labelRole: 'Headline1',
+      labelRole: 'Body',
     }).button.getSceneObject();
-    this.sectionText = textRow(info, 'SectionText', '1 / 5', 'Title2', 8, 3.4, DIST, TEXT_ACCENT);
-    this.elapsedText = textRow(info, 'ElapsedText', '0:00 / 3:00', 'Title2', 15, 3.4, DIST);
+    this.sectionText = textRow(info, 'SectionText', '1 / 5', 'Title', 8, 3.4, DIST, TEXT_ACCENT);
+    this.elapsedText = textRow(info, 'ElapsedText', '0:00 / 3:00', 'Title', 15, 3.4, DIST);
     const buttons = flexRow(c, 'PodiumButtons', W - 2, 5.8, 1.0);
-    addButton(buttons, 'PrevButton', 'Prev', 7.8, 4.2, DIST, () => this.handlers?.prev(), { icon: 'chevron_left', labelRole: 'HeadlineXL' });
+    addButton(buttons, 'PrevButton', 'Prev', 7.8, 4.2, DIST, () => this.handlers?.prev(), { icon: 'chevron_left', labelRole: 'Heading' });
     addButton(buttons, 'NextButton', 'Next', 11.2, 5.4, DIST, () => this.handlers?.next(), {
       icon: 'chevron_right',
       primary: true,
-      labelRole: 'Title2',
+      labelRole: 'Title',
     });
     const finish = addButton(buttons, 'FinishButton', 'Finish', 8.2, 4.2, DIST, () => this.handlers?.finish(), {
       icon: 'flag',
       amber: true,
-      labelRole: 'HeadlineXL',
+      labelRole: 'Heading',
     });
     this.finishButton = finish.button.getSceneObject();
     this.finishLabel = finish.label;
