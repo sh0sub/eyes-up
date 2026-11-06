@@ -97,7 +97,7 @@ sessions, Connected Lenses, deck import (Stretch), and LLM feedback (excluded).
 - Lens Studio learning curve (no prior experience). CLAD builds the scene, and I write design notes.
 - MCP/CLAD setup. If the loop does not run by the D2 evening, cut the MVP to no Setup panel and 3 audience members.
 - Preview limits: LEAF cannot move the camera, so gaze is injected through `ScriptedGazeProvider`.
-- Audience visual quality: faceless translucent silhouettes are an intentional style.
+- Audience visual quality: faceless but volumetric glass figures (head, neck, shoulders, torso with a rim light, one hue per person) are an intentional style; see docs/spec-matrix.md (redesign).
 
 ## Build notes for CLAD
 

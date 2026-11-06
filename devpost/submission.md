@@ -14,7 +14,7 @@ Rehearse your talk with your eyes on the room, not on your notes.
 > 1. **See it:** gallery images 1 and 2 are the whole idea. Members you ignore slump, mute their colour and light a phone; the one you look at stays lit in cyan and the room meter shows how many are with you.
 > 2. **See why it needs glasses:** image 3 is the plan seen from above (you, 2.5 m, three members 42 cm apart, your view) beside a Preview frame, with three design rules.
 > 3. **See the payoff and the loop:** image 4 is the Summary (grade, split, timeline, tip). Image 5 puts Run 1 (C 39) next to Run 2 (A 84) after following the tip.
-> 4. **Check it:** image 6 (process, 10 of 10 LEAF scenarios, 183 tests) and image 7 (how CLAD and the Lens Studio MCP were used). Preview only, gaze driven by the LEAF harness, untested on a device.
+> 4. **Check it:** image 6 (process, 10 of 10 LEAF scenarios, 194 tests) and image 7 (how CLAD and the Lens Studio MCP were used). Preview only, gaze driven by the LEAF harness, untested on a device.
 
 **Learn:** spread your eye contact across the whole room. **For:** students, founders, anyone with a talk or an interview coming up.
 
@@ -34,7 +34,7 @@ Rehearse your talk with your eyes on the room, not on your notes.
 
 1. **Problem:** people rehearse talks staring at slides, a phone or a script, so the room never gets practice.
 2. **Spatial moment:** on Spectacles a virtual audience sits 2.5 m ahead and **reacts to where you look**: the member you face lights up in cyan and perks up, the ones you ignore slump and light a phone, and after 8 seconds a chime and a chevron point to the side you forgot.
-3. **Proof:** built with CLAD and the Lens Studio MCP; 10 of 10 LEAF scenarios pass in the Interactive Preview and 183 Node tests pass. Preview only, gaze = head direction driven by the LEAF harness, not tested on a device.
+3. **Proof:** built with CLAD and the Lens Studio MCP; 10 of 10 LEAF scenarios pass in the Interactive Preview and 194 Node tests pass. Preview only, gaze = head direction driven by the LEAF harness, not tested on a device.
 
 **Learning goal:** spread your eye contact across the whole room. **Feedback:** the audience reacts live, then you get one tip and a grade. **Practice:** press Again and beat your grade. *Limit: learning outcomes are not measured; preview only, gaze is head direction driven by the LEAF harness, untested on a device.*
 
@@ -43,7 +43,7 @@ Rehearse your talk with your eyes on the room, not on your notes.
 Eyes Up is a presentation rehearsal coach for Spectacles. Setup is three pinches (talk length
 3 / 5 / 10 min, audience 3 / 6 / 9 with 3 selected so the whole room fits the view, deck: two samples or your own outline), then Start rehearsal.
 
-- **Look:** a half circle of glassy silhouettes stands 2.5 m ahead. Whoever you look at lights up in cyan within a second.
+- **Look:** a half circle of glass figures (head, neck, shoulders and torso, each person in a different hue, each with a "#n NN%" engagement tag) stands 2.5 m ahead. Whoever you look at gets a bright cyan ring within a second.
 - **Nudge:** ignore one side for 8 seconds and a soft chime plays from that side while an amber double chevron appears at the edge of your view.
 - **Notes:** your next talking point floats above the audience for 4 seconds, then shrinks to a three-word tag. Look at it for a second and it opens again.
 - **Podium:** look down like a wristwatch for Prev, Next, Finish, a section counter and the talk timer.
@@ -69,7 +69,7 @@ Every caption describes what the image shows in the Interactive Preview (preview
 3. `devpost/screenshots/14-glasses-scale.png`: Why only on glasses: plan seen from above (you, 2.5 m arc, three members 42 cm apart, your view cone) beside a Preview frame, with three rules (placement, targets of 3 cm or larger, show only when needed) and where each is visible.
 4. `devpost/screenshots/06-summary.png`: The payoff: a large grade, attention score, room and balance, zone split, gaze timeline with the longest look-away, one tip, and Again as the single filled button (`06b-summary-grade-zones.png` is the close crop).
 5. `devpost/screenshots/12-run-compare.png`: The learning loop: Run 1 (C 39) beside Run 2 (A 84) with each tip. Scripted gaze, illustrative, not a user study.
-6. `devpost/screenshots/09-process-at-a-glance.png`: Process: three fixes found in the Preview (halo, hit area, game layer), the loop table, 10 of 10 LEAF scenarios, 183 tests.
+6. `devpost/screenshots/09-process-at-a-glance.png`: Process: three fixes found in the Preview (halo, hit area, game layer), the loop table, 10 of 10 LEAF scenarios, 194 tests.
 7. `devpost/screenshots/13-clad-mcp.png`: How CLAD and the Lens Studio MCP were used: architecture strip, four real steps, real log lines.
 8. `devpost/screenshots/03-nudge-chevron.png`: The nudge: an amber double chevron on a dark disc and "Look left" appear for the side you ignored, clear of the "zzz".
 
@@ -83,7 +83,7 @@ Rehearse, read the Summary, press Again (it keeps your settings) and run the tal
 
 | | Grade | Balance | Left / Center / Right | Longest look-away | Nudges | Tip shown |
 |---|---|---|---|---|---|---|
-| Run 1: stares right, ignores the left | C (score 39) | 46 | 0 / 31 / 69 % | 28 s, left | 3 | "Next time, look left more." |
+| Run 1: stares right, ignores the left | C (score 39) | 46 | 0 / 30 / 70 % | 29 s, left | 3 | "Next time, look left more." |
 | Run 2: follows the tip | A (score 84, new best) | 89 | 41 / 26 / 33 % | 12 s, right | 1 | "Next time, look at the center more." |
 
 | | What the learner gets |
@@ -104,7 +104,7 @@ Design rationale: the audience reaction is the feedback, the tip is the next ste
 
 One glance: gallery image 7 (`screenshots/13-clad-mcp.png`) shows the architecture strip, four real steps and real log lines.
 
-- **Pure-TypeScript core (no Lens Studio dependency):** state machine, gaze zones, halo attention, nudge rules, cue card, stage-line timer, session stats, engagement and room meter, score and grade, panel view models, chevron placement, deck import parser. 183 unit and integration tests, typecheck and lint pass in Node.
+- **Pure-TypeScript core (no Lens Studio dependency):** state machine, gaze zones, halo attention, nudge rules, cue card, stage-line timer, session stats, engagement and room meter, score and grade, panel view models, chevron placement, deck import parser. 194 unit and integration tests, typecheck and lint pass in Node.
 - **CLAD skills:** scene and UIKit panels built with the CLAD build skills (UIKit panels and buttons, Spectacles Interaction Kit pinch input).
 - **Lens Studio MCP tools:** scene edits, `MovePreviewCamera`, `run_leaf_scenario`, compile checks and log reads, all driven through MCP; no hand-edited scene files.
 - **LEAF:** 10 scenarios pass one at a time in the Interactive Preview (start places the audience, gaze fills the halo, neglect triggers a nudge, card then pill, dwell expands the pill, finish shows the summary, repeated nudge, Finish pulses at time, a neglected member slumps and recovers, Finish shows a grade).
@@ -148,7 +148,7 @@ We have not measured learning outcomes. These are open questions, not results.
 
 ## Last step before submitting (not paste-ready text)
 
-The demo video is re-recorded once at the end from the final Lens. After the upload, set the YouTube video to Public or Unlisted and paste its URL into the Devpost "Video demo link" field. Until then the field below stays unfilled and must not be pasted anywhere.
+The demo video is re-recorded once at the end from the final Lens (the current cut was made before the glass-native redesign, so its panels and silhouettes look like the earlier build; the screenshots and gallery images show the final look). After the upload, set the YouTube video to Public or Unlisted and paste its URL into the Devpost "Video demo link" field. Until then the field below stays unfilled and must not be pasted anywhere.
 
 - Demo video (under 3 min, narrated and captioned, Interactive Preview footage with a PREVIEW pill): YouTube URL: **TODO_PASTE_PUBLIC_YOUTUBE_URL_HERE** (needs the entrant's YouTube account).
 

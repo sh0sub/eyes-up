@@ -29,7 +29,7 @@ more.") close the loop: look, get feedback, adjust, run it again (Again keeps th
 
 | | Grade | Balance | Left / Center / Right | Longest look-away | Nudges | Tip shown |
 |---|---|---|---|---|---|---|
-| Run 1: stares right, ignores the left | C (score 39) | 46 | 0 / 31 / 69 % | 28 s, left | 3 | "Next time, look left more." |
+| Run 1: stares right, ignores the left | C (score 39) | 46 | 0 / 30 / 70 % | 29 s, left | 3 | "Next time, look left more." |
 | Run 2: follows the tip | A (score 84, new best) | 89 | 41 / 26 / 33 % | 12 s, right | 1 | "Next time, look at the center more." |
 
 Room engagement 76 % to 91 %. The Lens makes the feedback visible and repeatable; it does not show that real speakers improve.
@@ -57,6 +57,7 @@ Room engagement 76 % to 91 %. The Lens makes the feedback visible and repeatable
 |---|---|---|
 | Grey on grey: silhouettes (0.55, 0.68, 0.85 at 0.35 alpha) and the unlit halo vanish against the room | Silhouettes are saturated sky blue at 0.72 alpha, the unlit halo ring is bluer and twice as opaque, the cue card is indigo with a cyan frame | `walkthrough/02-audience.png`, `04-cue-card.png` |
 | Little fun or emotional hook: the audience only glows when you look | The audience reacts to being ignored: members slump and light a phone, then perk up in a cyan burst when you look. A room meter and an S/A/B/C grade give a number to beat | `walkthrough/07-engagement-slump.png`, `08-perk-up.png`, `06-summary.png` |
+| Dark filled plates read as grey plates, and the audience was identical paper-doll silhouettes (judged against the artifact mockups, 4 colour-tweak cycles stalled at about 5.5 to 6 of 10) | Redesign: the display is additive, so a dark fill cannot render darker; panels are now bright rounded outline strokes with a soft glow and at most a 5 to 12 % tint, and the audience is layered glass figures (head, neck, shoulders, torso, rim light, a different hue per person) with a "#n NN%" engagement tag | `walkthrough/01-setup.png`, `02-audience.png`, `05-podium.png`, `06-summary.png` |
 | Cue card and tag text too small at Spectacles scale | Card 84 x 34 cm, title size 290, bullets 180, tag effective size +12 % | `walkthrough/04-cue-card.png` |
 
 Habit 4 (guide attention) got a second channel: the neglected side now also looks neglected.

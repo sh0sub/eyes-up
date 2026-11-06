@@ -10,6 +10,8 @@ Cycle 6 re-run (2026-11-05, body fade, floor shadow, capped slump head, chevron 
 Cycle 3 re-run (2026-11-04, default audience 3, stage 6 cm higher, backdrop plate, zzz moved): all 10 scenarios PASSED again one at a time, no E/F lines from project scripts. Scenarios that use members in every zone pick the 6-person Setup button first.
 Cycle 4 re-run (2026-11-04, Summary re-layout, Room meter tick and frame, zzz above heads, canonical camera reset): every scenario starts from a refreshed preview and the camera pose of `scripts/video/preview-reset.sh` (`scripts/video/leaf-all.sh` runs all ten); `setUp` re-syncs the scripted gaze to the camera, closes a leftover Rehearsal or Summary and pinches the audience button explicitly. `start_places_audience` also asserts that all 3 heads project inside the viewport with a 10 % margin (`headFrameProblems`).
 Cycle 5 re-run (2026-11-05, Summary inside the viewport, higher stage and phone, larger Setup / podium / card text): all 10 scenarios PASSED one at a time from a refreshed preview at the canonical pose (`finish_gives_grade` timed out once while Lens Studio was overloaded after hours of captures; it PASSED after a Lens Studio restart). `start_places_audience` also asserts that every phone glow ends inside the bottom 4 % of the viewport (`phoneBottomProblems`).
+Redesign re-run (2026-11-06, glass-native luminous line UI and volumetric audience): all 10 scenarios PASSED one at a time from a refreshed preview at the canonical pose (`scripts/video/leaf-all.sh`), `npm run check` 194 tests, no E/F lines from project scripts. Preview only, not tested on a device.
+
 Design cycle 1 re-run (2026-11-05, shared panel material, 4-step type scale, ring cap, meter pill, cue card and chevron redesign): all 10 scenarios PASSED one at a time from a refreshed preview at the canonical pose (`scripts/video/leaf-all.sh`), `npm run check` 183 tests, no E/F lines from project scripts.
 Preview only, not tested on a Spectacles device.
 
@@ -30,7 +32,7 @@ Preview only, not tested on a Spectacles device.
 | 13 | `neglect_disengages_then_recovers` | 17 s of gaze on #0: engagement[4] < 0.5, Head of #4 sank, room < 90 % and the meter text dropped. 1.8 s on #4: engagement 1.0, Head back up, room rose | PASSED (22 s) |
 | 14 | `finish_gives_grade` | Short sweep, Finish: grade tile is S/A/B/C and equals the result, "Attention n" matches the score | PASSED (12 s) |
 | 15 | `capture_game` | Capture helper for `walkthrough/02-audience.png`, `07-engagement-slump.png` and `08-perk-up.png` (3-person audience: members 0 and 1 slump while #2 is watched, then #1 perks up) | PASSED |
-| 16 | `capture_loop` | Capture helper (about 65 s): Run 1 stares right, Again, Run 2 follows the tip. Logged: run1 grade C score 39 balance 46 room 76 % L0/C31/R69 longest 28 s left (the log uses the Summary's own formatter, so it matches the on-screen Summary and gallery image 12), 3 nudges; run2 grade A score 84 balance 89 room 91 % L41/C26/R33 longest 12 s right, 1 nudge, new best. Scripted gaze, illustrative, not a user study | PASSED |
+| 16 | `capture_loop` | Capture helper (about 65 s): Run 1 stares right, Again, Run 2 follows the tip. Logged: run1 grade C score 39 balance 46 room 76 % L0/C30/R70 longest 29 s left (the log uses the Summary's own formatter, so it matches the on-screen Summary and gallery image 12), 3 nudges; run2 grade A score 84 balance 89 room 91 % L41/C26/R33 longest 12 s right, 1 nudge, new best. Scripted gaze, illustrative, not a user study | PASSED |
 
 ## Not tested
 
@@ -40,7 +42,7 @@ Preview only, not tested on a Spectacles device.
 
 ## Node tests
 
-`npm run check`: typecheck, ESLint and 183 Vitest tests (state machine, gaze zones, halo attention,
+`npm run check`: typecheck, ESLint and 194 Vitest tests (state machine, gaze zones, halo attention,
 nudge rules, chevron placement, cue card, stage line, session stats, panel view models, deck import,
 engagement decay and recovery, silhouette look, room meter tone, score, grade, best-previous compare,
 applause strength).
