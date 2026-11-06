@@ -107,16 +107,49 @@ describe('per-person tag', () => {
     expect(l.burst).toBeCloseTo(0.5, 9);
   });
 
-  it('fills are faint tints (at most 15 % alpha) in every state; volume comes from the strokes', () => {
+  it('fills are tints (at most 25 % alpha at the shoulders, fading with height; additive, so they add light) in every state; volume comes from the strokes', () => {
     for (const v of [0, 0.5, 1]) {
       for (const lit of [0, 1]) {
         const c = figureColors(figureHue(0), v, 0, lit, 1);
         for (const k of ['body', 'glow', 'highlight', 'head', 'headHighlight', 'headGlow'] as const) expect(c[k][3], `${k} v=${v} lit=${lit}`).toBeLessThanOrEqual(0.25);
-        expect(c.body[3]).toBeLessThanOrEqual(0.15);
-        expect(c.head[3]).toBeLessThanOrEqual(0.15);
+        expect(c.body[3]).toBeLessThanOrEqual(0.25);
+        expect(c.head[3]).toBeLessThanOrEqual(0.25);
         expect(c.rim[3]).toBeGreaterThanOrEqual(0.45);
         expect(c.rimLight[3]).toBeGreaterThanOrEqual(c.rim[3] - 0.01);
       }
     }
+  });
+});
+
+describe('round 3: per-person variation, volume and slump', () => {
+  it('every seat differs from its neighbour by height or width, within 8 % and never taller than the lit reference', async () => {
+    const { figureVariant } = await import('../../Assets/Scripts/core/Figure');
+    for (let i = 0; i < 9; i++) {
+      const v = figureVariant(i);
+      expect(v.height).toBeGreaterThanOrEqual(0.92);
+      expect(v.height).toBeLessThanOrEqual(1);
+      expect(v.width).toBeGreaterThanOrEqual(0.92);
+      expect(v.width).toBeLessThanOrEqual(1);
+      expect(Math.abs(v.turn)).toBeGreaterThan(0.3);
+      const n = figureVariant(i + 1);
+      expect(Math.abs(v.height - n.height) + Math.abs(v.width - n.width) + Math.abs(v.turn - n.turn)).toBeGreaterThan(0.1);
+    }
+  });
+
+  it('the body tint fades with height: strongest at the shoulders, half of it at the fade start', async () => {
+    const { bodyGradient, FADE_START_CM, BODY_HEIGHT_CM } = await import('../../Assets/Scripts/core/BodyFade');
+    expect(bodyGradient(BODY_HEIGHT_CM)).toBe(1);
+    expect(bodyGradient(FADE_START_CM)).toBeCloseTo(0.5, 6);
+  });
+
+  it('a slumped look drops and rolls the whole figure; an upright or perked-up one does not', async () => {
+    const { audienceLook, BODY_DROP_CM } = await import('../../Assets/Scripts/core/AudienceLook');
+    const up = audienceLook(1);
+    const down = audienceLook(0);
+    expect(up.bodyDropCm).toBe(0);
+    expect(up.bodyRollDeg).toBe(0);
+    expect(down.bodyDropCm).toBeCloseTo(-BODY_DROP_CM, 6);
+    expect(down.bodyRollDeg).toBeGreaterThan(5);
+    expect(audienceLook(0, 1).bodyDropCm).toBe(0);
   });
 });

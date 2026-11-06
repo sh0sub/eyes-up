@@ -30,6 +30,32 @@ export function figureHue(i: number): Rgb {
   return FIGURE_HUES[((i % FIGURE_HUES.length) + FIGURE_HUES.length) % FIGURE_HUES.length];
 }
 
+/**
+ * Round 3: every person is a little different. `height` and `width` scale the figure by up to 8 % (never above 1, so the tag row above the
+ * lit halo tops keeps its gap), `turn` (-1..1) slides and narrows the eyes so the head looks turned toward one side, `roll` (degrees) tips
+ * the resting head a touch.
+ */
+export interface FigureVariant {
+  height: number;
+  width: number;
+  turn: number;
+  roll: number;
+}
+const VARIANTS: readonly FigureVariant[] = [
+  { height: 0.97, width: 0.98, turn: -0.75, roll: -3 },
+  { height: 1.0, width: 0.93, turn: 0.55, roll: 2 },
+  { height: 0.94, width: 1.0, turn: 0.85, roll: 3.5 },
+  { height: 0.98, width: 0.92, turn: -0.45, roll: -2 },
+  { height: 0.93, width: 0.97, turn: 0.65, roll: 3 },
+  { height: 1.0, width: 1.0, turn: -0.85, roll: -3.5 },
+  { height: 0.95, width: 0.95, turn: 0.35, roll: 1.5 },
+  { height: 0.97, width: 0.93, turn: -0.6, roll: -2.5 },
+  { height: 0.92, width: 0.99, turn: 0.75, roll: 2.5 },
+];
+export function figureVariant(i: number): FigureVariant {
+  return VARIANTS[((i % VARIANTS.length) + VARIANTS.length) % VARIANTS.length];
+}
+
 /** Height of the figure's body object above the floor (cm): body-local y is height - BODY_ORIGIN_CM. */
 export const BODY_ORIGIN_CM = 70;
 /** Head ellipse half extents (cm). The rest head centre sits at 153 cm. */
@@ -139,6 +165,8 @@ export interface FigureColors {
   body: Rgba;
   /** Brighter rim on the light side (left) of the torso and head, and the V collar. */
   rimLight: Rgba;
+  /** Round 3: soft highlight along the light-side shoulder. */
+  shoulder: Rgba;
   /** The V collar: only on an engaged member (on a slumped one it would cross the sunk head). */
   collar: Rgba;
   glow: Rgba;
@@ -170,21 +198,22 @@ export function figureColors(hue: Rgb, vitality: number, burst: number, lit: num
   const l = clamp01(lit);
   const f = clamp01(fade);
   const base = mix3(mix3(DRAINED, hue, v), PERK, 0.55 * b);
-  const rimRgb = mix3(mix3(base, WHITE, 0.55), [0.7, 1, 1], 0.6 * l);
+  const rimRgb = mix3(mix3(base, WHITE, 0.32), [0.7, 1, 1], 0.6 * l);
   const skin = mix3(base, WHITE, 0.45);
   const a = (x: number): number => x * f;
-  // Additive display: every fill is a tint of at most about 15 % alpha. Volume is carried by bright outline strokes (rim, inner arm and collar
+  // Additive display (blend Add, alpha not written): fills are tints that add light, so a figure reads as a glowing volume; top strength about 24 % at the shoulders, fading with height. Volume is carried by bright outline strokes (rim, inner arm and collar
   // contours), a brighter rim on the left (light) side, and the body fading out toward the bottom (texture alpha).
-  const bodyA = lerp(0.06, 0.13, v);
+  const bodyA = lerp(0.1, 0.24, v);
   return {
     body: [base[0], base[1], base[2], a(bodyA)],
-    rimLight: [lerp(rimRgb[0], 1, 0.4), lerp(rimRgb[1], 1, 0.4), lerp(rimRgb[2], 1, 0.4), a(lerp(0.65, 1, v))],
+    rimLight: [lerp(rimRgb[0], 1, 0.3), lerp(rimRgb[1], 1, 0.3), lerp(rimRgb[2], 1, 0.3), a(lerp(0.7, 1, v))],
+    shoulder: [lerp(skin[0], 1, 0.4), lerp(skin[1], 1, 0.4), lerp(skin[2], 1, 0.4), a(lerp(0.12, 0.26, v))],
     collar: [rimRgb[0], rimRgb[1], rimRgb[2], a(0.75 * v * v)],
     glow: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.04, 0.1, v) + 0.1 * l)],
-    highlight: [skin[0], skin[1], skin[2], a(lerp(0.03, 0.07, v))],
+    highlight: [skin[0], skin[1], skin[2], a(lerp(0.04, 0.1, v))],
     arms: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.25, 0.75, v))],
     rim: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.45, 1, v))],
-    head: [skin[0], skin[1], skin[2], a(lerp(0.07, 0.14, v))],
+    head: [skin[0], skin[1], skin[2], a(lerp(0.1, 0.22, v))],
     headHighlight: [1, 1, 1, a(lerp(0.08, 0.16, v))],
     headGlow: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.05, 0.12, v) + 0.1 * l)],
     headRim: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.8, 1, v))],

@@ -40,6 +40,8 @@ declare class vec4 {
 declare class quat {
   static lookAt(forward: vec3, up: vec3): quat;
   static angleAxis(angle: number, axis: vec3): quat;
+  multiply(q: quat): quat;
+  multiplyVec3(v: vec3): vec3;
 }
 declare class Rect {
   static create(left: number, right: number, bottom: number, top: number): Rect;
@@ -155,7 +157,16 @@ declare class ProceduralTextureProvider {
   setPixels(x: number, y: number, width: number, height: number, data: Uint8Array): void;
 }
 declare class Font extends Asset {}
+declare class vec4b {
+  constructor(x: boolean, y: boolean, z: boolean, w: boolean);
+}
+declare enum BlendMode {
+  Normal,
+  Add,
+}
 declare class Pass {
+  blendMode: BlendMode;
+  colorMask: vec4b;
   baseColor: vec4;
   baseTex: Texture;
   depthTest: boolean;

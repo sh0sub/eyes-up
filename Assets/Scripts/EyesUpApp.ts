@@ -35,24 +35,25 @@ import { ChevronBox, PlaneRect, placeChevron } from './core/ChevronPlacement';
 import { podiumState } from './core/PodiumModel';
 import { Vec3Like } from './core/math';
 import { ACCENT_CYAN, AUDIENCE_RENDER_ORDER, PANEL_FILL, STAGE_GLOW_CM, STAGE_STROKE_CM, addCircleRing, addPanelGlow, PANEL_STROKE, TEXT_LABEL, TEXT_PRIMARY, TEXT_SECONDARY, addDot, addIcon, addRoundedSurface, addSurface, child, faceTowards } from './EyesUpUI';
-import { METER_ABOVE_CM, METER_CAPSULE_H_CM, METER_WIDTH_CM } from './RoomMeter';
+import { METER_ABOVE_CM, METER_BELOW_CM, METER_WIDTH_CM } from './RoomMeter';
 
 /**
  * Pass 5 nudge chevron (artifact S3): a 6 × 6 cm amber double chevron ("‹‹" / "››", Material
  * keyboard_double_arrow_*) above a "left" / "right" caption. The hint's scene Text (±20 cm, 100 cm
  * ahead of the camera) becomes the caption; the icon is added at awake 4 cm above it.
  */
-const CHEVRON_CM = 7.6;
-const CHEVRON_ICON_Y = 7.3;
+/** Round 3: disc r 4.4 (was 5.7) and a lower disc centre, so the block (disc + caption) is 2.4 cm shorter and fits the gap between the tag row and a slumped member's zzz. */
+const CHEVRON_CM = 6.0;
+const CHEVRON_ICON_Y = 6.0;
 /**
  * Cycle 1 (D9): a dark backing circle (r 5.6 cm) with an amber hairline behind the double chevron, so it reads on a beige room, a "Look left" /
  * "Look right" caption in Body, and the 1 Hz pulse. Extents about the hint origin (cm), used for placement only.
  */
 /** Round 2: the whole chevron block is 0.8x its old size, so it fits the free wall left of the audience at the canonical pose without covering a tag. */
-const CHEVRON_BACK_R = 5.7;
+const CHEVRON_BACK_R = 4.4;
 const CHEVRON_EXT_HALF_W = 6.2;
-const CHEVRON_EXT_BELOW = 1.9;
-const CHEVRON_EXT_ABOVE = 13.4;
+const CHEVRON_EXT_BELOW = 1.7;
+const CHEVRON_EXT_ABOVE = 10.5;
 /** A member's body is about this wide (half, cm in the stage) for the chevron's keep-clear rects. */
 const MEMBER_BODY_HALF_W_CM = 26;
 /** Round 7: hint x offset (was 20) and drop so the backing clears the opening pill's corner in the nudge still. */
@@ -62,7 +63,7 @@ const CHEVRON_EDGE_GAP_CM = 2;
 /** Hint plane: the chevron is head-locked 100 cm ahead; panels are projected into that plane for placement. */
 const CHEVRON_PLANE_CM = 100;
 /** Clear gap kept between the chevron backing and any panel (cm in the plane). */
-const CHEVRON_PANEL_MARGIN_CM = 2.5;
+const CHEVRON_PANEL_MARGIN_CM = 1.0;
 /** Backing extents about the hint origin at the largest pulse scale (1.05). */
 const CHEVRON_BOX: ChevronBox = {
   halfW: CHEVRON_EXT_HALF_W * 1.05,
@@ -143,19 +144,23 @@ const PILL_TEXT_SIZE = 290;
  * Cycle 3 (F8): the capsule floats 4 cm above the tallest (lit) head top; the card keeps the old 9.5 cm centre-to-centre offset plus the
  * label row that now sits above the capsule (2.6 cm gap above the label).
  */
-const METER_ABOVE_HEAD_CM = 11;
+const METER_ABOVE_HEAD_CM = 19;
 /**
  * Round 2: the audience stands 11 cm lower in the view (floorOffsetCm 163) and the halo ring is 32 cm across, so a row of "#n NN%" tags fits between
  * the lit halo tops (177 cm) and the meter's bottom edge (11 cm above them); the card stays where it was. The card's bottom edge is 3.6 cm above
  * the top of the meter's label row (the card centre sits CARD_CENTER_Y above its origin, half its height further down).
  */
-const METER_CARD_OFFSET_CM = METER_ABOVE_CM + 3.6 + (CARD_H / 2 - CARD_CENTER_Y);
+/** Round 3: the meter row (label left of the bar, "target" under the tick) stands higher so "target" clears the tag row; the card keeps a gap of 3.4 cm above the bar. */
+const METER_CARD_GAP_CM = 3.4;
+const METER_CARD_OFFSET_CM = METER_ABOVE_CM + METER_CARD_GAP_CM + (CARD_H / 2 - CARD_CENTER_Y);
 /** Room meter extents about its centre (cm, local), from RoomMeter.ts: capsule width, capsule plus label row above it. */
 const METER_HALF_W_CM = METER_WIDTH_CM / 2;
-const METER_HALF_H_CM = METER_ABOVE_CM;
+const METER_HALF_H_CM = (METER_ABOVE_CM + METER_BELOW_CM) / 2;
+/** The row's centre is this far above its root (the root is the bar centre; the "target" row hangs below it). */
+const METER_CENTER_Y_CM = (METER_ABOVE_CM - METER_BELOW_CM) / 2;
 /** Footprint of a "zzz" marker in the member's space (cm), kept clear by the nudge chevron. */
 const ZZZ_HALF_W_CM = 11;
-const ZZZ_HALF_H_CM = 6;
+const ZZZ_HALF_H_CM = 5;
 /** Footprint of a member's "#n NN%" tag (cm in the member's space). */
 const TAG_HALF_W_CM = 13;
 const TAG_HALF_H_CM = 4.5;
@@ -248,7 +253,7 @@ export class EyesUpApp extends BaseScriptComponent {
       }
       this.hintTexts[i] = t;
       const back = child(so, 'Backing', new vec3(0, CHEVRON_ICON_Y, -0.1));
-      this.hintBacking[i] = [addDot(back, 'Disc', CHEVRON_BACK_R, new vec3(0, 0, 0), CHEVRON_BACK_FILL), addCircleRing(back, 'Rim', CHEVRON_BACK_R, CHEVRON_RING_CM, 0.02, CHEVRON_BACK_RING), addCircleRing(back, 'Glow', CHEVRON_BACK_R + 0.9, 0.9, -0.02, CHEVRON_BACK_GLOW), addCircleRing(back, 'Glow2', CHEVRON_BACK_R + 1.9, 1.0, -0.03, CHEVRON_BACK_GLOW2)];
+      this.hintBacking[i] = [addDot(back, 'Disc', CHEVRON_BACK_R, new vec3(0, 0, 0), CHEVRON_BACK_FILL), addCircleRing(back, 'Rim', CHEVRON_BACK_R, CHEVRON_RING_CM, 0.02, CHEVRON_BACK_RING), addCircleRing(back, 'Glow', CHEVRON_BACK_R + 0.7, 0.7, -0.02, CHEVRON_BACK_GLOW), addCircleRing(back, 'Glow2', CHEVRON_BACK_R + 1.5, 0.8, -0.03, CHEVRON_BACK_GLOW2)];
       const icon = addIcon(so, i === 0 ? 'double_arrow_left' : 'double_arrow_right', CHEVRON_CM, new vec3(0, CHEVRON_ICON_Y, 0));
       this.hintIcons[i] = icon;
     });
@@ -561,7 +566,7 @@ export class EyesUpApp extends BaseScriptComponent {
       if (r) panels.push(r);
     }
     // Every head and halo ring (at its current, possibly slumped, position) and the room meter are obstacles too.
-    const meterRect = this.meter && this.meter.root.enabled ? this.projectRect(this.meter.root, 0, 0, METER_HALF_W_CM, METER_HALF_H_CM) : null;
+    const meterRect = this.meter && this.meter.root.enabled ? this.projectRect(this.meter.root, 0, METER_CENTER_Y_CM, METER_HALF_W_CM, METER_HALF_H_CM) : null;
     const heads = this.headRects('heads');
     const silhouettes = this.headRects('silhouette');
     const cam = this.camera.getComponent('Component.Camera') as Camera;
@@ -578,11 +583,11 @@ export class EyesUpApp extends BaseScriptComponent {
         { margin: CHEVRON_PANEL_MARGIN_CM, viewHalfW: halfW, viewHalfH: halfH },
       );
     const withMeter = (rects: PlaneRect[]) => (meterRect ? [...rects, meterRect] : rects);
-    // Heads and halos are hard no-go (Cycle 6, D1): prefer wall clear of whole silhouettes and the meter, then clear of heads and the meter, then of heads only.
-    // If even that has no room the chevron is hidden (the chime still plays) rather than drawn over a head.
-    // Tags are kept clear when there is room; otherwise the chevron may cover one (a nudge must stay visible).
+    // Round 3: heads, halos, tags and the meter are all hard no-go. Prefer wall clear of whole silhouettes; otherwise clear of heads, tags and the
+    // meter (the chevron may then overlap a body outline, never a tag or a head). With no such spot the chevron waits (the chime has played) and
+    // appears as soon as members slump or move and a spot opens up; it is re-placed every frame.
     const tags = this.tagRects();
-    const spot = place(withMeter([...silhouettes, ...tags])) || place(withMeter([...heads, ...tags])) || place([...heads, ...tags]) || place(withMeter(silhouettes)) || place(withMeter(heads)) || place(heads);
+    const spot = place(withMeter([...silhouettes, ...tags])) || place(withMeter([...heads, ...tags]));
     this.hintHidden[i] = spot === null;
     if (spot === null) {
       so.getTransform().setLocalScale(new vec3(0, 0, 0));
@@ -838,7 +843,7 @@ export class EyesUpApp extends BaseScriptComponent {
             baseScale[i] = baseScale[i] ?? so.getTransform().getLocalScale().x;
           }
         });
-        const meterY = layout.stageCenter.y + LIT_HEAD_TOP_CM + METER_ABOVE_HEAD_CM + METER_CAPSULE_H_CM / 2;
+        const meterY = layout.stageCenter.y + LIT_HEAD_TOP_CM + METER_ABOVE_HEAD_CM;
         setPos(this.cueCard, { x: layout.cardAnchor.x, y: meterY + METER_CARD_OFFSET_CM, z: layout.cardAnchor.z });
         this.meter?.placeAt(new vec3(layout.cardAnchor.x, meterY, layout.cardAnchor.z), head);
         setPos(this.stageLine, layout.stageCenter);

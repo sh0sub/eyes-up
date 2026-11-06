@@ -20,7 +20,7 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:18px;background:#eef0fa;
  <h1>Built with CLAD and the Lens Studio MCP</h1>
  <div class="sub">The logic is tested in Node. The Lens is built, driven and looked at through MCP tools.</div>
  <div class="arch">
-  <div class="node"><div class="k">1 &middot; Core</div><div class="n">Pure TypeScript</div><div class="d">State machine, gaze, engagement, score. 195 tests, no Lens Studio needed.</div></div>
+  <div class="node"><div class="k">1 &middot; Core</div><div class="n">Pure TypeScript</div><div class="d">State machine, gaze, engagement, score. 198 tests, no Lens Studio needed.</div></div>
   <div class="node"><div class="k">2 &middot; Lens</div><div class="n">Lens scripts</div><div class="d">UIKit panels, audience rig, cue card, podium. Thin adapters over the core.</div></div>
   <div class="node"><div class="k">3 &middot; MCP</div><div class="n">Lens Studio MCP</div><div class="d">Compile, refresh Preview, move the camera, run LEAF scenarios, read logs.</div></div>
   <div class="node"><div class="k">4 &middot; LEAF</div><div class="n">10 scenarios</div><div class="d">Scripted gaze and pinches against the real Lens, one at a time.</div></div>
@@ -32,6 +32,6 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:18px;background:#eef0fa;
   <div class="step"><div class="num">3</div><div><div class="n">LEAF drives the Lens</div><div class="d"><code>run_leaf_scenario</code> looks at a member, pinches a button, waits for a nudge, reads the Summary.</div></div></div>
   <div class="step"><div class="num">4</div><div><div class="n">We look, then fix</div><div class="d">Pale halo, cone hit area, grey UIKit plates under the glass UI, clipped Summary: all found in captures (see the process card).</div></div></div>
  </div>
- <div class="log"><span class="l">Lens Studio log, Interactive Preview</span><br>[capture_loop] run1 grade C score 39 balance 46 room 76% zones L0/C30/R70 longest 29 s left at 0:00 nudges 3<br>[capture_loop] run2 grade A score 84 balance 89 room 91% zones L41/C26/R33 longest 12 s right at 0:00 nudges 1<br><span class="ok">PASSED: capture_game</span></div>
+ <div class="log"><span class="l">Lens Studio log, Interactive Preview</span><br>[capture_loop] run1 grade C score 39 balance 46 room 76% zones L0/C30/R70 longest 28 s left at 0:00 nudges 3<br>[capture_loop] run2 grade A score 84 balance 89 room 91% zones L41/C26/R33 longest 12 s right at 0:00 nudges 1<br><span class="ok">PASSED: capture_game</span></div>
  <div class="foot">Preview only, gaze driven by the LEAF harness, not tested on a Spectacles device. Log lines are copied from the Lens Studio log of the capture run.</div>
 </div>

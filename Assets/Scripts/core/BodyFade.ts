@@ -22,11 +22,21 @@ export function bodyFadeAlpha(heightCm: number): number {
   return t * t * (3 - 2 * t);
 }
 
+/**
+ * Round 3: vertical tint gradient. Above the fade-out the body keeps fading gently with height: full strength at the shoulders (the top of the
+ * mesh), `GRADIENT_LOW` of it at FADE_START_CM, so the torso reads as a rounded, lit-from-above volume instead of one flat tint.
+ */
+export const GRADIENT_LOW = 0.5;
+export function bodyGradient(heightCm: number): number {
+  const t = clamp01((heightCm - FADE_START_CM) / (BODY_HEIGHT_CM - FADE_START_CM));
+  return GRADIENT_LOW + (1 - GRADIENT_LOW) * t;
+}
+
 /** RGBA bytes of a `width` x FADE_ROWS texture whose row 0 is the feet: white, with `bodyFadeAlpha` as alpha (`plain`: opaque everywhere, for the head). */
 export function bodyFadePixels(width = 2, plain = false): Uint8Array {
   const data = new Uint8Array(width * FADE_ROWS * 4);
   for (let r = 0; r < FADE_ROWS; r++) {
-    const a = plain ? 255 : Math.round(255 * bodyFadeAlpha((BODY_HEIGHT_CM * r) / (FADE_ROWS - 1)));
+    const a = plain ? 255 : Math.round(255 * bodyFadeAlpha((BODY_HEIGHT_CM * r) / (FADE_ROWS - 1)) * bodyGradient((BODY_HEIGHT_CM * r) / (FADE_ROWS - 1)));
     for (let x = 0; x < width; x++) data.set([255, 255, 255, a], (r * width + x) * 4);
   }
   return data;

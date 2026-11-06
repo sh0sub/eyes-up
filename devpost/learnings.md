@@ -29,7 +29,7 @@ more.") close the loop: look, get feedback, adjust, run it again (Again keeps th
 
 | | Grade | Balance | Left / Center / Right | Longest look-away | Nudges | Tip shown |
 |---|---|---|---|---|---|---|
-| Run 1: stares right, ignores the left | C (score 39) | 46 | 0 / 30 / 70 % | 29 s, left | 3 | "Next time, look left more." |
+| Run 1: stares right, ignores the left | C (score 39) | 46 | 0 / 30 / 70 % | 28 s, left | 3 | "Next time, look left more." |
 | Run 2: follows the tip | A (score 84, new best) | 89 | 41 / 26 / 33 % | 12 s, right | 1 | "Next time, look at the center more." |
 
 Room engagement 76 % to 91 %. The Lens makes the feedback visible and repeatable; it does not show that real speakers improve.

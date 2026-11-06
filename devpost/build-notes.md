@@ -1013,3 +1013,15 @@ Visual design only; no game logic changed. Seven fixes from the round-1 critique
 - **Captures.** `capture_game`, `capture_nudge_hold` (80 s so both left members slump), a podium pass, `capture_summary` and `capture_loop`. `CaptureLoop.ts` now keeps the Run 1 Summary up for 3 s instead of 0.5 s (capture only), because a 1 fps window recorder missed it. Rebuilt: devpost/screenshots 00 to 06, 06b, 09, 10, 10b, 11, 12, 13, 14 and walkthrough 01 to 08; every frame was looked at; no debug text. The demo video was not re-recorded.
 - **Checks.** `npm run check`: 195 tests (a fill-alpha test and a shoulder-margin assertion were added; the floor, torso-width and frame-margin tests were updated), typecheck and lint clean. All 10 LEAF scenarios: see `devpost/leaf-results.md`.
 - **Known.** The tick touches the bottom of the word "target" by about a pixel. Earlier in the nudge hold the chevron has to overlap a torso outline because there is no free wall. Not tested on a device.
+
+## Redesign round 3 (2026-11-06): additive figures, whole-figure slump, meter and Summary rework
+
+Visual design only. Seven fixes from the round-2 critique, each looked at in Interactive Preview captures. Rows RD3-1 to RD3-7 in `docs/spec-matrix.md`.
+
+- **Figures.** Meshes use blend Add and do not write alpha, so tints add light. Vertical gradient on the torso, shoulder highlight, per-person height / width / head turn, whole-figure drop and roll on slump. Chevron placement no longer covers tags.
+- **Found while testing.** UIKit keeps drawing its dark button squircle in some frames even when its visual is switched off; the chip fills are therefore 3 % and the selected fill 7 % so what remains reads as an outline.
+- **Layout.** Room meter, Summary (52 x 84, chip, inline labels, subline) and Setup (54 x 38) reworked.
+- **Captures.** Window recordings of `capture_nudge_hold`, `capture_game`, a podium pass (camera pitched down, canonical pose otherwise), `capture_summary`, `capture_loop`; frames looked at. Devpost 00 to 06, 06b, 09, 10, 10b, 11, 12, 13, 14 and walkthrough 01 to 08 refreshed. The demo video was not re-recorded.
+- **Checks.** `npm run check`: 198 tests (3 new), typecheck and lint clean. LEAF: see `devpost/leaf-results.md`.
+- **Known.** Preview only, not tested on a device. The Preview shows the lens frame narrower than the room image, so the outer figures sit near the frame edge.
+

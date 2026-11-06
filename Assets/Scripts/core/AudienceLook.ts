@@ -27,6 +27,12 @@ export const PHONE_Y_CM = 89;
 export const PHONE_BOTTOM_BELOW_CENTER_CM = 6;
 /** The slumped head also tilts sideways (roll about the view axis) by this much; the ellipsoid makes a roll visible, a pitch is not. */
 export const HEAD_TILT_DEG = 30;
+/** Round 3: a slumped member drops as a whole (shoulders and head together) and rolls the torso sideways, instead of the head sinking inside a fixed shell. */
+export const BODY_DROP_CM = 18;
+export const BODY_ROLL_DEG = 7;
+/** At full slump the head centre sits this far above the (dropped) neck top: chin down, sunk between the shoulders. Upright it sits 12 cm above. */
+export const HEAD_ABOVE_NECK_UP_CM = 12;
+export const HEAD_ABOVE_NECK_SLUMP_CM = 7;
 
 export interface AudienceLook {
   /** Redesign: the raw engagement 0..1 and perk-up burst 0..1 behind this look (the figure's colours and the "#n NN%" tag read them). */
@@ -40,6 +46,9 @@ export interface AudienceLook {
   headPitchDeg: number;
   /** Head roll about the audience's forward axis (degrees; 0 = upright, HEAD_TILT_DEG at full slump). */
   headTiltDeg: number;
+  /** Round 3: whole-figure drop (cm, negative = lower) and torso roll (degrees, magnitude; the rig signs it per seat). */
+  bodyDropCm: number;
+  bodyRollDeg: number;
   /** 0..1 strength of the small 'zzz' marker above a slumped head (0 = hidden). */
   zzz: number;
   /** Multiplier for the body's scale Y (1 = upright). */
@@ -76,6 +85,8 @@ export function audienceLook(engagement: number, burst = 0): AudienceLook {
     headDropCm: -HEAD_SINK_CM * slump * (1 - 0.6 * lift) + 0, // + 0 turns -0 into 0
     headPitchDeg: HEAD_PITCH_DEG * slump * (1 - 0.8 * lift),
     headTiltDeg: HEAD_TILT_DEG * slump * (1 - lift),
+    bodyDropCm: -BODY_DROP_CM * slump * (1 - lift) + 0,
+    bodyRollDeg: BODY_ROLL_DEG * slump * (1 - lift),
     zzz: lift > 0.2 ? 0 : clamp01((slump - 0.5) / 0.3),
     bodyScaleY: 1 - 0.1 * slump,
     phoneGlow: clamp01((0.6 - e) / 0.4),

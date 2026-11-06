@@ -138,7 +138,8 @@ export const STAGE_GLOW_CM = 2.6;
  * panel reads as light. Drawn after the audience, before the panel fill.
  */
 export const PANEL_GLOW_CM = 1.4;
-const PANEL_GLOW_BANDS = [0.2, 0.15, 0.11, 0.08, 0.055, 0.035, 0.02];
+/** Round 3: outermost band first, so the glow is faintest at its outer edge and brightest next to the stroke (it used to be the other way round and read as a second outline). */
+const PANEL_GLOW_BANDS = [0.02, 0.035, 0.055, 0.08, 0.11, 0.15, 0.2];
 export const PANEL_GLOW_ORDER = PANEL_BACKDROP_ORDER - 1;
 const SURFACE_FILL = PANEL_FILL;
 const SURFACE_BORDER = PANEL_STROKE;
@@ -296,6 +297,8 @@ function meshVisual(parent: SceneObject, name: string, mesh: RenderMesh, z: numb
   rmv.mesh = mesh;
   const mat = SURFACE_MATERIAL.clone();
   mat.mainPass.baseColor = color;
+  mat.mainPass.blendMode = BlendMode.Add;
+  mat.mainPass.colorMask = new vec4b(true, true, true, false);
   rmv.mainMaterial = mat;
   return rmv;
 }
@@ -370,7 +373,7 @@ const KIND_GLOW: Partial<Record<keyof typeof FACES, vec4>> = {
 
 const BUTTON_RADIUS_CM = 1.1;
 /** Selected segments get a soft cyan glow ring around the face (D1: "optional cyan glow on the active element"). */
-const GLOW_COLOR = new vec4(0.37, 0.83, 1.0, 0.34);
+const GLOW_COLOR = new vec4(0.37, 0.83, 1.0, 0.24);
 const GLOW_SPREAD_CM = 0.5;
 
 /** Themes a button's face; returns `setSelected` (cyan face + frame + glow, artifact S1 segments). */
@@ -584,6 +587,8 @@ export interface ButtonOptions {
   outline?: boolean;
   /** A second, smaller line under the label (for example 'beat your grade'). */
   subline?: string;
+  /** Type role of the subline (default 'Caption'). */
+  sublineRole?: TextRole;
 }
 
 /**
@@ -641,7 +646,7 @@ export function addButton(
     // icon + label group is centered on the face.
     const glyph = (roleSize(role, distanceCm) / 39) * 0.42;
     // With a subline the group is as wide as the longer of the two lines (the subline is Caption, about 0.66 of the label size).
-    const textW = Math.min(widthCm - iconSize - 1.2, Math.max(label.length * glyph, opts.subline ? opts.subline.length * glyph * 0.66 : 0));
+    const textW = Math.min(widthCm - iconSize - 1.2, Math.max(label.length * glyph, opts.subline ? opts.subline.length * glyph * (roleSize(opts.sublineRole ?? 'Caption') / roleSize(role)) : 0));
     const groupW = iconSize + gap + textW;
     addIcon(so, opts.icon, iconSize, new vec3(-groupW / 2 + iconSize / 2, 0, BUTTON_LABEL_Z));
     labelX = -groupW / 2 + iconSize + gap + textW / 2;
@@ -652,7 +657,7 @@ export function addButton(
   const text = makeText(labelSo, label, role, labelW, opts.subline ? heightCm * 0.6 : heightCm, distanceCm, opts.primary ? TEXT_PRIMARY : opts.mint ? TEXT_MINT : opts.amber ? TEXT_AMBER_LABEL : TEXT_PRIMARY);
   if (opts.subline) {
     const sub = makeText(child(so, 'Subline', new vec3(labelX, -heightCm * 0.27, BUTTON_LABEL_Z)), opts.subline, role, labelW, heightCm * 0.3, distanceCm, TEXT_LABEL);
-    sub.size = roleSize('Caption', distanceCm);
+    sub.size = roleSize(opts.sublineRole ?? 'Caption', distanceCm);
   }
   const item = so.createComponent(FlexItem.getTypeName()) as FlexItem;
   item.overrideWidth = widthCm;

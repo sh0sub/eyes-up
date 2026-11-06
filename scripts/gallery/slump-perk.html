@@ -1,22 +1,27 @@
 <!doctype html><meta charset="utf-8"><title>Eyes Up slump to perk-up</title>
 <link rel="stylesheet" href="_base.css">
 <style>
-.row{display:grid;grid-template-columns:1fr 90px 1fr;margin-top:26px;align-items:center}
-.im{height:610px;border-radius:14px;background-size:cover;background-position:center;position:relative}
+.row{display:grid;grid-template-columns:1fr 90px 1fr;margin-top:24px;align-items:center}
+.hd{display:flex;align-items:center;justify-content:space-between;margin:2px 0 12px}
+.tag{background:#20232d;color:#fff;font-size:28px;font-weight:700;border-radius:10px;padding:8px 18px}
+.im{height:730px;border-radius:14px;background-size:cover;background-position:center;position:relative}
 .mid{text-align:center;font-size:72px;font-weight:800;color:var(--ind)}
-.badge{position:absolute;right:14px;bottom:14px;background:#fff;border-radius:12px;padding:8px 16px;font-size:30px;font-weight:800}
-.amber{color:#c47a00}.cy{color:#0099b8}
-.arrowtag{position:absolute;background:#20232d;color:#fff;font-size:24px;font-weight:700;border-radius:9px;padding:6px 12px}
+.badge{background:#eef2ff;border-radius:12px;padding:6px 18px;font-size:32px;font-weight:800}
+.amber{color:#d6453b}.cy{color:#0099b8}
+.chips{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.chip{background:#20232d;color:#fff;font-size:24px;font-weight:700;border-radius:9px;padding:6px 14px}
 </style>
 <div class="wrap">
  <h1>Ignore them: they slump. Look at one: it perks up.</h1>
  <div class="sub">Same room, same three members, a few seconds apart. The room meter follows.</div>
  <div class="row">
-  <div class="card"><div class="im" style="background-image:url('../../devpost/screenshots/10-engagement-slump.png')"><span class="cap">Neglect</span><span class="arrowtag" style="left:20px;top:205px">&#8595; head sinks and tilts, zzz</span><span class="arrowtag" style="left:8px;top:520px">phone glow &#8594;</span><span class="badge amber" style="color:#d6453b">Room 45 %</span></div>
-   <div class="k" style="margin-top:14px">Two members ignored</div><div class="t">Colour drains, the lit one stands out</div></div>
+  <div class="card"><div class="hd"><span class="tag">Neglect</span><span class="badge amber">Room 45 %</span></div><div class="im" style="background-image:url('../../devpost/screenshots/10-engagement-slump.png')"></div>
+   <div class="k" style="margin-top:14px">Two members ignored</div><div class="t">Colour drains, the lit one stands out</div>
+   <div class="chips"><span class="chip">&#8595; whole figure drops and tilts</span><span class="chip">zzz</span><span class="chip">phone glow</span></div></div>
   <div class="mid">&rarr;</div>
-  <div class="card"><div class="im" style="background-image:url('../../devpost/screenshots/11-perk-up.png')"><span class="cap">Eyes up</span><span class="arrowtag" style="left:255px;top:226px">&#8593; cyan ring, head lifts</span><span class="badge cy">Room 78 %</span></div>
-   <div class="k" style="margin-top:14px">You look at them</div><div class="t">A ring pulse, the head lifts, the meter climbs</div></div>
+  <div class="card"><div class="hd"><span class="tag">Eyes up</span><span class="badge cy">Room 72 %</span></div><div class="im" style="background-image:url('../../devpost/screenshots/11-perk-up.png')"></div>
+   <div class="k" style="margin-top:14px">You look at them</div><div class="t">A ring pulse, the head lifts, the meter climbs</div>
+   <div class="chips"><span class="chip">&#8593; cyan ring</span><span class="chip">head lifts</span><span class="chip">meter climbs</span></div></div>
  </div>
  <div class="foot">Lens Studio 5.24.1 Interactive Preview captures. Screenshot 11 was taken with the 0.7 s burst stretched to 3 s so the ring could be photographed. Preview only, gaze driven by the LEAF harness, not tested on a Spectacles device.</div>
 </div>

@@ -34,7 +34,7 @@ Preview only, not tested on a Spectacles device.
 | 13 | `neglect_disengages_then_recovers` | 17 s of gaze on #0: engagement[4] < 0.5, Head of #4 sank, room < 90 % and the meter text dropped. 1.8 s on #4: engagement 1.0, Head back up, room rose | PASSED (22 s) |
 | 14 | `finish_gives_grade` | Short sweep, Finish: grade tile is S/A/B/C and equals the result, "Attention n" matches the score | PASSED (12 s) |
 | 15 | `capture_game` | Capture helper for `walkthrough/02-audience.png`, `07-engagement-slump.png` and `08-perk-up.png` (3-person audience: members 0 and 1 slump while #2 is watched, then #1 perks up) | PASSED |
-| 16 | `capture_loop` | Capture helper (about 65 s): Run 1 stares right, Again, Run 2 follows the tip. Logged: run1 grade C score 39 balance 46 room 76 % L0/C30/R70 longest 29 s left (the log uses the Summary's own formatter, so it matches the on-screen Summary and gallery image 12), 3 nudges; run2 grade A score 84 balance 89 room 91 % L41/C26/R33 longest 12 s right, 1 nudge, new best. Scripted gaze, illustrative, not a user study | PASSED |
+| 16 | `capture_loop` | Capture helper (about 65 s): Run 1 stares right, Again, Run 2 follows the tip. Logged: run1 grade C score 39 balance 46 room 76 % L0/C30/R70 longest 28 s left (the log uses the Summary's own formatter, so it matches the on-screen Summary and gallery image 12), 3 nudges; run2 grade A score 84 balance 89 room 91 % L41/C26/R33 longest 12 s right, 1 nudge, new best. Scripted gaze, illustrative, not a user study | PASSED |
 
 ## Not tested
 
@@ -50,3 +50,5 @@ engagement decay and recovery, silhouette look, room meter tone, score, grade, b
 applause strength).
 
 Full log and per-pass details: `build-notes.md`.
+
+Redesign round 3 re-run (2026-11-06, additive figures, whole-figure slump, meter / Summary / Setup rework): all 10 scenarios PASSED one at a time from a refreshed preview at the canonical pose (`scripts/video/leaf-all.sh`), `npm run check` 198 tests. Preview only, not tested on a device.

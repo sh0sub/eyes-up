@@ -7,7 +7,7 @@
  * LEAF capture and video shot, so the framing is repeatable. Pure maths, no Lens Studio dependency.
  */
 import { Vec3Like } from './math';
-import { HEAD_PITCH_DEG, HEAD_SINK_CM, HEAD_UP_Y } from './AudienceLook';
+import { BODY_DROP_CM, HEAD_ABOVE_NECK_SLUMP_CM, HEAD_PITCH_DEG, HEAD_UP_Y } from './AudienceLook';
 
 export const VIEW_HALF_FOV_H_DEG = 24.9;
 export const VIEW_HALF_FOV_V_DEG = 17.9;
@@ -15,14 +15,16 @@ export const VIEW_HALF_FOV_V_DEG = 17.9;
 export const CANONICAL_PITCH_DEG = -2.3;
 /** Head ring radius (the Halo is about 36 cm across). */
 export const HEAD_RADIUS_CM = 20;
-/** Mirrors AudienceRig.apply at full slump: body squashed to 90 %, leaning 35 % of the head pitch, head sunk HEAD_SINK_CM. */
+/** Mirrors AudienceRig.apply at full slump: body squashed to 90 %, leaning 35 % of the head pitch, the whole figure dropped BODY_DROP_CM, the head just above the neck top. */
 const SLUMP_BODY_SCALE = 0.9;
 const SLUMP_LEAN_SHARE = 0.35;
 
-/** Height above the floor of the fully slumped head's centre (about 104 cm, 49 cm below upright). */
+/** Body-local height of the neck top above the floor at rest (cm). */
+const NECK_TOP_CM = 141;
+/** Height above the floor of the fully slumped head's centre (about 103 cm, 50 cm below upright). */
 export function slumpedHeadY(): number {
   const lean = rad(HEAD_PITCH_DEG * SLUMP_LEAN_SHARE);
-  return HEAD_UP_Y * SLUMP_BODY_SCALE * Math.cos(lean) - HEAD_SINK_CM;
+  return NECK_TOP_CM * SLUMP_BODY_SCALE * Math.cos(lean) - BODY_DROP_CM + HEAD_ABOVE_NECK_SLUMP_CM;
 }
 /** Every head must sit inside this fraction of the viewport half extent (8 % margin; was 10 % before the audience moved 11 cm lower for the tag row). */
 export const FRAME_MARGIN = 0.92;
@@ -81,9 +83,10 @@ export function insideMargin(e: { left: number; right: number; top: number; bott
  */
 export const SUMMARY_DISTANCE_CM = 150;
 export const SUMMARY_CENTER_Y_CM = -6.5;
-export const SUMMARY_PANEL_W_CM = 50;
-export const SUMMARY_PANEL_H_CM = 78;
-export const SUMMARY_PANEL_SCALE = 1.08;
+/** Round 3: 52 x 84 cm at scale 1.0 (was 50 x 78 at 1.08: the same on-screen height), so the stats, chip, timeline rows and the Again subline fit at body size. */
+export const SUMMARY_PANEL_W_CM = 52;
+export const SUMMARY_PANEL_H_CM = 84;
+export const SUMMARY_PANEL_SCALE = 1.0;
 
 /** Viewport extent of the Summary panel for a camera at `origin` looking along `forward` (any pitch, yaw 0). */
 export function summaryExtent(origin: Vec3Like, forward: Vec3Like): { left: number; right: number; top: number; bottom: number } | null {

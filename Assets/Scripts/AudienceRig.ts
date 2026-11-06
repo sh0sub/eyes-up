@@ -8,9 +8,9 @@
  * lights a small rounded phone screen with a faint light cone at the lap, shows a "zzz" marker, and pulses the Halo ring on a perk-up burst.
  * Local axes: the silhouette faces +Z (the speaker), so a forward lean is +Z.
  */
-import { AudienceLook, PHONE_Y_CM } from './core/AudienceLook';
+import { AudienceLook, HEAD_ABOVE_NECK_SLUMP_CM, HEAD_ABOVE_NECK_UP_CM, PHONE_Y_CM } from './core/AudienceLook';
 import { FADE_ROWS, SHADOW_LAYERS, bodyFadePixels, headDepthScale, shadowBars } from './core/BodyFade';
-import { BODY_ORIGIN_CM, FigureColors, TORSO_ROWS, TORSO_WIDTH_SCALE, HEAD_HALF_H, HEAD_HALF_W, Pt, centroid, ellipsePts, figureColors, figureHue, offsetPts, roundedRectPts, scalePts, tagText, tagTone, torsoOutline } from './core/Figure';
+import { BODY_ORIGIN_CM, FigureColors, TORSO_ROWS, TORSO_WIDTH_SCALE, HEAD_HALF_H, HEAD_HALF_W, Pt, centroid, ellipsePts, figureColors, figureHue, figureVariant, FigureVariant, offsetPts, roundedRectPts, scalePts, tagText, tagTone, torsoOutline } from './core/Figure';
 import { DEFAULT_TUNABLES } from './core/Tunables';
 import { AUDIENCE_RENDER_ORDER, STAGE_STROKE_CM, LINE_AMBER, LINE_CORAL, LINE_CYAN, addCircleRing, addDot, addRoundedSurface, addSurface, addText, child } from './EyesUpUI';
 import { polyFill, polyRing, polyStrip } from './FigureMesh';
@@ -34,6 +34,8 @@ function makeBodyFadeTexture(plain = false): Texture | null {
 const BODY_REST_Y = 70;
 const BODY_REST_H = 140;
 const HEAD_REST_Y = 153;
+/** Neck top relative to the body centre (the body box is centred at 70 cm; the neck top is 141 cm above the floor). */
+const NECK_TOP_REL_CM = 71;
 /** Forward lean of the body, as a share of the head pitch. */
 const LEAN_SHARE = 0.35;
 /** The head also creeps toward the speaker by this many cm at full slump. */
@@ -83,6 +85,9 @@ interface Member {
   shadowFade: number;
   headRestScale: vec3;
   figure: Figure;
+  variant: FigureVariant;
+  /** +1 (counter-clockwise, leaning left) / -1: which way this seat rolls when it slumps; the left seat leans outward so neighbours do not overlap. */
+  rollSign: number;
   tag: Tag;
   haloGlow: RenderMeshVisual[];
   /** How much the speaker is looking at this member, 0..1 (from the halo colour). */
@@ -162,6 +167,8 @@ function layerVisual(parent: SceneObject, name: string, mesh: RenderMesh, mat: M
   const v = so.createComponent('Component.RenderMeshVisual') as RenderMeshVisual;
   v.mesh = mesh;
   v.mainMaterial = mat.clone();
+  v.mainPass.blendMode = BlendMode.Add;
+  v.mainPass.colorMask = new vec4b(true, true, true, false);
   return v;
 }
 
@@ -194,8 +201,11 @@ function buildFigure(index: number, body: SceneObject | null, head: SceneObject 
     add('ArmL', polyRing('armL', roundedRectPts(aw, 84, aw / 2, -ax, 11), 0.85, BODY_V), 'arms');
     add('ArmR', polyRing('armR', roundedRectPts(aw, 84, aw / 2, ax, 11), 0.85, BODY_V), 'arms');
     add('Collar', polyStrip('collar', [[-7, 66], [0, 52], [7, 66]], 0.9, [0, -30], BODY_V), 'collar');
-    add('TorsoRim', polyRing('torsoRim', torso, 1.5, BODY_V), 'rim');
-    add('TorsoRimLight', polyStrip('torsoRimLight', torso.slice(TORSO_ROWS), 2.6, c, BODY_V), 'rimLight');
+    // An open stroke along both sides: no flat line across the neck top (it showed through a sunk head like a beard).
+    add('TorsoRim', polyStrip('torsoRimOpen', torso, 1.5, c, BODY_V), 'rim');
+    add('TorsoRimLight', polyStrip('torsoRimLight', torso.slice(TORSO_ROWS), 3.4, c, BODY_V), 'rimLight');
+    // Soft highlight along the light-side shoulder, a little inside the rim.
+    add('ShoulderLight', polyStrip('shoulderLight', offsetPts(torso, -2.4).slice(-7, -2), 4.5, c, BODY_V), 'shoulder');
   }
   if (head && headVisual) {
     const mat = headVisual.mainMaterial;
@@ -204,12 +214,17 @@ function buildFigure(index: number, body: SceneObject | null, head: SceneObject 
     holder.getTransform().setLocalScale(new vec3(1 / headRest.x, 1 / headRest.y, 1 / headRest.z));
     const ell = ellipsePts(HEAD_HALF_W, HEAD_HALF_H, 48);
     const add = (name: string, mesh: RenderMesh, color: keyof FigureColors, z: number) => layers.push({ visual: layerVisual(holder, name, mesh, mat, z), color, k: 1 });
+    // Round 3: a slight head turn per person: the eyes slide and close up toward one side, the highlight follows.
+    const v = figureVariant(index);
+    const ex = v.turn * 3.2;
+    const gap = 3.6 - 0.9 * Math.abs(v.turn);
+    const tk = `${index % 9}`;
     add('HeadGlow', polyFill('headGlow', offsetPts(ell, 1.5), null), 'headGlow', 0.6);
     add('HeadFill', polyFill('head', ell, null), 'head', 0.65);
     add('HeadLight1', polyFill('headHi1', scalePts(ell, 0.62, 0.62, ZERO, -2.6, 3.2), null), 'headHighlight', 0.7);
     add('HeadLight2', polyFill('headHi2', scalePts(ell, 0.3, 0.3, ZERO, -4, 5.6), null), 'headHighlight', 0.75);
-    add('EyeL', polyFill('eye', ellipsePts(1.1, 1.5, 14, -3.6, 1.6), null), 'eyes', 0.8);
-    add('EyeR', polyFill('eyeR', ellipsePts(1.1, 1.5, 14, 3.6, 1.6), null), 'eyes', 0.8);
+    add('EyeL', polyFill(`eyeL${tk}`, ellipsePts(1.1 * (1 - 0.18 * Math.max(0, v.turn)), 1.5, 14, ex - gap, 1.6), null), 'eyes', 0.8);
+    add('EyeR', polyFill(`eyeR${tk}`, ellipsePts(1.1 * (1 + 0.0 * v.turn) * (1 - 0.18 * Math.max(0, -v.turn)), 1.5, 14, ex + gap, 1.6), null), 'eyes', 0.8);
     add('HeadRim', polyRing('headRim', ell, 1.3, null), 'headRim', 0.85);
     add('HeadRimLight', polyStrip('headRimLight', ell.slice(13, 31), 2.2, ZERO, null), 'rimLight', 0.9);
   }
@@ -288,6 +303,8 @@ export class AudienceRig {
       const bodyRestScale = body ? body.getTransform().getLocalScale() : new vec3(80, 140, 64);
       const headRestScale = head ? head.getTransform().getLocalScale() : new vec3(22, 25, 22);
       const haloRestScale = halo ? halo.getTransform().getLocalScale().uniformScale(HALO_SCALE) : new vec3(32, 32, 32);
+      const variant = figureVariant(index);
+      const rollSign = index % 3 === 0 ? 1 : index % 3 === 1 ? -0.45 : -1;
       const figure = buildFigure(index, body, head, bodyVisual, headVisual, bodyRestScale, headRestScale);
       const tag = makeTag(root, index);
       const haloGlow = halo ? makeHaloRings(halo) : [];
@@ -310,6 +327,8 @@ export class AudienceRig {
         shadowFade: -1,
         headRestScale,
         figure,
+        variant,
+        rollSign,
         tag,
         haloGlow,
         lit: 0,
@@ -329,23 +348,30 @@ export class AudienceRig {
 
     const slump = Math.min(1, look.headPitchDeg / 38);
     const lean = (look.headPitchDeg * LEAN_SHARE * Math.PI) / 180;
-    const k = look.bodyScaleY;
+    const k = look.bodyScaleY * m.variant.height;
+    const roll = (m.rollSign * look.bodyRollDeg * Math.PI) / 180;
+    const rot = quat.angleAxis(roll, new vec3(0, 0, 1)).multiply(quat.angleAxis(lean, new vec3(1, 0, 0)));
+    // Round 3: the whole figure drops and rolls as one; the head then sits on the (dropped, rolled) neck, so a slumped member is a hunched
+    // person with the chin down instead of a head floating inside a hollow shell.
+    const cy = BODY_REST_Y * k;
+    const bodyPos = new vec3(0, cy * Math.cos(lean) + look.bodyDropCm, cy * Math.sin(lean));
     if (m.body) {
       const t = m.body.getTransform();
-      t.setLocalRotation(quat.angleAxis(lean, new vec3(1, 0, 0)));
-      const cy = BODY_REST_Y * k;
-      t.setLocalPosition(new vec3(0, cy * Math.cos(lean), cy * Math.sin(lean)));
-      t.setLocalScale(new vec3(m.bodyRestScale.x, BODY_REST_H * k, m.bodyRestScale.z));
+      t.setLocalRotation(rot);
+      t.setLocalPosition(bodyPos);
+      t.setLocalScale(new vec3(m.bodyRestScale.x * m.variant.width, BODY_REST_H * k, m.bodyRestScale.z));
     }
-    const hy = HEAD_REST_Y * k;
-    const headPos = new vec3(0, hy * Math.cos(lean) + look.headDropCm, hy * Math.sin(lean) + HEAD_FORWARD_CM * slump);
+    const above = (HEAD_ABOVE_NECK_UP_CM + (HEAD_ABOVE_NECK_SLUMP_CM - HEAD_ABOVE_NECK_UP_CM) * slump) * k;
+    const headOff = rot.multiplyVec3(new vec3(0, NECK_TOP_REL_CM * k + above, 0));
+    const headPos = new vec3(bodyPos.x + headOff.x, bodyPos.y + headOff.y, bodyPos.z + headOff.z + HEAD_FORWARD_CM * slump);
     if (m.head) {
       const ht = m.head.getTransform();
       ht.setLocalPosition(headPos);
       // Cycle 6 (D2): creeping toward the viewer must not make the slumped head draw larger than the lit one.
       const ds = headDepthScale(headPos.z, DEFAULT_TUNABLES.stageDistanceCm);
       ht.setLocalScale(new vec3(m.headRestScale.x * ds, m.headRestScale.y * ds, m.headRestScale.z * ds));
-      ht.setLocalRotation(quat.angleAxis((-look.headTiltDeg * Math.PI) / 180, new vec3(0, 0, 1)));
+      const headRoll = (0.5 * look.headTiltDeg * m.rollSign * Math.PI) / 180 + (m.variant.roll * (1 - slump) * Math.PI) / 180 + roll;
+      ht.setLocalRotation(quat.angleAxis(headRoll, new vec3(0, 0, 1)));
     }
     if (m.halo) {
       // The halo ring stays around the head as it sinks, and pops outward on a perk-up burst.
