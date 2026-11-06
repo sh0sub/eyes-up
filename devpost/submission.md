@@ -14,7 +14,7 @@ Rehearse your talk with your eyes on the room, not on your notes.
 > 1. **See it:** gallery images 1 and 2 are the whole idea. Members you ignore slump, mute their colour and light a phone; the one you look at stays lit in cyan and the room meter shows how many are with you.
 > 2. **See why it needs glasses:** image 3 is the plan seen from above (you, 2.5 m, three members 42 cm apart, your view) beside a Preview frame, with three design rules.
 > 3. **See the payoff and the loop:** image 4 is the Summary (grade, split, timeline, tip). Image 5 puts Run 1 (C 39) next to Run 2 (A 84) after following the tip.
-> 4. **Check it:** image 6 (process, 10 of 10 LEAF scenarios, 194 tests) and image 7 (how CLAD and the Lens Studio MCP were used). Preview only, gaze driven by the LEAF harness, untested on a device.
+> 4. **Check it:** image 6 (process, 10 of 10 LEAF scenarios, 195 tests) and image 7 (how CLAD and the Lens Studio MCP were used). Preview only, gaze driven by the LEAF harness, untested on a device.
 
 **Learn:** spread your eye contact across the whole room. **For:** students, founders, anyone with a talk or an interview coming up.
 
@@ -64,12 +64,12 @@ Design rules: **placement** (stage 2.5 m ahead, three members 42 cm apart so the
 
 Every caption describes what the image shows in the Interactive Preview (preview only, gaze driven by the LEAF harness, not tested on a device). Captured from one fixed preview camera pose toward the plain curtain wall, so the room reads against a quiet background.
 
-1. `devpost/screenshots/00-hero-eyes-up.png`: Eyes Up. Neglect (two members slumped with "zzz", room meter amber) beside the perk-up (cyan ring burst, meter cyan), with the Learn / For line.
+1. `devpost/screenshots/00-hero-eyes-up.png`: Eyes Up. Neglect (two members slumped with "zzz", room meter amber, one tag row above the heads) beside the perk-up (cyan ring burst, meter cyan), with the Learn / For line.
 2. `devpost/screenshots/10b-slump-to-perk-up.png`: One image, two moments: ignored members sink, tilt, drain colour and light a phone (meter 40 %); look at one and it perks up with a cyan ring (meter 89 %).
 3. `devpost/screenshots/14-glasses-scale.png`: Why only on glasses: plan seen from above (you, 2.5 m arc, three members 42 cm apart, your view cone) beside a Preview frame, with three rules (placement, targets of 3 cm or larger, show only when needed) and where each is visible.
-4. `devpost/screenshots/06-summary.png`: The payoff: a large grade, attention score, room and balance, zone split, gaze timeline with the longest look-away, one tip, and Again as the single filled button (`06b-summary-grade-zones.png` is the close crop).
+4. `devpost/screenshots/06-summary.png`: The payoff: a large grade, attention score, room and balance, zone split, gaze timeline with the longest look-away, one tip, and Again, Done and Move stage as outline buttons (`06b-summary-grade-zones.png` is the close crop).
 5. `devpost/screenshots/12-run-compare.png`: The learning loop: Run 1 (C 39) beside Run 2 (A 84) with each tip. Scripted gaze, illustrative, not a user study.
-6. `devpost/screenshots/09-process-at-a-glance.png`: Process: three fixes found in the Preview (halo, hit area, game layer), the loop table, 10 of 10 LEAF scenarios, 194 tests.
+6. `devpost/screenshots/09-process-at-a-glance.png`: Process: three fixes found in the Preview (halo, hit area, game layer), the loop table, 10 of 10 LEAF scenarios, 195 tests.
 7. `devpost/screenshots/13-clad-mcp.png`: How CLAD and the Lens Studio MCP were used: architecture strip, four real steps, real log lines.
 8. `devpost/screenshots/03-nudge-chevron.png`: The nudge: an amber double chevron on a dark disc and "Look left" appear for the side you ignored, clear of the "zzz".
 

@@ -25,7 +25,7 @@ export interface PodiumHandlers {
  * off by the lens frustum at both sides (square edges in the Preview). 30 cm leaves a small margin, like the mockup's 30 x 8 cm.
  */
 export const PODIUM_W_CM = 30;
-export const PODIUM_H_CM = 12.5;
+export const PODIUM_H_CM = 10.4;
 const W = PODIUM_W_CM;
 const H = PODIUM_H_CM;
 const DIST = 55;
@@ -44,28 +44,28 @@ export class Podium extends BaseScriptComponent {
   private frames = 0;
 
   onAwake(): void {
-    this.panel = makePanel(this.getSceneObject(), W, H, 1.0, 0.8);
+    this.panel = makePanel(this.getSceneObject(), W, H, 0.9, 0.7);
     const c = this.panel.content;
-    // Pass 4 (artifact S4): counter "n / N" + timer "m:ss / m:ss"; Next is the largest target and
-    // the cyan primary; Prev / Finish smaller (Finish amber-framed). All buttons stay ≥ 3 cm tall.
-    // Re-place lives in the info row (hidden during Rehearsal) so the button row stays centered.
-    const info = flexRow(c, 'PodiumInfo', W - 2, 3.8, 1.2);
-    this.replaceButton = addButton(info, 'ReplaceButton', 'Re-place', 6.2, 3.8, DIST, () => this.handlers?.replace(), {
+    // Redesign: one outline stroke with a glow, no fill. Counter and timer sit on one compact row directly over the buttons; Prev, Next and
+    // Finish share one height and one label size (Title), only the accent differs (cyan, cyan primary, amber). Re-place lives in the info
+    // row (hidden during Rehearsal) so the button row stays centered.
+    const info = flexRow(c, 'PodiumInfo', W - 2, 3.4, 1.2);
+    this.replaceButton = addButton(info, 'ReplaceButton', 'Re-place', 6.4, 3.4, DIST, () => this.handlers?.replace(), {
       labelRole: 'Body',
     }).button.getSceneObject();
-    this.sectionText = textRow(info, 'SectionText', '1 / 5', 'Title', 6, 3.4, DIST, TEXT_ACCENT);
-    this.elapsedText = textRow(info, 'ElapsedText', '0:00 / 3:00', 'Title', 13, 3.4, DIST);
-    const buttons = flexRow(c, 'PodiumButtons', W - 2, 5.8, 0.8);
-    addButton(buttons, 'PrevButton', 'Prev', 6.8, 4.2, DIST, () => this.handlers?.prev(), { icon: 'chevron_left', labelRole: 'Heading' });
-    addButton(buttons, 'NextButton', 'Next', 9.4, 5.4, DIST, () => this.handlers?.next(), {
+    this.sectionText = textRow(info, 'SectionText', '1 / 5', 'Title', 6, 3.2, DIST, TEXT_ACCENT);
+    this.elapsedText = textRow(info, 'ElapsedText', '0:00 / 3:00', 'Title', 13, 3.2, DIST);
+    const buttons = flexRow(c, 'PodiumButtons', W - 2, 4.6, 0.8);
+    addButton(buttons, 'PrevButton', 'Prev', 7.6, 4.4, DIST, () => this.handlers?.prev(), { icon: 'chevron_left', outline: true, labelRole: 'Title' });
+    addButton(buttons, 'NextButton', 'Next', 8.6, 4.4, DIST, () => this.handlers?.next(), {
       icon: 'chevron_right',
       primary: true,
       labelRole: 'Title',
     });
-    const finish = addButton(buttons, 'FinishButton', 'Finish', 7.2, 4.2, DIST, () => this.handlers?.finish(), {
+    const finish = addButton(buttons, 'FinishButton', 'Finish', 9, 4.4, DIST, () => this.handlers?.finish(), {
       icon: 'flag',
       amber: true,
-      labelRole: 'Heading',
+      labelRole: 'Title',
     });
     this.finishButton = finish.button.getSceneObject();
     this.finishLabel = finish.label;
@@ -81,7 +81,7 @@ export class Podium extends BaseScriptComponent {
     this.pulsing = p > 0;
     const s = 1 + 0.12 * p;
     this.finishButton.getTransform().setLocalScale(new vec3(s, s, 1));
-    if (this.finishLabel) this.finishLabel.textFill.color = new vec4(1, 1 - 0.25 * p, 1 - 0.7 * p, 1);
+    if (this.finishLabel) this.finishLabel.textFill.color = new vec4(1, 0.86 + 0.14 * p, 0.5 + 0.5 * p, 1);
   }
 
   bind(handlers: PodiumHandlers): void {

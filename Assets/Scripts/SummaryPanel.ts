@@ -24,7 +24,6 @@ import {
   TEXT_TIP,
   Panel,
   TEXT_AMBER,
-  TEXT_LABEL,
   TEXT_MINT,
   TEXT_PRIMARY,
   TEXT_SECONDARY,
@@ -72,12 +71,12 @@ const BAR_H = 2.2;
 /** Timeline block: 44 × 7.4 cm. Row labels on the left, a 40 cm strip, nudge markers below. */
 const TL_W = W - 6;
 /** Cycle 4 (D3): 9.2 -> 15 cm, rows 1.9 -> 3.4 cm tall (1.8x), so segments and the coral look-away read at thumbnail size. */
-const TL_H = 14;
+const TL_H = 16;
 const TL_X0 = -18.5;
 const TL_STRIP_W = 40;
-const TL_ROW_Y = [4.4, 0.8, -2.8];
-const TL_ROW_H = 3.4;
-const TL_NUDGE_Y = -5.8;
+const TL_ROW_Y = [5.2, 0.4, -4.4];
+const TL_ROW_H = 3.6;
+const TL_NUDGE_Y = -7.3;
 /** Zone labels and percentages: 92 -> 120 (about 1.3x). Buttons: 5.6 cm tall targets, Again is the widest. */
 const ZONE_TEXT_SIZE = 120;
 const BUTTON_H = 6.6;
@@ -109,7 +108,7 @@ export class SummaryPanel extends BaseScriptComponent {
   private wantVisible = false;
 
   onAwake(): void {
-    this.panel = makePanel(this.getSceneObject(), W, H, 2.0, 1.3);
+    this.panel = makePanel(this.getSceneObject(), W, H, 2.0, 1.1);
     this.panel.root.getTransform().setLocalScale(new vec3(PANEL_SCALE, PANEL_SCALE, PANEL_SCALE));
     const c = this.panel.content;
     // Cycle 4 (D3): the "Session complete" toast above the panel is gone (it overlapped the panel edge and added nothing the title does not say).
@@ -145,21 +144,28 @@ export class SummaryPanel extends BaseScriptComponent {
     // Gaze timeline strip (artifact S5 ③), drawn in show().
     this.timelineBlock = addBlock(c, 'GazeTimeline', TL_W, TL_H);
     // Cycle 5 (R1): a tiny legend so the red box and the amber dot explain themselves.
-    const legend = textRow(c, 'TimelineLegend', 'red box: longest look-away   amber dot: nudge', 'Headline2', W - 6, 2.4, DIST, TEXT_LABEL);
-    legend.size = 84;
+    // Redesign: the legend is body-plus size and coloured like the marks it names (a coral box, an amber stem and dot).
+    const legend = flexRow(c, 'TimelineLegend', W - 6, 3.2, 1.2);
+    const lg1 = textRow(legend, 'LegendLongest', 'red: longest look-away', 'Headline2', 28, 3.2, DIST, CORAL);
+    lg1.size = 100;
+    lg1.horizontalAlignment = HorizontalAlignment.Left;
+    const lg2 = textRow(legend, 'LegendNudge', 'amber: nudge', 'Headline2', 15, 3.2, DIST, NUDGE_AMBER);
+    lg2.size = 100;
+    lg2.horizontalAlignment = HorizontalAlignment.Right;
     // Cycle 4 (D3): the one-line stat row is gone; the longest look-away is the coral box in the timeline, the grade and tip carry the rest.
     // The coaching tip is the second-largest text on the panel (after the grade).
     this.tipText = addBox(c, 'TipText', '', 'Title2', W - 6, 7.6, DIST, TEXT_TIP, BOX_AMBER_SOLID);
     this.tipText.size = 148; // Cycle 5 (R1): a bigger amber bar, the second-largest text after the grade
     const buttons = flexRow(c, 'SummaryButtons', W - 6, BUTTON_H + 1.8, 1.6);
-    const big = { labelRole: 'Body' as const };
+    const big = { labelRole: 'Heading' as const };
     // Again is the practice loop: the widest, primary (cyan) button. Done and Re-place are secondary.
     // Cycle 5 (R1): Again is the only filled cyan button and says what it is for; Done and Move stage are outlines.
-    addButton(buttons, 'AgainButton', 'Again', 15, BUTTON_H, DIST, () => this.onAgain?.(), { icon: 'replay', primary: true, labelRole: 'Heading' });
-    addButton(buttons, 'DoneButton', 'Done', 11.4, BUTTON_H, DIST, () => this.onDone?.(), { icon: 'check', outline: true, ...big });
+    // Redesign: all three are outlines with one label size (Heading); only the accent differs (Again is the bright cyan, with a glow).
+    addButton(buttons, 'AgainButton', 'Again', 13, BUTTON_H, DIST, () => this.onAgain?.(), { icon: 'replay', primary: true, ...big });
+    addButton(buttons, 'DoneButton', 'Done', 12, BUTTON_H, DIST, () => this.onDone?.(), { icon: 'check', outline: true, ...big });
     // Pass 6 (artifact F2): Re-place (same size and type role as Again / Done), reachable here once the rehearsal is over (the podium
     // hides it during Rehearsal). Seats the stage again where you now face and restarts the talk.
-    addButton(buttons, 'SummaryReplaceButton', 'Move stage', 13, BUTTON_H, DIST, () => this.onReplace?.(), { outline: true, ...big });
+    addButton(buttons, 'SummaryReplaceButton', 'Move stage', 15.2, BUTTON_H, DIST, () => this.onReplace?.(), { outline: true, ...big });
     // Hidden state is applied in UpdateEvent, after every UIKit element ran OnStart (G3).
     this.createEvent('UpdateEvent').bind(() => {
       if (this.panel.root.enabled !== this.wantVisible) this.panel.root.enabled = this.wantVisible;
@@ -252,12 +258,14 @@ export class SummaryPanel extends BaseScriptComponent {
       const y = TL_ROW_Y[tl.longest.zone];
       addRoundedSurface(child(root, 'Longest', new vec3(cx, y, 0.2)), lw, TL_ROW_H + 0.6, 0, CORAL_FILL, CORAL, 0.9, 0.2);
       const label = tl.longest.label;
-      labels.push(() => addText(root, 'LongestLabel', label, 'Headline1', lw, TL_ROW_H + 0.5, DIST, CORAL, new vec3(cx, y, 0.3)).size = 96);
+      labels.push(() => addText(root, 'LongestLabel', label, 'Headline1', lw, TL_ROW_H + 0.5, DIST, CORAL, new vec3(cx, y, 0.3)).size = 104);
     }
     tl.nudges.forEach((f) => {
       const x = xOf(f);
-      addSurface(child(root, 'NudgeStem', new vec3(x, (TL_ROW_Y[2] + TL_NUDGE_Y) / 2, 0.25)), 0.14, TL_ROW_Y[2] - TL_NUDGE_Y, 0, NUDGE_AMBER, null);
-      addRoundedSurface(child(root, 'NudgeDot', new vec3(x, TL_NUDGE_Y, 0.3)), 1.1, 1.1, 0, NUDGE_AMBER, null, 0.55);
+      // An amber line through all three rows with a ringed dot under it: where the nudge happened.
+      const top = TL_ROW_Y[0] + TL_ROW_H / 2 + 0.6;
+      addSurface(child(root, 'NudgeStem', new vec3(x, (top + TL_NUDGE_Y) / 2, 0.25)), 0.26, top - TL_NUDGE_Y, 0, NUDGE_AMBER, null);
+      addRoundedSurface(child(root, 'NudgeDot', new vec3(x, TL_NUDGE_Y, 0.3)), 1.5, 1.5, 0, NUDGE_AMBER, null, 0.75);
     });
     labels.forEach((f) => f());
     ['L', 'C', 'R'].forEach((n, z) => {

@@ -73,3 +73,7 @@ Habit 4 (guide attention) got a second channel: the neglected side now also look
 - Fixes went in as design notes with before and after screenshots, logged in `build-notes.md` (for example the cyan halo that washed out to grey on an additive display).
 - Keep logic out of the editor. All rules are plain TypeScript tested in Node, and LEAF scenarios check the real Lens.
 - Honest gaps are listed in `submission.md` under "What is not done".
+
+## Redesign round 2: look for what else draws
+
+Four colour-tweak cycles could not remove the grey chips because the grey was not ours: UIKit's Button and BackPlate visuals were drawing under our outline surfaces. One sweep that switches off every mesh we did not create fixed what colour tweaks could not. When a Preview capture contradicts the numbers in the code, enumerate what is actually drawn before changing colours.

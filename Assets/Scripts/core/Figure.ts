@@ -38,8 +38,7 @@ export const HEAD_HALF_H = 13;
 
 /** Torso profile: (height above the floor, half width) from the top of the neck down to the floor. */
 const TORSO_PROFILE: ReadonlyArray<[number, number]> = [
-  [144, 6.2],
-  [140, 6.8],
+  [141, 6.4],
   [136, 8.6],
   [133, 12],
   [130, 17],
@@ -54,12 +53,20 @@ const TORSO_PROFILE: ReadonlyArray<[number, number]> = [
 
 /** Closed torso outline in body-local cm, going down the right side then up the left (counter-clockwise from the top is not required). */
 export function torsoOutline(): Pt[] {
-  const right: Pt[] = TORSO_PROFILE.map(([h, w]) => [w, h - BODY_ORIGIN_CM]);
+  const right: Pt[] = TORSO_PROFILE.map(([h, w]) => [w * TORSO_WIDTH_SCALE, h - BODY_ORIGIN_CM]);
   const left: Pt[] = TORSO_PROFILE.slice()
     .reverse()
-    .map(([h, w]) => [-w, h - BODY_ORIGIN_CM]);
+    .map(([h, w]) => [-w * TORSO_WIDTH_SCALE, h - BODY_ORIGIN_CM]);
   return [...right, ...left];
 }
+
+/** Number of profile rows: the left side of `torsoOutline()` is its last `TORSO_ROWS` points, running from the floor up to the neck. */
+export const TORSO_ROWS = TORSO_PROFILE.length;
+/**
+ * Shoulders narrowed to 78 % (half width 29.4 -> 23 cm, 46 cm across) so three members 42 cm apart keep a margin inside the lens view on both
+ * sides (the outer edges sit at 42 + 23 = 65 cm of the roughly +-72 cm viewport) and their outlines only just touch.
+ */
+export const TORSO_WIDTH_SCALE = 0.78;
 
 /** Smooth points of an ellipse (half extents `hw`, `hh`) centred at (cx, cy). */
 export function ellipsePts(hw: number, hh: number, n = 40, cx = 0, cy = 0): Pt[] {
@@ -130,6 +137,10 @@ export function offsetPts(pts: readonly Pt[], d: number): Pt[] {
 export interface FigureColors {
   /** Torso base fill, soft outer glow, inner highlights, arm lines and the bright rim. */
   body: Rgba;
+  /** Brighter rim on the light side (left) of the torso and head, and the V collar. */
+  rimLight: Rgba;
+  /** The V collar: only on an engaged member (on a slumped one it would cross the sunk head). */
+  collar: Rgba;
   glow: Rgba;
   highlight: Rgba;
   arms: Rgba;
@@ -162,18 +173,21 @@ export function figureColors(hue: Rgb, vitality: number, burst: number, lit: num
   const rimRgb = mix3(mix3(base, WHITE, 0.55), [0.7, 1, 1], 0.6 * l);
   const skin = mix3(base, WHITE, 0.45);
   const a = (x: number): number => x * f;
-  const bodyA = lerp(0.3, 0.55, v);
-  const rimA = lerp(0.5, 1, v);
+  // Additive display: every fill is a tint of at most about 15 % alpha. Volume is carried by bright outline strokes (rim, inner arm and collar
+  // contours), a brighter rim on the left (light) side, and the body fading out toward the bottom (texture alpha).
+  const bodyA = lerp(0.06, 0.13, v);
   return {
     body: [base[0], base[1], base[2], a(bodyA)],
-    glow: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.08, 0.2, v) + 0.16 * l)],
-    highlight: [skin[0], skin[1], skin[2], a(lerp(0.12, 0.24, v))],
-    arms: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.2, 0.4, v))],
-    rim: [rimRgb[0], rimRgb[1], rimRgb[2], a(rimA)],
-    head: [skin[0], skin[1], skin[2], a(lerp(0.42, 0.7, v))],
-    headHighlight: [1, 1, 1, a(lerp(0.2, 0.36, v))],
-    headGlow: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.1, 0.22, v) + 0.16 * l)],
-    headRim: [rimRgb[0], rimRgb[1], rimRgb[2], a(rimA)],
+    rimLight: [lerp(rimRgb[0], 1, 0.4), lerp(rimRgb[1], 1, 0.4), lerp(rimRgb[2], 1, 0.4), a(lerp(0.65, 1, v))],
+    collar: [rimRgb[0], rimRgb[1], rimRgb[2], a(0.75 * v * v)],
+    glow: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.04, 0.1, v) + 0.1 * l)],
+    highlight: [skin[0], skin[1], skin[2], a(lerp(0.03, 0.07, v))],
+    arms: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.25, 0.75, v))],
+    rim: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.45, 1, v))],
+    head: [skin[0], skin[1], skin[2], a(lerp(0.07, 0.14, v))],
+    headHighlight: [1, 1, 1, a(lerp(0.08, 0.16, v))],
+    headGlow: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.05, 0.12, v) + 0.1 * l)],
+    headRim: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.8, 1, v))],
     eyes: [1, 1, 1, a(lerp(0.55, 0.95, v))],
   };
 }

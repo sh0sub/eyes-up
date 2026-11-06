@@ -24,8 +24,8 @@ export function slumpedHeadY(): number {
   const lean = rad(HEAD_PITCH_DEG * SLUMP_LEAN_SHARE);
   return HEAD_UP_Y * SLUMP_BODY_SCALE * Math.cos(lean) - HEAD_SINK_CM;
 }
-/** Every head must sit inside this fraction of the viewport half extent (10 % margin). */
-export const FRAME_MARGIN = 0.9;
+/** Every head must sit inside this fraction of the viewport half extent (8 % margin; was 10 % before the audience moved 11 cm lower for the tag row). */
+export const FRAME_MARGIN = 0.92;
 
 const rad = (d: number) => (d * Math.PI) / 180;
 

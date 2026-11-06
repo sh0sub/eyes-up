@@ -50,6 +50,8 @@ export const TEXT_SECONDARY = new vec4(1, 1, 1, 0.7);
 export const TEXT_LABEL = new vec4(1, 1, 1, 0.95);
 export const TEXT_ACCENT = new vec4(0.55, 0.85, 1.0, 1);
 export const TEXT_AMBER = new vec4(1.0, 0.75, 0.3, 1);
+/** Label of an amber outline button (Finish): luminous amber, readable as text. */
+export const TEXT_AMBER_LABEL = new vec4(1.0, 0.86, 0.5, 1);
 /** Pass 4 (artifact S5): mint for the Balance badge. */
 export const TEXT_MINT = new vec4(0.55, 1.0, 0.8, 1);
 /**
@@ -116,7 +118,7 @@ const ICONS: Record<IconName, Texture> = {
  * stroke at 35 %, continuous rounded corners. Setup, cue card, pill, podium, Summary and the room
  * meter pill all use it. The previous blue-grey fill washed out to lavender on the additive display.
  */
-export const PANEL_FILL = new vec4(0.4, 0.7, 1.0, 0.07);
+export const PANEL_FILL = new vec4(0.4, 0.7, 1.0, 0.05);
 export const PANEL_STROKE = new vec4(0.62, 0.93, 1.0, 1);
 export const PANEL_RADIUS_CM = 1.6;
 /** One stroke width for every panel, box and button at the 110 cm reference (stage elements scale it by their distance). */
@@ -136,29 +138,29 @@ export const STAGE_GLOW_CM = 2.6;
  * panel reads as light. Drawn after the audience, before the panel fill.
  */
 export const PANEL_GLOW_CM = 1.4;
-const PANEL_GLOW_BANDS = [0.34, 0.24, 0.15, 0.08, 0.035];
+const PANEL_GLOW_BANDS = [0.2, 0.15, 0.11, 0.08, 0.055, 0.035, 0.02];
 export const PANEL_GLOW_ORDER = PANEL_BACKDROP_ORDER - 1;
 const SURFACE_FILL = PANEL_FILL;
 const SURFACE_BORDER = PANEL_STROKE;
 /** Button faces: the same faint tint, a mid-cyan stroke; hover and press raise the tint. */
-const BUTTON_FACE = new vec4(0.4, 0.7, 1.0, 0.06);
-const BUTTON_FACE_HOVER = new vec4(0.45, 0.78, 1.0, 0.22);
-const BUTTON_FACE_PRESS = new vec4(0.5, 0.85, 1.0, 0.4);
+const BUTTON_FACE = new vec4(0.4, 0.7, 1.0, 0.04);
+const BUTTON_FACE_HOVER = new vec4(0.45, 0.78, 1.0, 0.16);
+const BUTTON_FACE_PRESS = new vec4(0.5, 0.85, 1.0, 0.3);
 const BUTTON_BORDER = new vec4(0.5, 0.82, 1.0, 0.95);
 /** Selected segment = cyan tint, bright cyan-white stroke, cyan glow. */
-const SELECTED_FACE = new vec4(0.3, 0.85, 1.0, 0.3);
-const SELECTED_HOVER = new vec4(0.3, 0.85, 1.0, 0.42);
-const SELECTED_PRESS = new vec4(0.4, 0.9, 1.0, 0.55);
+const SELECTED_FACE = new vec4(0.3, 0.85, 1.0, 0.1);
+const SELECTED_HOVER = new vec4(0.3, 0.85, 1.0, 0.2);
+const SELECTED_PRESS = new vec4(0.4, 0.9, 1.0, 0.34);
 const SELECTED_BORDER = new vec4(0.78, 1, 1, 1);
 /** Primary action (Next / Again): cyan tint and bright stroke. */
-const PRIMARY_FACE = new vec4(0.3, 0.85, 1.0, 0.3);
-const PRIMARY_FACE_HOVER = new vec4(0.3, 0.85, 1.0, 0.45);
-const PRIMARY_FACE_PRESS = new vec4(0.4, 0.9, 1.0, 0.6);
+const PRIMARY_FACE = new vec4(0.3, 0.85, 1.0, 0.08);
+const PRIMARY_FACE_HOVER = new vec4(0.3, 0.85, 1.0, 0.2);
+const PRIMARY_FACE_PRESS = new vec4(0.4, 0.9, 1.0, 0.34);
 const PRIMARY_BORDER = new vec4(0.82, 1, 1, 1);
 /** Finish is amber. */
-const AMBER_FACE = new vec4(1, 0.72, 0.22, 0.16);
-const AMBER_FACE_HOVER = new vec4(1, 0.72, 0.22, 0.32);
-const AMBER_FACE_PRESS = new vec4(1, 0.78, 0.3, 0.5);
+const AMBER_FACE = new vec4(1, 0.72, 0.22, 0.07);
+const AMBER_FACE_HOVER = new vec4(1, 0.72, 0.22, 0.2);
+const AMBER_FACE_PRESS = new vec4(1, 0.78, 0.3, 0.34);
 const AMBER_BORDER = new vec4(1, 0.82, 0.4, 1);
 
 /*
@@ -179,6 +181,7 @@ const FRAME_CM = 0.15;
 function quad(parent: SceneObject, name: string, w: number, h: number, z: number, color: vec4): RenderMeshVisual {
   const so = child(parent, name, new vec3(0, 0, z));
   const rmv = so.createComponent('Component.RenderMeshVisual') as RenderMeshVisual;
+  OWN_VISUALS.add(rmv);
   rmv.mesh = QUAD_MESH;
   const mat = SURFACE_MATERIAL.clone();
   mat.mainPass.baseColor = color;
@@ -264,9 +267,32 @@ function roundedRingMesh(w: number, h: number, r: number, stroke: number): Rende
   return mesh;
 }
 
+/**
+ * Every mesh this UI draws itself. UIKit's own visuals (the BackPlate rectangle and each Button's rounded rectangle, dark grey) also draw on
+ * the panel in 5.24.1 and read as grey plates on an additive display, so `muteUiKitVisuals` switches off every other mesh under a panel.
+ */
+const OWN_VISUALS = new Set<RenderMeshVisual>();
+const muteRoots: SceneObject[] = [];
+let muteHooked = false;
+function sweepMute(so: SceneObject): void {
+  const list = so.getComponents('Component.RenderMeshVisual') as RenderMeshVisual[];
+  for (const v of list) if (v.enabled && !OWN_VISUALS.has(v)) v.enabled = false;
+  for (let i = 0; i < so.getChildrenCount(); i++) sweepMute(so.getChild(i));
+}
+export function muteUiKitVisuals(root: SceneObject): void {
+  muteRoots.push(root);
+  if (muteHooked) return;
+  muteHooked = true;
+  const sc = global.scene.createSceneObject('UiKitMute').createComponent('Component.ScriptComponent');
+  sc.createEvent('UpdateEvent').bind(() => {
+    for (const r of muteRoots) if (r.enabled) sweepMute(r);
+  });
+}
+
 function meshVisual(parent: SceneObject, name: string, mesh: RenderMesh, z: number, color: vec4): RenderMeshVisual {
   const so = child(parent, name, new vec3(0, 0, z));
   const rmv = so.createComponent('Component.RenderMeshVisual') as RenderMeshVisual;
+  OWN_VISUALS.add(rmv);
   rmv.mesh = mesh;
   const mat = SURFACE_MATERIAL.clone();
   mat.mainPass.baseColor = color;
@@ -321,9 +347,9 @@ export function addSurface(parent: SceneObject, w: number, h: number, z: number,
 }
 
 /** Pass 6 (artifact S1): mint Start button (mint text, mint frame) and the cyan "selected" segment. */
-const MINT_FACE = new vec4(0.3, 1.0, 0.7, 0.2);
-const MINT_FACE_HOVER = new vec4(0.3, 1.0, 0.7, 0.34);
-const MINT_FACE_PRESS = new vec4(0.4, 1.0, 0.78, 0.5);
+const MINT_FACE = new vec4(0.3, 1.0, 0.7, 0.06);
+const MINT_FACE_HOVER = new vec4(0.3, 1.0, 0.7, 0.2);
+const MINT_FACE_PRESS = new vec4(0.4, 1.0, 0.78, 0.34);
 const MINT_BORDER = new vec4(0.55, 1.0, 0.82, 1);
 
 type FaceSet = [vec4, vec4, vec4, vec4];
@@ -337,14 +363,14 @@ const FACES: Record<'normal' | 'primary' | 'amber' | 'mint' | 'outline', FaceSet
 };
 /** Accent kinds keep a soft glow of their own colour even when not selected. */
 const KIND_GLOW: Partial<Record<keyof typeof FACES, vec4>> = {
-  primary: new vec4(0.37, 0.83, 1.0, 0.24),
-  mint: new vec4(0.4, 1.0, 0.75, 0.24),
-  amber: new vec4(1.0, 0.75, 0.3, 0.24),
+  primary: new vec4(0.37, 0.83, 1.0, 0.3),
+  mint: new vec4(0.4, 1.0, 0.75, 0.32),
+  amber: new vec4(1.0, 0.75, 0.3, 0.3),
 };
 
 const BUTTON_RADIUS_CM = 1.1;
 /** Selected segments get a soft cyan glow ring around the face (D1: "optional cyan glow on the active element"). */
-const GLOW_COLOR = new vec4(0.37, 0.83, 1.0, 0.28);
+const GLOW_COLOR = new vec4(0.37, 0.83, 1.0, 0.34);
 const GLOW_SPREAD_CM = 0.5;
 
 /** Themes a button's face; returns `setSelected` (cyan face + frame + glow, artifact S1 segments). */
@@ -356,8 +382,15 @@ function themeButton(button: Button, so: SceneObject, w: number, h: number, kind
   const surface = addRoundedSurface(surfaceRoot, w, h, 0, face, border, radius, BUTTON_STROKE_CM);
   const frame = surfaceRoot.getChild(1).getComponent('Component.RenderMeshVisual') as RenderMeshVisual;
   const kindGlow = KIND_GLOW[kind];
-  const glow = meshVisual(surfaceRoot, 'Glow', roundedRingMesh(w + 2 * GLOW_SPREAD_CM, h + 2 * GLOW_SPREAD_CM, radius + GLOW_SPREAD_CM, GLOW_SPREAD_CM), -0.02, kindGlow ?? GLOW_COLOR);
-  glow.getSceneObject().enabled = !!kindGlow;
+  const glowRoot = child(surfaceRoot, 'GlowRoot', new vec3(0, 0, -0.02));
+  const glowA = meshVisual(glowRoot, 'Glow', roundedRingMesh(w + 2 * GLOW_SPREAD_CM, h + 2 * GLOW_SPREAD_CM, radius + GLOW_SPREAD_CM, GLOW_SPREAD_CM), 0, kindGlow ?? GLOW_COLOR);
+  const glowB = meshVisual(glowRoot, 'Glow2', roundedRingMesh(w + 4 * GLOW_SPREAD_CM, h + 4 * GLOW_SPREAD_CM, radius + 2 * GLOW_SPREAD_CM, GLOW_SPREAD_CM), -0.01, kindGlow ?? GLOW_COLOR);
+  const tint = (c: vec4) => {
+    glowA.mainPass.baseColor = c;
+    glowB.mainPass.baseColor = new vec4(c.x, c.y, c.z, c.w * 0.4);
+  };
+  tint(kindGlow ?? GLOW_COLOR);
+  glowRoot.enabled = !!kindGlow;
   const set = (c: vec4) => (surface.mainPass.baseColor = c);
   button.onHoverEnter.add(() => set(hover));
   button.onHoverExit.add(() => set(face));
@@ -368,8 +401,8 @@ function themeButton(button: Button, so: SceneObject, w: number, h: number, kind
     else [face, hover, press] = FACES[kind];
     set(face);
     frame.mainPass.baseColor = selected ? SELECTED_BORDER : border;
-    glow.mainPass.baseColor = selected ? GLOW_COLOR : kindGlow ?? GLOW_COLOR;
-    glow.getSceneObject().enabled = selected || !!kindGlow;
+    tint(selected ? GLOW_COLOR : kindGlow ?? GLOW_COLOR);
+    glowRoot.enabled = selected || !!kindGlow;
   };
 }
 
@@ -439,10 +472,7 @@ export function makePanel(host: SceneObject, widthCm: number, heightCm: number, 
   // UIKit's BackPlate draws its own dark rounded rectangle on the panel root, which reads as a flat grey plate on the additive display
   // (and not as the luminous outline this UI uses). It keeps its collider and layout; only its visual is switched off, every frame
   // (it is created at initialize and may be re-enabled by the component).
-  host.createComponent('Component.ScriptComponent').createEvent('UpdateEvent').bind(() => {
-    const v = root.getComponent('Component.RenderMeshVisual') as RenderMeshVisual | null;
-    if (v && v.enabled) v.enabled = false;
-  });
+  muteUiKitVisuals(root);
   return { root, content, backPlate };
 }
 
@@ -619,7 +649,7 @@ export function addButton(
   }
   // With a subline the label moves up and the subline (about 60 % of the label size) sits under it.
   const labelSo = child(so, 'Label', new vec3(labelX, opts.subline ? heightCm * 0.17 : 0, BUTTON_LABEL_Z));
-  const text = makeText(labelSo, label, role, labelW, opts.subline ? heightCm * 0.6 : heightCm, distanceCm, opts.mint && !opts.primary ? TEXT_MINT : TEXT_PRIMARY);
+  const text = makeText(labelSo, label, role, labelW, opts.subline ? heightCm * 0.6 : heightCm, distanceCm, opts.primary ? TEXT_PRIMARY : opts.mint ? TEXT_MINT : opts.amber ? TEXT_AMBER_LABEL : TEXT_PRIMARY);
   if (opts.subline) {
     const sub = makeText(child(so, 'Subline', new vec3(labelX, -heightCm * 0.27, BUTTON_LABEL_Z)), opts.subline, role, labelW, heightCm * 0.3, distanceCm, TEXT_LABEL);
     sub.size = roleSize('Caption', distanceCm);

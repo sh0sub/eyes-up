@@ -93,7 +93,7 @@ export const DEFAULT_TUNABLES: Readonly<Tunables> = Object.freeze({
   burstSeconds: 0.7,
 
   stageDistanceCm: 250,
-  floorOffsetCm: 152,
+  floorOffsetCm: 163,
   audienceSpacingCm: 60,
   smallAudienceSpacingCm: 42,
   smallAudienceMax: 3,

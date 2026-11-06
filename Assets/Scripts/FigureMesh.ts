@@ -76,3 +76,35 @@ export function polyRing(key: string, pts: readonly Pt[], stroke: number, r: VRa
   cache.set(key, mesh);
   return mesh;
 }
+
+/**
+ * A band of width `stroke` along an open polyline, offset toward `toward` (so the outer edge is the polyline itself): the brighter rim
+ * on the light side of a figure and its collar line.
+ */
+export function polyStrip(key: string, pts: readonly Pt[], stroke: number, toward: Pt, r: VRange | null): RenderMesh {
+  const hit = cache.get(key);
+  if (hit) return hit;
+  const n = pts.length;
+  const inner: Pt[] = pts.map((p, i) => {
+    const a = pts[Math.max(0, i - 1)];
+    const b = pts[Math.min(n - 1, i + 1)];
+    const tx = b[0] - a[0];
+    const ty = b[1] - a[1];
+    const len = Math.hypot(tx, ty) || 1;
+    let nx = -ty / len;
+    let ny = tx / len;
+    if (nx * (toward[0] - p[0]) + ny * (toward[1] - p[1]) < 0) {
+      nx = -nx;
+      ny = -ny;
+    }
+    return [p[0] + nx * stroke, p[1] + ny * stroke];
+  });
+  const verts: number[][] = [];
+  pts.forEach((p) => verts.push([p[0], p[1], 0, ...uvOf(p, r)]));
+  inner.forEach((p) => verts.push([p[0], p[1], 0, ...uvOf(p, r)]));
+  const idx: number[] = [];
+  for (let i = 0; i < n - 1; i++) idx.push(i, i + 1, n + i + 1, i, n + i + 1, n + i, i, n + i + 1, i + 1, i, n + i, n + i + 1);
+  const mesh = build(verts, idx);
+  cache.set(key, mesh);
+  return mesh;
+}

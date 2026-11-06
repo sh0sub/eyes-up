@@ -32,7 +32,8 @@ describe('figure geometry', () => {
     expect(Math.min(...ys)).toBe(-70);
     expect(Math.max(...ys)).toBeGreaterThan(70);
     const maxHalf = Math.max(...t.map((p) => p[0]));
-    expect(maxHalf).toBeGreaterThan(25);
+    expect(maxHalf).toBeGreaterThan(20);
+    expect(maxHalf + 42).toBeLessThan(72 - 6); // three members 42 cm apart keep a margin inside the lens view
     const topHalf = Math.max(...t.filter((p) => p[1] === Math.max(...ys)).map((p) => p[0]));
     expect(topHalf).toBeLessThan(8);
     const c = centroid(t);
@@ -104,5 +105,18 @@ describe('per-person tag', () => {
     const l = audienceLook(0.35, 0.5);
     expect(l.engagement).toBeCloseTo(0.35, 9);
     expect(l.burst).toBeCloseTo(0.5, 9);
+  });
+
+  it('fills are faint tints (at most 15 % alpha) in every state; volume comes from the strokes', () => {
+    for (const v of [0, 0.5, 1]) {
+      for (const lit of [0, 1]) {
+        const c = figureColors(figureHue(0), v, 0, lit, 1);
+        for (const k of ['body', 'glow', 'highlight', 'head', 'headHighlight', 'headGlow'] as const) expect(c[k][3], `${k} v=${v} lit=${lit}`).toBeLessThanOrEqual(0.25);
+        expect(c.body[3]).toBeLessThanOrEqual(0.15);
+        expect(c.head[3]).toBeLessThanOrEqual(0.15);
+        expect(c.rim[3]).toBeGreaterThanOrEqual(0.45);
+        expect(c.rimLight[3]).toBeGreaterThanOrEqual(c.rim[3] - 0.01);
+      }
+    }
   });
 });

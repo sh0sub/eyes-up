@@ -23,7 +23,7 @@ import {
 } from './core/SetupModel';
 import { SessionConfig } from './core/EyesUpSession';
 import { FlexJustify } from 'UIKit.lspkg/Scripts/Components/Layout2D/Flex/FlexTypes';
-import { BOX_NEUTRAL, Panel, TEXT_LABEL, TEXT_PRIMARY, addBox, addButton, flexRow, makePanel, textRow } from './EyesUpUI';
+import { BOX_NEUTRAL, LINE_CYAN, PANEL_STROKE_CM, Panel, TEXT_LABEL, TEXT_PRIMARY, addBlock, addBox, addButton, addCircleRing, addDot, addRoundedSurface, addSurface, child, flexRow, makePanel, textRow } from './EyesUpUI';
 
 /** Cycle 5 (R5): 40 x 30 -> 46 x 34 cm so the captions, labels and Start button can be about 1.3x larger. */
 const W = 46;
@@ -54,10 +54,11 @@ export class SetupPanel extends BaseScriptComponent {
     this.panel = makePanel(this.getSceneObject(), W, H, 1.4, 0.8);
     const c = this.panel.content;
     // Pass 4 (artifact S1): title with a "SETUP" pill on the right.
-    const titleRow = flexRow(c, 'SetupTitleRow', W - 4, 4.4, 1);
-    textRow(titleRow, 'SetupTitle', this.title, 'Title', W - 15, 4.4, DIST).horizontalAlignment = HorizontalAlignment.Left;
-    addBox(titleRow, 'SetupPill', SETUP_PILL, 'Caption', 9, 2.6, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
-    textRow(c, 'SetupSubtitle', this.subtitle, 'Body', W - 4, 3, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
+    const titleRow = flexRow(c, 'SetupTitleRow', ROW_W, 4.8, 1, FlexJustify.Start);
+    this.buildLogo(addBlock(titleRow, 'SetupLogo', 4.4, 4.4));
+    textRow(titleRow, 'SetupTitle', this.title, 'Title', ROW_W - 4.4 - 11.2 - 2, 4.8, DIST).horizontalAlignment = HorizontalAlignment.Left;
+    addBox(titleRow, 'SetupPill', SETUP_PILL, 'Body', 11.2, 3.4, DIST, TEXT_PRIMARY, BOX_NEUTRAL);
+    textRow(c, 'SetupSubtitle', this.subtitle, 'Heading', ROW_W, 3.4, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
     // Pass 6 (artifact S1): segmented 3/5/10 and 3/6/9 controls (selected = cyan), deck list, mint Start.
     const seg = { labelRole: 'Heading' as const };
     this.lengthSeg = this.segmentRow(c, 'Length', 'Talk length', LENGTH_OPTIONS, 'min', (v) => this.model.setLengthSlider(optionToSlider(LENGTH_OPTIONS, v)), seg);
@@ -86,12 +87,12 @@ export class SetupPanel extends BaseScriptComponent {
     this.importLabel = imp.label;
     this.deckButtons.push({ id: IMPORTED_DECK_ID, setSelected: imp.setSelected });
     // Start + the artifact caption side by side (keeps the panel inside 40 × 30 cm).
-    const startRow = flexRow(c, 'StartRow', W - 4, 5.6, 1);
+    const startRow = flexRow(c, 'StartRow', ROW_W, 5.6, 1);
     addButton(
       startRow,
       'StartButton',
       'Start rehearsal',
-      23.5,
+      20.5,
       5.6,
       DIST,
       () => {
@@ -101,7 +102,9 @@ export class SetupPanel extends BaseScriptComponent {
       { icon: 'play_arrow', mint: true, labelRole: 'Heading' },
     );
     // The panel's Text never wraps (Overflow), so the caption breaks after "ahead".
-    textRow(startRow, 'SetupCaption', SETUP_CAPTION.replace(' of ', '\nof '), 'Body', 17.5, 5.6, DIST, TEXT_LABEL);
+    const caption = textRow(startRow, 'SetupCaption', SETUP_CAPTION.replace(' of ', '\nof '), 'Body', 20.5, 5.6, DIST, TEXT_LABEL);
+    caption.size = 66; // a little above the Body step: the helper line is read from 1.1 m
+    caption.horizontalAlignment = HorizontalAlignment.Left;
     // Visibility is applied in UpdateEvent (after every UIKit element has run OnStart): disabling
     // a UIKit host before its OnStart stops it from ever initializing (specs-build-ui G3).
     this.createEvent('UpdateEvent').bind(() => {
@@ -162,8 +165,20 @@ export class SetupPanel extends BaseScriptComponent {
       );
       return { value, setSelected: b.setSelected };
     });
-    textRow(row, `${name}Unit`, unit, 'Body', ROW_W - LABEL_W - 3 * 6.2 - 4, 4.2, DIST, TEXT_LABEL);
+    // Same type step and height as the row label, so the unit sits on the chips' baseline.
+    textRow(row, `${name}Unit`, unit, 'Heading', ROW_W - LABEL_W - 3 * 6.2 - 4, 4.2, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
     return segs;
+  }
+
+  /** Logo tile (mockup S1): a rounded outline tile with an outlined eye (pupil and three lashes), in the panel's one stroke. */
+  private buildLogo(block: SceneObject): void {
+    addRoundedSurface(child(block, 'Tile', new vec3(0, 0, 0.05)), 4.4, 4.4, 0, new vec4(0.4, 0.7, 1.0, 0.08), LINE_CYAN, 1.1, PANEL_STROKE_CM);
+    const eye = child(block, 'Eye', new vec3(0, -0.25, 0.1));
+    const ring = child(eye, 'EyeRing');
+    ring.getTransform().setLocalScale(new vec3(1, 0.62, 1));
+    addCircleRing(ring, 'Ring', 1.55, 0.3, 0, LINE_CYAN);
+    addDot(eye, 'Pupil', 0.55, new vec3(0, 0, 0), LINE_CYAN);
+    [-1.0, 0, 1.0].forEach((x, k) => addSurface(child(eye, `Lash${k}`, new vec3(x, k === 1 ? 1.6 : 1.4, 0)), 0.2, 0.55, 0, LINE_CYAN, null));
   }
 
   /** Open the AR keyboard; Return imports the typed outline as the "Imported deck" (device only: no keyboard in Preview). */

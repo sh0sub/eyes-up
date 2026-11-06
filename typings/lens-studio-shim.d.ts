@@ -99,6 +99,8 @@ declare class SceneObject {
   name: string;
   getTransform(): Transform;
   setParent(parent: SceneObject): void;
+  getParent(): SceneObject;
+  getComponents(typeName: string): any[];
   getChildrenCount(): number;
   getChild(index: number): SceneObject;
   createComponent(typeName: string): any;

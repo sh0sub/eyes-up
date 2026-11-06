@@ -10,10 +10,10 @@
  */
 import { AudienceLook, PHONE_Y_CM } from './core/AudienceLook';
 import { FADE_ROWS, SHADOW_LAYERS, bodyFadePixels, headDepthScale, shadowBars } from './core/BodyFade';
-import { BODY_ORIGIN_CM, FigureColors, HEAD_HALF_H, HEAD_HALF_W, Pt, centroid, ellipsePts, figureColors, figureHue, offsetPts, roundedRectPts, scalePts, tagText, tagTone, torsoOutline } from './core/Figure';
+import { BODY_ORIGIN_CM, FigureColors, TORSO_ROWS, TORSO_WIDTH_SCALE, HEAD_HALF_H, HEAD_HALF_W, Pt, centroid, ellipsePts, figureColors, figureHue, offsetPts, roundedRectPts, scalePts, tagText, tagTone, torsoOutline } from './core/Figure';
 import { DEFAULT_TUNABLES } from './core/Tunables';
 import { AUDIENCE_RENDER_ORDER, STAGE_STROKE_CM, LINE_AMBER, LINE_CORAL, LINE_CYAN, addCircleRing, addDot, addRoundedSurface, addSurface, addText, child } from './EyesUpUI';
-import { polyFill, polyRing } from './FigureMesh';
+import { polyFill, polyRing, polyStrip } from './FigureMesh';
 
 /** Cycle 6 (D2): the soft shadow sits where the body has faded out, just above the bottom of the preview frame (about 57 cm above the feet). */
 const SHADOW_Y = 74;
@@ -87,7 +87,6 @@ interface Member {
   haloGlow: RenderMeshVisual[];
   /** How much the speaker is looking at this member, 0..1 (from the halo colour). */
   lit: number;
-  tagAbove: boolean;
 }
 
 /** One figure layer: a mesh visual and the colour it takes from FigureColors. */
@@ -116,15 +115,17 @@ interface Tag {
  * Per-person tag ("#2 55%"): a capsule outline just under the head (a name badge on the shoulders), following the head as it sinks.
  * There is no free row above the heads: the room meter and the cue card use it, and the frame is full.
  */
-const TAG_BELOW_HEAD_CM = 27;
-/** A slumped head sits on the lap, where the phone glows: its tag moves above the head instead (with hysteresis), and the zzz rises above the tag. */
-const TAG_ABOVE_HEAD_CM = 24;
-const TAG_FLIP_DOWN_AT = 0.4;
-const TAG_FLIP_UP_AT = 0.55;
-const ZZZ_ABOVE_TAG_CM = 40;
+/**
+ * Round 2: every tag stands on one baseline above the halo tops (upright lit halo top 175 cm, a 1.8 cm gap, half the 7 cm tag), the same for
+ * every member in every state, so tags never overlap a neighbour's outline. A slumped member's head sinks well below it; its zzz marks the head.
+ */
+const TAG_BASELINE_Y = 182.2;
 const TAG_Z = 14;
-const TAG_W = 25;
-const TAG_H = 7.4;
+const TAG_W = 23;
+const TAG_H = 6.4;
+const TAG_TEXT_SIZE = 190;
+/** Halo ring 36 -> 32 cm across: the lit ring's top is 177 cm, which leaves room for the tag row under the meter. */
+const HALO_SCALE = 32 / 36;
 const TAG_DIST = 250;
 const TAG_TEXT: Record<'good' | 'mid' | 'low', vec4> = {
   good: new vec4(0.78, 0.97, 1, 1),
@@ -187,9 +188,14 @@ function buildFigure(index: number, body: SceneObject | null, head: SceneObject 
     add('TorsoFill', polyFill('torso', torso, BODY_V), 'body');
     add('TorsoLight1', polyFill('torsoHi1', scalePts(torso, 0.62, 0.8, c, -4, 8), BODY_V), 'highlight');
     add('TorsoLight2', polyFill('torsoHi2', scalePts(torso, 0.34, 0.52, c, -7, 17), BODY_V), 'highlight');
-    add('ArmL', polyRing('armL', roundedRectPts(12.5, 84, 6.2, -21, 11), 0.7, BODY_V), 'arms');
-    add('ArmR', polyRing('armR', roundedRectPts(12.5, 84, 6.2, 21, 11), 0.7, BODY_V), 'arms');
-    add('TorsoRim', polyRing('torsoRim', torso, 1.05, BODY_V), 'rim');
+    // Inner contours (the arm hanging from the shoulder, a V collar) and a brighter rim on the light (left) side give the torso volume without a fill.
+    const aw = 12.5 * TORSO_WIDTH_SCALE;
+    const ax = 21 * TORSO_WIDTH_SCALE;
+    add('ArmL', polyRing('armL', roundedRectPts(aw, 84, aw / 2, -ax, 11), 0.85, BODY_V), 'arms');
+    add('ArmR', polyRing('armR', roundedRectPts(aw, 84, aw / 2, ax, 11), 0.85, BODY_V), 'arms');
+    add('Collar', polyStrip('collar', [[-7, 66], [0, 52], [7, 66]], 0.9, [0, -30], BODY_V), 'collar');
+    add('TorsoRim', polyRing('torsoRim', torso, 1.5, BODY_V), 'rim');
+    add('TorsoRimLight', polyStrip('torsoRimLight', torso.slice(TORSO_ROWS), 2.6, c, BODY_V), 'rimLight');
   }
   if (head && headVisual) {
     const mat = headVisual.mainMaterial;
@@ -204,7 +210,8 @@ function buildFigure(index: number, body: SceneObject | null, head: SceneObject 
     add('HeadLight2', polyFill('headHi2', scalePts(ell, 0.3, 0.3, ZERO, -4, 5.6), null), 'headHighlight', 0.75);
     add('EyeL', polyFill('eye', ellipsePts(1.1, 1.5, 14, -3.6, 1.6), null), 'eyes', 0.8);
     add('EyeR', polyFill('eyeR', ellipsePts(1.1, 1.5, 14, 3.6, 1.6), null), 'eyes', 0.8);
-    add('HeadRim', polyRing('headRim', ell, 0.95, null), 'headRim', 0.85);
+    add('HeadRim', polyRing('headRim', ell, 1.3, null), 'headRim', 0.85);
+    add('HeadRimLight', polyStrip('headRimLight', ell.slice(13, 31), 2.2, ZERO, null), 'rimLight', 0.9);
   }
   return fig;
 }
@@ -226,6 +233,7 @@ function makeTag(root: SceneObject, index: number): Tag {
   const fill = addRoundedSurface(surf, TAG_W, TAG_H, 0, new vec4(LINE_CYAN.x, LINE_CYAN.y, LINE_CYAN.z, 0.1), LINE_CYAN, TAG_H / 2, STAGE_STROKE_CM);
   const frame = surf.getChild(1).getComponent('Component.RenderMeshVisual') as RenderMeshVisual;
   const text = addText(tagRoot, 'TagText', tagText(index, 1), 'Title', TAG_W, TAG_H, TAG_DIST, TAG_TEXT.good, new vec3(0, 0, 0.3));
+  text.size = TAG_TEXT_SIZE;
   return { root: tagRoot, text, fill, frame, shown: '', index, owner: root };
 }
 
@@ -279,7 +287,7 @@ export class AudienceRig {
       const headVisual = visualOf(head, plainTexture);
       const bodyRestScale = body ? body.getTransform().getLocalScale() : new vec3(80, 140, 64);
       const headRestScale = head ? head.getTransform().getLocalScale() : new vec3(22, 25, 22);
-      const haloRestScale = halo ? halo.getTransform().getLocalScale() : new vec3(36, 36, 36);
+      const haloRestScale = halo ? halo.getTransform().getLocalScale().uniformScale(HALO_SCALE) : new vec3(32, 32, 32);
       const figure = buildFigure(index, body, head, bodyVisual, headVisual, bodyRestScale, headRestScale);
       const tag = makeTag(root, index);
       const haloGlow = halo ? makeHaloRings(halo) : [];
@@ -305,7 +313,6 @@ export class AudienceRig {
         tag,
         haloGlow,
         lit: 0,
-        tagAbove: false,
       };
     });
   }
@@ -315,10 +322,10 @@ export class AudienceRig {
     const m = this.members[i];
     if (!m) return;
     this.applyFigure(m, look, fade);
-    if (look.engagement < TAG_FLIP_DOWN_AT) m.tagAbove = true;
-    else if (look.engagement > TAG_FLIP_UP_AT) m.tagAbove = false;
-    const headY = m.head ? m.head.getTransform().getLocalPosition().y : HEAD_REST_Y;
-    m.tag.root.getTransform().setLocalPosition(new vec3(0, m.tagAbove ? headY + TAG_ABOVE_HEAD_CM : headY - TAG_BELOW_HEAD_CM, TAG_Z));
+    // The member's root is scaled up to 1.05 when looked at; the tag cancels it, so every tag keeps one world baseline, size and width.
+    const rs = Math.max(0.5, m.tag.owner.getTransform().getWorldScale().x);
+    m.tag.root.getTransform().setLocalPosition(new vec3(0, TAG_BASELINE_Y / rs, TAG_Z / rs));
+    m.tag.root.getTransform().setLocalScale(new vec3(1 / rs, 1 / rs, 1 / rs));
 
     const slump = Math.min(1, look.headPitchDeg / 38);
     const lean = (look.headPitchDeg * LEAN_SHARE * Math.PI) / 180;
@@ -364,14 +371,14 @@ export class AudienceRig {
     const glow = look.phoneGlow * fade;
     if (m.phone.enabled !== glow > 0.01) m.phone.enabled = glow > 0.01;
     if (glow > 0.01) {
-      m.screenVisuals.forEach((v, k) => (v.mainPass.baseColor = k === 0 ? new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], 0.8 * glow) : new vec4(1, 0.93, 0.7, glow)));
+      m.screenVisuals.forEach((v, k) => (v.mainPass.baseColor = k === 0 ? new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], 0.22 * glow) : new vec4(1, 0.93, 0.7, glow)));
       // The three screen quads overlap; keep the sum opaque but not blown out.
       m.coneVisuals.forEach((v, k) => (v.mainPass.baseColor = new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], (0.13 - 0.025 * k) * glow)));
     }
     const z = look.zzz * fade;
     if (m.zzz.enabled !== z > 0.01) m.zzz.enabled = z > 0.01;
     if (z > 0.01) {
-      m.zzz.getTransform().setLocalPosition(new vec3(headPos.x, headPos.y + (m.tagAbove ? ZZZ_ABOVE_TAG_CM : ZZZ_ABOVE_HEAD_CM), headPos.z + 6));
+      m.zzz.getTransform().setLocalPosition(new vec3(headPos.x, headPos.y + ZZZ_ABOVE_HEAD_CM, headPos.z + 6));
       m.zzzText.textFill.color = new vec4(ZZZ_RGB.x, ZZZ_RGB.y, ZZZ_RGB.z, z);
     }
   }

@@ -32,12 +32,12 @@ h1{margin:0;font-size:42px;letter-spacing:-.01em}
 </style>
 <div class="wrap">
 <h1>Eyes Up: process at a glance</h1>
-<div class="sub">Three fixes found by looking at the Interactive Preview, checked by 10 LEAF scenarios and 194 tests.</div>
+<div class="sub">Three fixes found by looking at the Interactive Preview, checked by 10 LEAF scenarios and 195 tests.</div>
 <div class="row r1">
  <div class="card"><div class="k">Fix 1 &middot; Halo</div><div class="t">Pale halo washed out, saturated cyan reads</div>
   <div class="pair">
    <div class="im" style="background-image:url('before-halo-pale.png');background-size:662px 1953px;background-position:-348px -838px"><span class="cap">Before: pale disc</span></div>
-   <div class="im" style="background-image:url('../../devpost/screenshots/02-audience-lit-halo.png');background-size:1000px auto;background-position:-556px -147px"><span class="cap">After: saturated cyan</span></div>
+   <div class="im" style="background-image:url('../../devpost/screenshots/02-audience-lit-halo.png');background-size:1000px auto;background-position:-567px -205px"><span class="cap">After: saturated cyan</span></div>
   </div>
   <div class="note">Additive displays punish pale colors. The lit state keeps the red channel low.</div></div>
  <div class="card"><div class="k">Fix 2 &middot; Gaze hit area</div><div class="t">Cone replaced by the real pill rectangle</div>
@@ -55,17 +55,17 @@ h1{margin:0;font-size:42px;letter-spacing:-.01em}
  <div class="card"><div class="k">Fix 3 &middot; Game layer</div><div class="t">A jury note became the game layer</div>
   <div class="pair">
    <div class="im" style="background-image:url('halo-cyan-prev.png');background-size:620px auto;background-position:-175px -139px"><span class="cap">Before: grey on grey</span></div>
-   <div class="im" style="background-image:url('../../devpost/screenshots/10-engagement-slump.png');background-size:600px auto;background-position:-160px -85px"><span class="cap">After: slump, meter, grade</span></div>
+   <div class="im" style="background-image:url('../../devpost/screenshots/10-engagement-slump.png');background-size:600px auto;background-position:-120px -190px"><span class="cap">After: slump, meter, grade</span></div>
   </div>
   <div class="note">Our own review: no emotional hook. Members now slump when ignored and perk up when looked at.</div></div>
 </div>
 <div class="row r2">
  <div class="card checks2"><div class="k">Checks &middot; logic in Node, Lens in LEAF</div>
   <div class="c"><span class="big">10 / 10</span><span class="note">LEAF scenarios PASSED in the Interactive Preview</span></div>
-  <div class="c"><span class="big2">194</span><span class="note">unit and integration tests, typecheck and lint clean</span></div></div>
+  <div class="c"><span class="big2">195</span><span class="note">unit and integration tests, typecheck and lint clean</span></div></div>
  <div class="card"><div class="k">Learning loop &middot; Run 1 vs Run 2 (scripted gaze, illustrative, not a user study)</div>
   <table class="runs"><tr><th></th><th>Grade</th><th>Balance</th><th>Left / Center / Right</th><th>Longest look-away</th><th>Tip shown</th></tr>
-   <tr><td>Run 1</td><td class="g c1">C &middot; 39</td><td>46</td><td>0 / 30 / 70 %</td><td>29 s left</td><td>look left more</td></tr>
+   <tr><td>Run 1</td><td class="g c1">C &middot; 39</td><td>46</td><td>0 / 30 / 70 %</td><td>28 s left</td><td>look left more</td></tr>
    <tr><td>Run 2</td><td class="g a1">A &middot; 84</td><td>89</td><td>41 / 26 / 33 %</td><td>12 s right</td><td>look at the center more</td></tr></table>
   <div class="note">Real values from LEAF scenario <b>capture_loop</b> in the Interactive Preview: Run 1 ignores the left, Run 2 follows the tip. Not a measure of learning.</div></div>
 </div>

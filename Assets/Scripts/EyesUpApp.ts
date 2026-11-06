@@ -42,26 +42,27 @@ import { METER_ABOVE_CM, METER_CAPSULE_H_CM, METER_WIDTH_CM } from './RoomMeter'
  * keyboard_double_arrow_*) above a "left" / "right" caption. The hint's scene Text (±20 cm, 100 cm
  * ahead of the camera) becomes the caption; the icon is added at awake 4 cm above it.
  */
-const CHEVRON_CM = 9.4;
-const CHEVRON_ICON_Y = 9;
+const CHEVRON_CM = 7.6;
+const CHEVRON_ICON_Y = 7.3;
 /**
  * Cycle 1 (D9): a dark backing circle (r 5.6 cm) with an amber hairline behind the double chevron, so it reads on a beige room, a "Look left" /
  * "Look right" caption in Body, and the 1 Hz pulse. Extents about the hint origin (cm), used for placement only.
  */
-const CHEVRON_BACK_R = 7;
-const CHEVRON_EXT_HALF_W = 7.3;
-const CHEVRON_EXT_BELOW = 2.3;
-const CHEVRON_EXT_ABOVE = 16.3;
+/** Round 2: the whole chevron block is 0.8x its old size, so it fits the free wall left of the audience at the canonical pose without covering a tag. */
+const CHEVRON_BACK_R = 5.7;
+const CHEVRON_EXT_HALF_W = 6.2;
+const CHEVRON_EXT_BELOW = 1.9;
+const CHEVRON_EXT_ABOVE = 13.4;
 /** A member's body is about this wide (half, cm in the stage) for the chevron's keep-clear rects. */
 const MEMBER_BODY_HALF_W_CM = 26;
 /** Round 7: hint x offset (was 20) and drop so the backing clears the opening pill's corner in the nudge still. */
 const CHEVRON_X_CM = 21.5;
 /** Cycle 4 (G9): the disc + caption block sits at the vertical centre of the frame, its outer edge this far from the FOV edge (cm in the plane). */
-const CHEVRON_EDGE_GAP_CM = 3;
+const CHEVRON_EDGE_GAP_CM = 2;
 /** Hint plane: the chevron is head-locked 100 cm ahead; panels are projected into that plane for placement. */
 const CHEVRON_PLANE_CM = 100;
 /** Clear gap kept between the chevron backing and any panel (cm in the plane). */
-const CHEVRON_PANEL_MARGIN_CM = 1;
+const CHEVRON_PANEL_MARGIN_CM = 2.5;
 /** Backing extents about the hint origin at the largest pulse scale (1.05). */
 const CHEVRON_BOX: ChevronBox = {
   halfW: CHEVRON_EXT_HALF_W * 1.05,
@@ -70,14 +71,18 @@ const CHEVRON_BOX: ChevronBox = {
 };
 const CHEVRON_TEXT = new vec4(1.0, 0.82, 0.35, 1);
 /** ≈ 1.5 cm caption at 100 cm (S3: "left" 1.5 cm). */
-const CHEVRON_CAPTION_SIZE = 140;
+const CHEVRON_CAPTION_SIZE = 124;
 /** Additive display: a near-black backing adds no light, so the disc is a deep luminous blue that the amber chevron stands out from. */
-const CHEVRON_BACK_FILL = new vec4(1.0, 0.75, 0.3, 0.1);
-const CHEVRON_BACK_RING = new vec4(1.0, 0.82, 0.4, 1);
-const CHEVRON_BACK_GLOW = new vec4(1.0, 0.75, 0.3, 0.3);
+const CHEVRON_BACK_FILL = new vec4(1.0, 0.75, 0.3, 0.04);
+const CHEVRON_BACK_RING = new vec4(1.0, 0.84, 0.45, 1);
+/** Round 2: a thin crisp ring (0.3 cm at the 100 cm plane) and two thin glow rings, so the glow is clean instead of one wide muddy band. */
+const CHEVRON_RING_CM = 0.3;
+const CHEVRON_BACK_GLOW = new vec4(1.0, 0.75, 0.3, 0.26);
+const CHEVRON_BACK_GLOW2 = new vec4(1.0, 0.75, 0.3, 0.1);
+const CHEVRON_BACK_COLORS = [CHEVRON_BACK_FILL, CHEVRON_BACK_RING, CHEVRON_BACK_GLOW, CHEVRON_BACK_GLOW2];
 
 /** Stage line colors (design): cool white while running, amber at 0 s. Never black. */
-const LINE_COLOR: [number, number, number] = [0.75, 0.85, 1.0];
+const LINE_COLOR: [number, number, number] = [0.45, 0.92, 1.0];
 const LINE_AMBER: [number, number, number] = [1.0, 0.72, 0.2];
 
 /** Panel placement (brief "Where things live"). */
@@ -138,8 +143,13 @@ const PILL_TEXT_SIZE = 290;
  * Cycle 3 (F8): the capsule floats 4 cm above the tallest (lit) head top; the card keeps the old 9.5 cm centre-to-centre offset plus the
  * label row that now sits above the capsule (2.6 cm gap above the label).
  */
-const METER_ABOVE_HEAD_CM = 4;
-const METER_CARD_OFFSET_CM = 9.5 + (METER_ABOVE_CM - 3.3);
+const METER_ABOVE_HEAD_CM = 11;
+/**
+ * Round 2: the audience stands 11 cm lower in the view (floorOffsetCm 163) and the halo ring is 32 cm across, so a row of "#n NN%" tags fits between
+ * the lit halo tops (177 cm) and the meter's bottom edge (11 cm above them); the card stays where it was. The card's bottom edge is 3.6 cm above
+ * the top of the meter's label row (the card centre sits CARD_CENTER_Y above its origin, half its height further down).
+ */
+const METER_CARD_OFFSET_CM = METER_ABOVE_CM + 3.6 + (CARD_H / 2 - CARD_CENTER_Y);
 /** Room meter extents about its centre (cm, local), from RoomMeter.ts: capsule width, capsule plus label row above it. */
 const METER_HALF_W_CM = METER_WIDTH_CM / 2;
 const METER_HALF_H_CM = METER_ABOVE_CM;
@@ -150,9 +160,9 @@ const ZZZ_HALF_H_CM = 6;
 const TAG_HALF_W_CM = 13;
 const TAG_HALF_H_CM = 4.5;
 /** Lit halo ring radius around a head, cm (rest scale 36 cm, diameter). */
-const LIT_HALO_RADIUS_CM = 22;
+const LIT_HALO_RADIUS_CM = 17;
 /** Top of the lit halo above the floor: resting head height plus the halo radius. */
-const LIT_HEAD_TOP_CM = HEAD_UP_Y + LIT_HALO_RADIUS_CM;
+const LIT_HEAD_TOP_CM = (HEAD_UP_Y + 16) * 1.05;
 /** Measured in Preview: ≈ 0.0124 cm per size unit per glyph for Inter titles (size 200 → 2.5 cm). */
 const PILL_GLYPH_CM = 0.0124 * PILL_TEXT_SIZE;
 
@@ -198,6 +208,7 @@ export class EyesUpApp extends BaseScriptComponent {
   private rig: AudienceRig | null = null;
   private meter: RoomMeter | null = null;
   private cardBg: SceneObject | null = null;
+  private stageGlow: Array<{ visual: RenderMeshVisual; alpha: number }> = [];
   private pillBg: SceneObject | null = null;
   /** Width (cm, before world scale) of the current pill backing. */
   private pillWidth = 0;
@@ -237,7 +248,7 @@ export class EyesUpApp extends BaseScriptComponent {
       }
       this.hintTexts[i] = t;
       const back = child(so, 'Backing', new vec3(0, CHEVRON_ICON_Y, -0.1));
-      this.hintBacking[i] = [addDot(back, 'Disc', CHEVRON_BACK_R, new vec3(0, 0, 0), CHEVRON_BACK_FILL), addCircleRing(back, 'Rim', CHEVRON_BACK_R, STAGE_STROKE_CM, 0.02, CHEVRON_BACK_RING), addCircleRing(back, 'Glow', CHEVRON_BACK_R + 1.6, 1.6, -0.02, CHEVRON_BACK_GLOW)];
+      this.hintBacking[i] = [addDot(back, 'Disc', CHEVRON_BACK_R, new vec3(0, 0, 0), CHEVRON_BACK_FILL), addCircleRing(back, 'Rim', CHEVRON_BACK_R, CHEVRON_RING_CM, 0.02, CHEVRON_BACK_RING), addCircleRing(back, 'Glow', CHEVRON_BACK_R + 0.9, 0.9, -0.02, CHEVRON_BACK_GLOW), addCircleRing(back, 'Glow2', CHEVRON_BACK_R + 1.9, 1.0, -0.03, CHEVRON_BACK_GLOW2)];
       const icon = addIcon(so, i === 0 ? 'double_arrow_left' : 'double_arrow_right', CHEVRON_CM, new vec3(0, CHEVRON_ICON_Y, 0));
       this.hintIcons[i] = icon;
     });
@@ -245,7 +256,10 @@ export class EyesUpApp extends BaseScriptComponent {
     this.halos.forEach((h) => {
       if (h) h.mainMaterial = h.mainMaterial.clone();
     });
-    if (this.stageLineVisual) this.stageLineVisual.mainMaterial = this.stageLineVisual.mainMaterial.clone();
+    if (this.stageLineVisual) {
+      this.stageLineVisual.mainMaterial = this.stageLineVisual.mainMaterial.clone();
+      this.styleStageLine();
+    }
 
     this.rig = new AudienceRig(this.audience);
     // Cycle 3 (F1): every audience layer draws before (behind) every panel backdrop.
@@ -409,6 +423,32 @@ export class EyesUpApp extends BaseScriptComponent {
   }
 
   /** Artifact S3: the visible chevron pulses at 1 Hz (brightness and a slight scale). */
+  /**
+   * Redesign: the stage line is a thin bright cyan line (the old 0.6 x 3 cm bar showed its flat top as a grey-blue slab when seen from above)
+   * with a soft glow either side and a faint reflection a few cm nearer the viewer. Local +Z faces the head; progress still scales X.
+   */
+  private styleStageLine(): void {
+    const main = this.stageLineVisual;
+    main.mainPass.depthWrite = false;
+    const mainSo = main.getSceneObject();
+    mainSo.getTransform().setLocalScale(new vec3(360, 0.3, 0.8));
+    const parent = mainSo.getParent();
+    const mk = (name: string, z: number, depth: number, alpha: number) => {
+      const so = global.scene.createSceneObject(name);
+      so.setParent(parent);
+      so.getTransform().setLocalPosition(new vec3(0, 0, z));
+      so.getTransform().setLocalScale(new vec3(360, 0.2, depth));
+      const v = so.createComponent('Component.RenderMeshVisual') as RenderMeshVisual;
+      v.mesh = main.mesh;
+      v.mainMaterial = main.mainMaterial.clone();
+      v.mainPass.depthWrite = false;
+      this.stageGlow.push({ visual: v, alpha });
+    };
+    mk('StageGlowNear', 30, 3.4, 0.3);
+    mk('StageGlowWide', 30, 8, 0.12);
+    mk('StageReflection', 36, 0.8, 0.2);
+  }
+
   private pulseChevron(dt: number): void {
     const hints = [this.edgeHintLeft, this.edgeHintRight];
     if (!hints.some((h) => h && h.enabled)) return;
@@ -426,7 +466,7 @@ export class EyesUpApp extends BaseScriptComponent {
       const img = this.hintIcons[i];
       if (img) img.mainMaterial.mainPass.baseColor = new vec4(a, a, a, a);
       this.hintBacking[i].forEach((v, k) => {
-        const c = k === 0 ? CHEVRON_BACK_FILL : k === 1 ? CHEVRON_BACK_RING : CHEVRON_BACK_GLOW;
+        const c = CHEVRON_BACK_COLORS[k];
         v.mainPass.baseColor = new vec4(c.x, c.y, c.z, c.w * a);
       });
       const s = 0.9 + 0.15 * p;
@@ -871,8 +911,9 @@ export class EyesUpApp extends BaseScriptComponent {
             Math.min(1, c[0] * boost),
             Math.min(1, c[1] * boost),
             Math.min(1, c[2] * boost),
-            0.9,
+            0.95,
           );
+          this.stageGlow.forEach((g) => (g.visual.mainPass.baseColor = new vec4(Math.min(1, c[0] * boost), Math.min(1, c[1] * boost), Math.min(1, c[2] * boost), g.alpha)));
           // The line spans the stage (child visual is unit width); progress grows it.
           const t = this.stageLine.getTransform();
           const s = t.getLocalScale();

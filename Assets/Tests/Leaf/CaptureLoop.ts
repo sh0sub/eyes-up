@@ -23,7 +23,7 @@ async function finishAndReport(rig: Rig, label: string): Promise<void> {
   await lookDownAtPodium(rig);
   await tap(rig, 'FinishButton');
   await waitUntil(() => rig.session.phase === 'Summary', 4000, () => 'summary');
-  await sleep(500);
+  await sleep(3000); // capture only: the Summary stays up long enough for a 1 fps window recorder to catch it (was 500 ms)
   const s = rig.session.summary;
   const g = rig.session.game;
   if (s && g) {
