@@ -52,17 +52,26 @@ export const TEXT_ACCENT = new vec4(0.55, 0.85, 1.0, 1);
 export const TEXT_AMBER = new vec4(1.0, 0.75, 0.3, 1);
 /** Pass 4 (artifact S5): mint for the Balance badge. */
 export const TEXT_MINT = new vec4(0.55, 1.0, 0.8, 1);
-/** Pass 4: box tones (fill, frame) for badges, pills, stat boxes and the tip line. */
-export const BOX_NEUTRAL: [vec4, vec4] = [new vec4(0.09, 0.15, 0.36, 0.92), new vec4(0.5, 0.69, 1.0, 0.6)];
-/** Round 6: opaque, brighter stat tiles and tip, so wall art does not bleed through their text on the additive display. */
-export const BOX_SOLID: [vec4, vec4] = [new vec4(0.09, 0.15, 0.36, 0.96), new vec4(0.5, 0.69, 1.0, 0.7)];
-export const BOX_AMBER_SOLID: [vec4, vec4] = [new vec4(0.34, 0.23, 0.05, 0.96), new vec4(1.0, 0.8, 0.38, 0.95)];
+/**
+ * Redesign (glass-native "luminous line" UI). Specs and the Lens Studio Preview are ADDITIVE: a dark fill cannot render darker than the
+ * room, it only reads as a faint grey plate. So panels, boxes and buttons carry at most a very faint cool tint (alpha 0.05 to 0.12) and are
+ * drawn as bright rounded outline strokes with a soft outer glow, one saturated accent per element (cyan, mint, amber, coral).
+ */
+export const LINE_CYAN = new vec4(0.58, 0.92, 1.0, 1);
+export const LINE_MINT = new vec4(0.5, 1.0, 0.8, 1);
+export const LINE_AMBER = new vec4(1.0, 0.8, 0.36, 1);
+export const LINE_CORAL = new vec4(1.0, 0.5, 0.45, 1);
+const faint = (c: vec4, a: number) => new vec4(c.x, c.y, c.z, a);
+export const BOX_NEUTRAL: [vec4, vec4] = [new vec4(0.4, 0.7, 1.0, 0.07), new vec4(0.58, 0.92, 1.0, 0.9)];
+/** Stat tiles and tip: same faint tint, accent stroke. */
+export const BOX_SOLID: [vec4, vec4] = [new vec4(0.4, 0.7, 1.0, 0.08), new vec4(0.58, 0.92, 1.0, 0.95)];
+export const BOX_AMBER_SOLID: [vec4, vec4] = [faint(LINE_AMBER, 0.1), LINE_AMBER];
 /** Tip text on BOX_AMBER_SOLID: pale warm white. */
 export const TEXT_TIP = new vec4(1.0, 0.95, 0.8, 1);
-export const BOX_MINT: [vec4, vec4] = [new vec4(0.12, 0.36, 0.3, 0.95), new vec4(0.5, 1.0, 0.8, 0.9)];
-export const BOX_AMBER: [vec4, vec4] = [new vec4(0.34, 0.26, 0.1, 0.95), new vec4(1.0, 0.78, 0.35, 0.85)];
+export const BOX_MINT: [vec4, vec4] = [faint(LINE_MINT, 0.1), LINE_MINT];
+export const BOX_AMBER: [vec4, vec4] = [faint(LINE_AMBER, 0.1), LINE_AMBER];
 /** Cyan accent for countdown lines and bars. */
-export const ACCENT_CYAN = new vec4(0.45, 0.85, 1.0, 0.95);
+export const ACCENT_CYAN = new vec4(0.45, 0.88, 1.0, 1);
 
 const CONTENT_Z = 0.6;
 const BUTTON_LABEL_Z = 0.08;
@@ -107,47 +116,50 @@ const ICONS: Record<IconName, Texture> = {
  * stroke at 35 %, continuous rounded corners. Setup, cue card, pill, podium, Summary and the room
  * meter pill all use it. The previous blue-grey fill washed out to lavender on the additive display.
  */
-export const PANEL_FILL = new vec4(0x07 / 255, 0x0d / 255, 0x22 / 255, 0.9);
-export const PANEL_STROKE = new vec4(0x9c / 255, 0xc4 / 255, 1, 0.55);
+export const PANEL_FILL = new vec4(0.4, 0.7, 1.0, 0.07);
+export const PANEL_STROKE = new vec4(0.62, 0.93, 1.0, 1);
 export const PANEL_RADIUS_CM = 1.6;
-export const PANEL_STROKE_CM = 0.24;
+/** One stroke width for every panel, box and button at the 110 cm reference (stage elements scale it by their distance). */
+export const PANEL_STROKE_CM = 0.22;
 /**
  * Cycle 3 (F1): fixed draw order. The audience (bodies, heads, halos, phones, shadows) draws first at AUDIENCE_RENDER_ORDER, every panel
- * backdrop next at PANEL_BACKDROP_ORDER, then buttons / strokes / text on top. There is no full-screen dimmer any more: each panel is its
- * own 90 % rounded plate, so no axis-aligned lighter / darker patches sort against the room.
+ * backdrop next at PANEL_BACKDROP_ORDER, then buttons / strokes / text on top. There is no full-screen dimmer.
  */
-export const AUDIENCE_RENDER_ORDER = -20;
+export const AUDIENCE_RENDER_ORDER = -60;
 export const PANEL_BACKDROP_ORDER = -10;
-const BUTTON_STROKE_CM = 0.18;
+const BUTTON_STROKE_CM = PANEL_STROKE_CM;
+/** The same stroke at the stage distance (cue card, pill, room meter, tags: about 2.3x the 110 cm reference). */
+export const STAGE_STROKE_CM = 0.5;
+export const STAGE_GLOW_CM = 2.6;
 /**
- * Cycle 4 (G5): the shared panel material's soft outer glow, a 1 cm cyan falloff at 20 % (three stepped bands: 20 / 12 / 5 %) just
- * outside the stroke, so a panel reads as light on the additive display. Drawn after the audience, before the panel fill.
+ * Soft outer glow of the shared panel material: five stepped cyan bands over 1.4 cm just outside the stroke (34 / 24 / 15 / 8 / 3.5 %), so a
+ * panel reads as light. Drawn after the audience, before the panel fill.
  */
-export const PANEL_GLOW_CM = 1;
-const PANEL_GLOW_BANDS = [0.2, 0.12, 0.05];
+export const PANEL_GLOW_CM = 1.4;
+const PANEL_GLOW_BANDS = [0.34, 0.24, 0.15, 0.08, 0.035];
 export const PANEL_GLOW_ORDER = PANEL_BACKDROP_ORDER - 1;
 const SURFACE_FILL = PANEL_FILL;
 const SURFACE_BORDER = PANEL_STROKE;
-/** Button faces: brighter blue-grey than the surface, with a light frame. */
-const BUTTON_FACE = new vec4(0x10 / 255, 0x1a / 255, 0x3a / 255, 0.95);
-const BUTTON_FACE_HOVER = new vec4(0.2, 0.32, 0.62, 1);
-const BUTTON_FACE_PRESS = new vec4(0.3, 0.46, 0.82, 1);
-const BUTTON_BORDER = new vec4(0x5e / 255, 0x86 / 255, 0xd6 / 255, 1);
-/** Cycle 2 (E1): selected segment = deep teal face, cyan 2 px stroke, cyan glow. */
-const SELECTED_FACE = new vec4(0x12 / 255, 0x32 / 255, 0x4f / 255, 0.97);
-const SELECTED_HOVER = new vec4(0.1, 0.27, 0.42, 1);
-const SELECTED_PRESS = new vec4(0.14, 0.38, 0.56, 1);
-const SELECTED_BORDER = new vec4(0x5f / 255, 0xd4 / 255, 1, 1);
-/** Primary action (Start / Finish / Again): cyan-teal face. */
-const PRIMARY_FACE = new vec4(0.18, 0.5, 0.62, 0.95);
-const PRIMARY_FACE_HOVER = new vec4(0.25, 0.64, 0.78, 1);
-const PRIMARY_FACE_PRESS = new vec4(0.34, 0.76, 0.9, 1);
-const PRIMARY_BORDER = new vec4(0.7, 0.95, 1, 1);
-/** Pass 4 (artifact S4): Finish is amber-framed, distinct from the cyan Next. */
-const AMBER_FACE = new vec4(0.42, 0.31, 0.12, 0.95);
-const AMBER_FACE_HOVER = new vec4(0.56, 0.42, 0.16, 1);
-const AMBER_FACE_PRESS = new vec4(0.7, 0.53, 0.2, 1);
-const AMBER_BORDER = new vec4(1, 0.8, 0.4, 1);
+/** Button faces: the same faint tint, a mid-cyan stroke; hover and press raise the tint. */
+const BUTTON_FACE = new vec4(0.4, 0.7, 1.0, 0.06);
+const BUTTON_FACE_HOVER = new vec4(0.45, 0.78, 1.0, 0.22);
+const BUTTON_FACE_PRESS = new vec4(0.5, 0.85, 1.0, 0.4);
+const BUTTON_BORDER = new vec4(0.5, 0.82, 1.0, 0.95);
+/** Selected segment = cyan tint, bright cyan-white stroke, cyan glow. */
+const SELECTED_FACE = new vec4(0.3, 0.85, 1.0, 0.3);
+const SELECTED_HOVER = new vec4(0.3, 0.85, 1.0, 0.42);
+const SELECTED_PRESS = new vec4(0.4, 0.9, 1.0, 0.55);
+const SELECTED_BORDER = new vec4(0.78, 1, 1, 1);
+/** Primary action (Next / Again): cyan tint and bright stroke. */
+const PRIMARY_FACE = new vec4(0.3, 0.85, 1.0, 0.3);
+const PRIMARY_FACE_HOVER = new vec4(0.3, 0.85, 1.0, 0.45);
+const PRIMARY_FACE_PRESS = new vec4(0.4, 0.9, 1.0, 0.6);
+const PRIMARY_BORDER = new vec4(0.82, 1, 1, 1);
+/** Finish is amber. */
+const AMBER_FACE = new vec4(1, 0.72, 0.22, 0.16);
+const AMBER_FACE_HOVER = new vec4(1, 0.72, 0.22, 0.32);
+const AMBER_FACE_PRESS = new vec4(1, 0.78, 0.3, 0.5);
+const AMBER_BORDER = new vec4(1, 0.82, 0.4, 1);
 
 /*
  * Why quads and not UIKit's own visuals: in this project (Lens Studio 5.24.1 + UIKit 4.0, which
@@ -274,11 +286,11 @@ export function addRoundedSurface(parent: SceneObject, w: number, h: number, z: 
 }
 
 /** Cycle 4 (G5): the panel glow (concentric rounded bands around a w x h panel); `order` is the render order of every band. Returns the root. */
-export function addPanelGlow(parent: SceneObject, w: number, h: number, radius: number, z: number, order: number = PANEL_GLOW_ORDER): SceneObject {
+export function addPanelGlow(parent: SceneObject, w: number, h: number, radius: number, z: number, order: number = PANEL_GLOW_ORDER, spread: number = PANEL_GLOW_CM): SceneObject {
   const root = child(parent, 'Glow', new vec3(0, 0, z));
-  const band = PANEL_GLOW_CM / PANEL_GLOW_BANDS.length;
+  const band = spread / PANEL_GLOW_BANDS.length;
   PANEL_GLOW_BANDS.forEach((a, k) => {
-    const grow = PANEL_GLOW_CM - k * band; // outer edge, in cm beyond the panel edge
+    const grow = spread - k * band; // outer edge, in cm beyond the panel edge
     const v = meshVisual(root, `Band${k}`, roundedRingMesh(w + 2 * grow, h + 2 * grow, radius + grow, band), 0, new vec4(0x5f / 255, 0xd4 / 255, 1, a));
     v.setRenderOrder(order);
   });
@@ -309,28 +321,31 @@ export function addSurface(parent: SceneObject, w: number, h: number, z: number,
 }
 
 /** Pass 6 (artifact S1): mint Start button (mint text, mint frame) and the cyan "selected" segment. */
-const MINT_FACE = new vec4(0.12, 0.36, 0.3, 0.95);
-const MINT_FACE_HOVER = new vec4(0.17, 0.5, 0.41, 1);
-const MINT_FACE_PRESS = new vec4(0.24, 0.64, 0.52, 1);
-const MINT_BORDER = new vec4(0.5, 1.0, 0.8, 0.95);
+const MINT_FACE = new vec4(0.3, 1.0, 0.7, 0.2);
+const MINT_FACE_HOVER = new vec4(0.3, 1.0, 0.7, 0.34);
+const MINT_FACE_PRESS = new vec4(0.4, 1.0, 0.78, 0.5);
+const MINT_BORDER = new vec4(0.55, 1.0, 0.82, 1);
 
 type FaceSet = [vec4, vec4, vec4, vec4];
-/** Cycle 5 (R1): secondary buttons are outlines (dark face, light frame) so the one filled cyan button is the obvious next step. */
-const OUTLINE_FACE = new vec4(0x10 / 255, 0x1a / 255, 0x3a / 255, 0.92);
-const OUTLINE_FACE_HOVER = new vec4(0.14, 0.22, 0.46, 1);
-const OUTLINE_FACE_PRESS = new vec4(0.24, 0.36, 0.7, 1);
-const OUTLINE_BORDER = new vec4(0x5e / 255, 0x86 / 255, 0xd6 / 255, 1);
+/** Secondary buttons are outlines (faint tint, mid-cyan stroke). */
 const FACES: Record<'normal' | 'primary' | 'amber' | 'mint' | 'outline', FaceSet> = {
-  outline: [OUTLINE_FACE, OUTLINE_FACE_HOVER, OUTLINE_FACE_PRESS, OUTLINE_BORDER],
+  outline: [BUTTON_FACE, BUTTON_FACE_HOVER, BUTTON_FACE_PRESS, BUTTON_BORDER],
   normal: [BUTTON_FACE, BUTTON_FACE_HOVER, BUTTON_FACE_PRESS, BUTTON_BORDER],
   primary: [PRIMARY_FACE, PRIMARY_FACE_HOVER, PRIMARY_FACE_PRESS, PRIMARY_BORDER],
   amber: [AMBER_FACE, AMBER_FACE_HOVER, AMBER_FACE_PRESS, AMBER_BORDER],
   mint: [MINT_FACE, MINT_FACE_HOVER, MINT_FACE_PRESS, MINT_BORDER],
 };
+/** Accent kinds keep a soft glow of their own colour even when not selected. */
+const KIND_GLOW: Partial<Record<keyof typeof FACES, vec4>> = {
+  primary: new vec4(0.37, 0.83, 1.0, 0.24),
+  mint: new vec4(0.4, 1.0, 0.75, 0.24),
+  amber: new vec4(1.0, 0.75, 0.3, 0.24),
+};
 
 const BUTTON_RADIUS_CM = 1.1;
 /** Selected segments get a soft cyan glow ring around the face (D1: "optional cyan glow on the active element"). */
-const GLOW_COLOR = new vec4(0.37, 0.83, 1.0, 0.4);
+const GLOW_COLOR = new vec4(0.37, 0.83, 1.0, 0.28);
+const GLOW_SPREAD_CM = 0.5;
 
 /** Themes a button's face; returns `setSelected` (cyan face + frame + glow, artifact S1 segments). */
 function themeButton(button: Button, so: SceneObject, w: number, h: number, kind: keyof typeof FACES): (selected: boolean) => void {
@@ -340,8 +355,9 @@ function themeButton(button: Button, so: SceneObject, w: number, h: number, kind
   const surfaceRoot = child(so, 'Surface', new vec3(0, 0, 0.02));
   const surface = addRoundedSurface(surfaceRoot, w, h, 0, face, border, radius, BUTTON_STROKE_CM);
   const frame = surfaceRoot.getChild(1).getComponent('Component.RenderMeshVisual') as RenderMeshVisual;
-  const glow = meshVisual(surfaceRoot, 'Glow', roundedRingMesh(w + 0.9, h + 0.9, radius + 0.45, 0.45), -0.02, GLOW_COLOR);
-  glow.getSceneObject().enabled = false;
+  const kindGlow = KIND_GLOW[kind];
+  const glow = meshVisual(surfaceRoot, 'Glow', roundedRingMesh(w + 2 * GLOW_SPREAD_CM, h + 2 * GLOW_SPREAD_CM, radius + GLOW_SPREAD_CM, GLOW_SPREAD_CM), -0.02, kindGlow ?? GLOW_COLOR);
+  glow.getSceneObject().enabled = !!kindGlow;
   const set = (c: vec4) => (surface.mainPass.baseColor = c);
   button.onHoverEnter.add(() => set(hover));
   button.onHoverExit.add(() => set(face));
@@ -352,7 +368,8 @@ function themeButton(button: Button, so: SceneObject, w: number, h: number, kind
     else [face, hover, press] = FACES[kind];
     set(face);
     frame.mainPass.baseColor = selected ? SELECTED_BORDER : border;
-    glow.getSceneObject().enabled = selected;
+    glow.mainPass.baseColor = selected ? GLOW_COLOR : kindGlow ?? GLOW_COLOR;
+    glow.getSceneObject().enabled = selected || !!kindGlow;
   };
 }
 
@@ -419,6 +436,13 @@ export function makePanel(host: SceneObject, widthCm: number, heightCm: number, 
   flex.paddingBottom = padCm;
   flex.paddingLeft = padCm;
   flex.paddingRight = padCm;
+  // UIKit's BackPlate draws its own dark rounded rectangle on the panel root, which reads as a flat grey plate on the additive display
+  // (and not as the luminous outline this UI uses). It keeps its collider and layout; only its visual is switched off, every frame
+  // (it is created at initialize and may be re-enabled by the component).
+  host.createComponent('Component.ScriptComponent').createEvent('UpdateEvent').bind(() => {
+    const v = root.getComponent('Component.RenderMeshVisual') as RenderMeshVisual | null;
+    if (v && v.enabled) v.enabled = false;
+  });
   return { root, content, backPlate };
 }
 
@@ -499,13 +523,13 @@ export function textRow(
 }
 
 /** A horizontal FlexLayout row inside a column. */
-export function flexRow(parent: SceneObject, name: string, widthCm: number, heightCm: number, gapCm: number): SceneObject {
+export function flexRow(parent: SceneObject, name: string, widthCm: number, heightCm: number, gapCm: number, justify: FlexJustify = FlexJustify.Center): SceneObject {
   const so = child(parent, name);
   const flex = so.createComponent(FlexLayout.getTypeName()) as FlexLayout;
   flex.width = widthCm;
   flex.height = heightCm;
   flex.direction = FlexDirection.Row;
-  flex.justifyContent = FlexJustify.Center;
+  flex.justifyContent = justify;
   flex.alignItems = FlexAlign.Center;
   flex.columnGap = gapCm;
   const item = so.createComponent(FlexItem.getTypeName()) as FlexItem;
@@ -582,7 +606,7 @@ export function addButton(
   let labelW = widthCm - 0.5;
   if (opts.icon) {
     const iconSize = Math.min(heightCm * 0.6, 2.4);
-    const gap = 0.3;
+    const gap = 0.8;
     // Estimated label width (Inter at size 39 ≈ 0.42 cm per glyph at 110 cm) so the
     // icon + label group is centered on the face.
     const glyph = (roleSize(role, distanceCm) / 39) * 0.42;

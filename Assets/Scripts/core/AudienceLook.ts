@@ -29,6 +29,9 @@ export const PHONE_BOTTOM_BELOW_CENTER_CM = 6;
 export const HEAD_TILT_DEG = 30;
 
 export interface AudienceLook {
+  /** Redesign: the raw engagement 0..1 and perk-up burst 0..1 behind this look (the figure's colours and the "#n NN%" tag read them). */
+  engagement: number;
+  burst: number;
   bodyColor: Rgba;
   headColor: Rgba;
   /** Offset to add to the head's rest y (negative = sinks). */
@@ -66,6 +69,8 @@ export function audienceLook(engagement: number, burst = 0): AudienceLook {
   const head: Rgba = [Math.min(1, base[0] + 0.1), Math.min(1, base[1] + 0.1), Math.min(1, base[2] + 0.05), Math.min(1, base[3] + 0.15)];
   const headColor = mix(head, BODY_PERK, 0.7 * lift);
   return {
+    engagement: e,
+    burst: b,
     bodyColor: body,
     headColor,
     headDropCm: -HEAD_SINK_CM * slump * (1 - 0.6 * lift) + 0, // + 0 turns -0 into 0

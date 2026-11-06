@@ -20,7 +20,11 @@ export interface PodiumHandlers {
 
 /** Pass 3 (demo legibility): 30 → 34 cm wide so the larger labels fit; buttons 7.2 × 3.6 cm (≥ 3 cm). */
 /** Cycle 5 (R5): 34 x 11 -> 38 x 12.5 cm, labels and buttons about 1.15x to 1.3x larger. */
-export const PODIUM_W_CM = 38;
+/**
+ * Redesign: 38 -> 30 cm. At 55 cm ahead the Specs field of view is only about 32 degrees wide (about 31 cm), so a 38 cm panel was cut
+ * off by the lens frustum at both sides (square edges in the Preview). 30 cm leaves a small margin, like the mockup's 30 x 8 cm.
+ */
+export const PODIUM_W_CM = 30;
 export const PODIUM_H_CM = 12.5;
 const W = PODIUM_W_CM;
 const H = PODIUM_H_CM;
@@ -45,20 +49,20 @@ export class Podium extends BaseScriptComponent {
     // Pass 4 (artifact S4): counter "n / N" + timer "m:ss / m:ss"; Next is the largest target and
     // the cyan primary; Prev / Finish smaller (Finish amber-framed). All buttons stay ≥ 3 cm tall.
     // Re-place lives in the info row (hidden during Rehearsal) so the button row stays centered.
-    const info = flexRow(c, 'PodiumInfo', W - 2, 3.8, 2);
-    this.replaceButton = addButton(info, 'ReplaceButton', 'Re-place', 7.2, 3.8, DIST, () => this.handlers?.replace(), {
+    const info = flexRow(c, 'PodiumInfo', W - 2, 3.8, 1.2);
+    this.replaceButton = addButton(info, 'ReplaceButton', 'Re-place', 6.2, 3.8, DIST, () => this.handlers?.replace(), {
       labelRole: 'Body',
     }).button.getSceneObject();
-    this.sectionText = textRow(info, 'SectionText', '1 / 5', 'Title', 8, 3.4, DIST, TEXT_ACCENT);
-    this.elapsedText = textRow(info, 'ElapsedText', '0:00 / 3:00', 'Title', 15, 3.4, DIST);
-    const buttons = flexRow(c, 'PodiumButtons', W - 2, 5.8, 1.0);
-    addButton(buttons, 'PrevButton', 'Prev', 7.8, 4.2, DIST, () => this.handlers?.prev(), { icon: 'chevron_left', labelRole: 'Heading' });
-    addButton(buttons, 'NextButton', 'Next', 11.2, 5.4, DIST, () => this.handlers?.next(), {
+    this.sectionText = textRow(info, 'SectionText', '1 / 5', 'Title', 6, 3.4, DIST, TEXT_ACCENT);
+    this.elapsedText = textRow(info, 'ElapsedText', '0:00 / 3:00', 'Title', 13, 3.4, DIST);
+    const buttons = flexRow(c, 'PodiumButtons', W - 2, 5.8, 0.8);
+    addButton(buttons, 'PrevButton', 'Prev', 6.8, 4.2, DIST, () => this.handlers?.prev(), { icon: 'chevron_left', labelRole: 'Heading' });
+    addButton(buttons, 'NextButton', 'Next', 9.4, 5.4, DIST, () => this.handlers?.next(), {
       icon: 'chevron_right',
       primary: true,
       labelRole: 'Title',
     });
-    const finish = addButton(buttons, 'FinishButton', 'Finish', 8.2, 4.2, DIST, () => this.handlers?.finish(), {
+    const finish = addButton(buttons, 'FinishButton', 'Finish', 7.2, 4.2, DIST, () => this.handlers?.finish(), {
       icon: 'flag',
       amber: true,
       labelRole: 'Heading',

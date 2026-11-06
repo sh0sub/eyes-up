@@ -22,6 +22,7 @@ import {
   setupExitScale,
 } from './core/SetupModel';
 import { SessionConfig } from './core/EyesUpSession';
+import { FlexJustify } from 'UIKit.lspkg/Scripts/Components/Layout2D/Flex/FlexTypes';
 import { BOX_NEUTRAL, Panel, TEXT_LABEL, TEXT_PRIMARY, addBox, addButton, flexRow, makePanel, textRow } from './EyesUpUI';
 
 /** Cycle 5 (R5): 40 x 30 -> 46 x 34 cm so the captions, labels and Start button can be about 1.3x larger. */
@@ -61,7 +62,7 @@ export class SetupPanel extends BaseScriptComponent {
     const seg = { labelRole: 'Heading' as const };
     this.lengthSeg = this.segmentRow(c, 'Length', 'Talk length', LENGTH_OPTIONS, 'min', (v) => this.model.setLengthSlider(optionToSlider(LENGTH_OPTIONS, v)), seg);
     this.audienceSeg = this.segmentRow(c, 'Audience', 'Audience', AUDIENCE_OPTIONS, 'people', (v) => this.model.setAudienceSlider(optionToSlider(AUDIENCE_OPTIONS, v)), seg);
-    const deckRow = flexRow(c, 'DeckRow', W - 4, 5.2, 1);
+    const deckRow = flexRow(c, 'DeckRow', ROW_W, 5.2, 1, FlexJustify.Start);
     textRow(deckRow, 'DeckLabel', 'Deck', 'Heading', LABEL_W, 5.2, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
     this.deckButtons = DECKS.map((d) => {
       const id = d.id;
@@ -81,7 +82,7 @@ export class SetupPanel extends BaseScriptComponent {
       return { id, setSelected: btn.setSelected };
     });
     // Artifact F14 (stretch): type a talk outline on the AR keyboard (core/DeckImport.ts format).
-    const imp = addButton(deckRow, 'ImportDeckButton', 'Import\ntext', 7, 5.2, DIST, () => this.importDeck(), { labelRole: 'Body' });
+    const imp = addButton(deckRow, 'ImportDeckButton', 'Import\ntext', 6.5, 5.2, DIST, () => this.importDeck(), { labelRole: 'Body' });
     this.importLabel = imp.label;
     this.deckButtons.push({ id: IMPORTED_DECK_ID, setSelected: imp.setSelected });
     // Start + the artifact caption side by side (keeps the panel inside 40 × 30 cm).
@@ -90,7 +91,7 @@ export class SetupPanel extends BaseScriptComponent {
       startRow,
       'StartButton',
       'Start rehearsal',
-      25,
+      23.5,
       5.6,
       DIST,
       () => {
@@ -100,7 +101,7 @@ export class SetupPanel extends BaseScriptComponent {
       { icon: 'play_arrow', mint: true, labelRole: 'Heading' },
     );
     // The panel's Text never wraps (Overflow), so the caption breaks after "ahead".
-    textRow(startRow, 'SetupCaption', SETUP_CAPTION.replace(' of ', '\nof '), 'Caption', 16, 5.6, DIST, TEXT_LABEL);
+    textRow(startRow, 'SetupCaption', SETUP_CAPTION.replace(' of ', '\nof '), 'Body', 17.5, 5.6, DIST, TEXT_LABEL);
     // Visibility is applied in UpdateEvent (after every UIKit element has run OnStart): disabling
     // a UIKit host before its OnStart stops it from ever initializing (specs-build-ui G3).
     this.createEvent('UpdateEvent').bind(() => {
@@ -143,7 +144,7 @@ export class SetupPanel extends BaseScriptComponent {
     pick: (value: number) => void,
     btn: { labelRole: 'Heading' },
   ): Array<{ value: number; setSelected: (on: boolean) => void }> {
-    const row = flexRow(parent, `${name}Row`, W - 4, 4.2, 1);
+    const row = flexRow(parent, `${name}Row`, ROW_W, 4.2, 1, FlexJustify.Start);
     textRow(row, `${name}Label`, label, 'Heading', LABEL_W, 4.2, DIST, TEXT_LABEL).horizontalAlignment = HorizontalAlignment.Left;
     const segs = options.map((value) => {
       const b = addButton(

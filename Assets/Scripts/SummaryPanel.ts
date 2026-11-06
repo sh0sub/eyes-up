@@ -32,6 +32,7 @@ import {
   addBox,
   addButton,
   addIconCell,
+  addRoundedSurface,
   addSurface,
   addText,
   child,
@@ -41,11 +42,16 @@ import {
 } from './EyesUpUI';
 
 /** Zone bar fill (design pass 2): bright cyan. Track behind it: dim blue-grey. */
-const BAR_FILL = new vec4(0.45, 0.78, 1.0, 0.9);
-const BAR_TRACK = new vec4(0.3, 0.38, 0.5, 0.6);
+const BAR_FILL = new vec4(0.4, 0.86, 1.0, 0.95);
+const BAR_FILL_AMBER = new vec4(1.0, 0.76, 0.3, 0.95);
+/** Redesign: the track is a faint tinted capsule with a thin line (no dark fill: the display is additive). */
+const BAR_TRACK = new vec4(0.4, 0.7, 1.0, 0.1);
+const BAR_TRACK_LINE = new vec4(0.5, 0.8, 1.0, 0.6);
+const BAR_SHEEN = new vec4(1, 1, 1, 0.4);
+const THIN_STROKE_CM = 0.14;
 /** Timeline (artifact S5 ③): coral longest look-away, amber nudge marker. */
 const CORAL = new vec4(1.0, 0.45, 0.4, 1);
-const CORAL_FILL = new vec4(0.42, 0.14, 0.13, 0.95);
+const CORAL_FILL = new vec4(1.0, 0.45, 0.4, 0.14);
 const NUDGE_AMBER = new vec4(1.0, 0.75, 0.3, 1);
 const GRADE_COLOR: Record<Grade, vec4> = {
   S: new vec4(1.0, 0.86, 0.4, 1),
@@ -53,8 +59,6 @@ const GRADE_COLOR: Record<Grade, vec4> = {
   B: new vec4(0.55, 0.85, 1.0, 1),
   C: new vec4(1.0, 0.62, 0.42, 1),
 };
-const BUTTON_PLATE = new vec4(0.03, 0.05, 0.15, 0.9);
-const BUTTON_PLATE_FRAME = new vec4(0.5, 0.69, 1.0, 0.45);
 const W = SUMMARY_PANEL_W_CM;
 /**
  * Game pass: 53 -> 60 cm to fit the grade row; Cycle 4 (D3): 74 cm. Cycle 5 (R1): 78 cm for the bigger grade, tip, a legend line and taller buttons.
@@ -91,6 +95,7 @@ export class SummaryPanel extends BaseScriptComponent {
   private zoneTexts: Text[] = [];
   /** [left, center, right] bar pivots; scaled on X from 0 to percent/100. */
   private zoneBars: SceneObject[] = [];
+  private zoneFills: RenderMeshVisual[] = [];
   private timelineBlock: SceneObject | null = null;
   private timelineDyn: SceneObject | null = null;
   private tipText!: Text;
@@ -112,7 +117,7 @@ export class SummaryPanel extends BaseScriptComponent {
     const header = flexRow(c, 'SummaryHeader', W - 4, 5.2, 1.2);
     addIconCell(header, 'SummaryCheck', 'check_circle', 3.4, 3.6, 5.2);
     this.titleText = textRow(header, 'TimeText', 'Nice work — 0:00', 'Headline1', W - 10, 5.2, DIST);
-    this.titleText.size = 100; // larger than the stat tiles, smaller than the tip (127) and the grade (520)
+    this.titleText.size = 112; // larger than the stat tiles, smaller than the tip (127) and the grade (520)
     this.titleText.horizontalAlignment = HorizontalAlignment.Left;
     // Game layer: a big grade tile (the payoff) + attention score, room engagement, balance and best-previous.
     const game = flexRow(c, 'GameRow', W - 6, 13, 1.2);
@@ -127,10 +132,11 @@ export class SummaryPanel extends BaseScriptComponent {
       zn.size = ZONE_TEXT_SIZE; // zone labels and percentages are what the Summary is read for: larger than Headline1 (74 at this distance)
       this.zoneNames.push(zn);
       const barCell = flexRow(row, `Zone${name}BarCell`, BAR_W - 1, 3, 0);
-      addSurface(child(barCell, 'Track', new vec3(0, 0, 0.05)), BAR_W, BAR_H, 0, BAR_TRACK, null);
+      addRoundedSurface(child(barCell, 'Track', new vec3(0, 0, 0.05)), BAR_W, BAR_H, 0, BAR_TRACK, BAR_TRACK_LINE, BAR_H / 2, THIN_STROKE_CM);
       const pivot = child(barCell, `Zone${name}Bar`, new vec3(-BAR_W / 2, 0, 0.1));
       const bar = child(pivot, 'Fill', new vec3(BAR_W / 2, 0, 0));
-      addSurface(bar, BAR_W, BAR_H, 0, BAR_FILL, null);
+      this.zoneFills.push(addRoundedSurface(bar, BAR_W, BAR_H, 0, BAR_FILL, null, BAR_H / 2));
+      addRoundedSurface(child(bar, 'Sheen', new vec3(0, BAR_H * 0.2, 0.02)), BAR_W - 1.4, BAR_H * 0.3, 0, BAR_SHEEN, null, BAR_H * 0.15);
       this.zoneBars.push(pivot);
       const zp = textRow(row, `Zone${name}Text`, '0%', 'Headline1', 9.4, 4.4, DIST);
       zp.size = ZONE_TEXT_SIZE;
@@ -140,19 +146,17 @@ export class SummaryPanel extends BaseScriptComponent {
     this.timelineBlock = addBlock(c, 'GazeTimeline', TL_W, TL_H);
     // Cycle 5 (R1): a tiny legend so the red box and the amber dot explain themselves.
     const legend = textRow(c, 'TimelineLegend', 'red box: longest look-away   amber dot: nudge', 'Headline2', W - 6, 2.4, DIST, TEXT_LABEL);
-    legend.size = 80;
+    legend.size = 84;
     // Cycle 4 (D3): the one-line stat row is gone; the longest look-away is the coral box in the timeline, the grade and tip carry the rest.
     // The coaching tip is the second-largest text on the panel (after the grade).
     this.tipText = addBox(c, 'TipText', '', 'Title2', W - 6, 7.6, DIST, TEXT_TIP, BOX_AMBER_SOLID);
     this.tipText.size = 148; // Cycle 5 (R1): a bigger amber bar, the second-largest text after the grade
-    // An opaque dark plate (own frame) behind the buttons, so they never read as part of the wall art behind the panel's lower edge.
     const buttons = flexRow(c, 'SummaryButtons', W - 6, BUTTON_H + 1.8, 1.6);
-    addSurface(child(buttons, 'ButtonPlate', new vec3(0, 0, -0.1)), W - 6, BUTTON_H + 1.8, 0, BUTTON_PLATE, BUTTON_PLATE_FRAME, 1.4);
     const big = { labelRole: 'Body' as const };
     // Again is the practice loop: the widest, primary (cyan) button. Done and Re-place are secondary.
     // Cycle 5 (R1): Again is the only filled cyan button and says what it is for; Done and Move stage are outlines.
-    addButton(buttons, 'AgainButton', 'Again', 17, BUTTON_H, DIST, () => this.onAgain?.(), { icon: 'replay', primary: true, labelRole: 'Heading', subline: 'beat your grade' });
-    addButton(buttons, 'DoneButton', 'Done', 9.4, BUTTON_H, DIST, () => this.onDone?.(), { icon: 'check', outline: true, ...big });
+    addButton(buttons, 'AgainButton', 'Again', 15, BUTTON_H, DIST, () => this.onAgain?.(), { icon: 'replay', primary: true, labelRole: 'Heading' });
+    addButton(buttons, 'DoneButton', 'Done', 11.4, BUTTON_H, DIST, () => this.onDone?.(), { icon: 'check', outline: true, ...big });
     // Pass 6 (artifact F2): Re-place (same size and type role as Again / Done), reachable here once the rehearsal is over (the podium
     // hides it during Rehearsal). Seats the stage again where you now face and restarts the talk.
     addButton(buttons, 'SummaryReplaceButton', 'Move stage', 13, BUTTON_H, DIST, () => this.onReplace?.(), { outline: true, ...big });
@@ -210,6 +214,7 @@ export class SummaryPanel extends BaseScriptComponent {
         this.zoneTexts[i].textFill.color = color;
       }
       if (this.zoneBars[i]) this.zoneBars[i].getTransform().setLocalScale(new vec3(Math.max(0.001, z.bar), 1, 1));
+      if (this.zoneFills[i]) this.zoneFills[i].mainPass.baseColor = z.outOfRange ? BAR_FILL_AMBER : BAR_FILL;
     });
     this.tipText.text = s.tip;
     this.tipText.size = s.tip.length > 30 ? 116 : 148; // the longest tip ("Next time, look at the center more.") must stay inside the 44 cm bar
@@ -234,10 +239,10 @@ export class SummaryPanel extends BaseScriptComponent {
     const amberRows = summaryState(snapshot, 1).zones.map((z) => z.outOfRange);
     const xOf = (f: number) => TL_X0 + f * TL_STRIP_W;
 
-    TL_ROW_Y.forEach((y) => addSurface(child(root, 'Track', new vec3(TL_X0 + TL_STRIP_W / 2, y, 0.05)), TL_STRIP_W, TL_ROW_H, 0, BAR_TRACK, null));
+    TL_ROW_Y.forEach((y) => addRoundedSurface(child(root, 'Track', new vec3(TL_X0 + TL_STRIP_W / 2, y, 0.05)), TL_STRIP_W, TL_ROW_H, 0, BAR_TRACK, BAR_TRACK_LINE, 0.8, THIN_STROKE_CM));
     for (const seg of tl.segments) {
       const w = Math.max(0.2, (seg.end - seg.start) * TL_STRIP_W - 0.15);
-      addSurface(child(root, 'Seg', new vec3(xOf((seg.start + seg.end) / 2), TL_ROW_Y[seg.zone], 0.1)), w, TL_ROW_H, 0, BAR_FILL, null);
+      addRoundedSurface(child(root, 'Seg', new vec3(xOf((seg.start + seg.end) / 2), TL_ROW_Y[seg.zone], 0.1)), w, TL_ROW_H - 0.5, 0, BAR_FILL, null, 0.6);
     }
     const labels: Array<() => void> = [];
     if (tl.longest) {
@@ -245,14 +250,14 @@ export class SummaryPanel extends BaseScriptComponent {
       // Keep the box inside the strip even when the look-away is shorter than its label.
       const cx = Math.min(TL_X0 + TL_STRIP_W - lw / 2, Math.max(TL_X0 + lw / 2, xOf((tl.longest.start + tl.longest.end) / 2)));
       const y = TL_ROW_Y[tl.longest.zone];
-      addSurface(child(root, 'Longest', new vec3(cx, y, 0.2)), lw, TL_ROW_H + 0.5, 0, CORAL_FILL, CORAL);
+      addRoundedSurface(child(root, 'Longest', new vec3(cx, y, 0.2)), lw, TL_ROW_H + 0.6, 0, CORAL_FILL, CORAL, 0.9, 0.2);
       const label = tl.longest.label;
       labels.push(() => addText(root, 'LongestLabel', label, 'Headline1', lw, TL_ROW_H + 0.5, DIST, CORAL, new vec3(cx, y, 0.3)).size = 96);
     }
     tl.nudges.forEach((f) => {
       const x = xOf(f);
-      addSurface(child(root, 'NudgeStem', new vec3(x, (TL_ROW_Y[2] + TL_NUDGE_Y) / 2, 0.25)), 0.12, TL_ROW_Y[2] - TL_NUDGE_Y, 0, NUDGE_AMBER, null);
-      addSurface(child(root, 'NudgeDot', new vec3(x, TL_NUDGE_Y, 0.3)), 0.8, 0.8, 0, NUDGE_AMBER, null);
+      addSurface(child(root, 'NudgeStem', new vec3(x, (TL_ROW_Y[2] + TL_NUDGE_Y) / 2, 0.25)), 0.14, TL_ROW_Y[2] - TL_NUDGE_Y, 0, NUDGE_AMBER, null);
+      addRoundedSurface(child(root, 'NudgeDot', new vec3(x, TL_NUDGE_Y, 0.3)), 1.1, 1.1, 0, NUDGE_AMBER, null, 0.55);
     });
     labels.forEach((f) => f());
     ['L', 'C', 'R'].forEach((n, z) => {

@@ -1,6 +1,6 @@
 /**
  * Capture helper, NOT a done-criterion test: `capture_nudge_hold` triggers the real left nudge
- * (8 s of gaze on the right) with the hint window stretched from 3 s to 20 s for this run only, so a
+ * (8 s of gaze on the right) with the hint window stretched from 3 s to 45 s for this run only, so a
  * screenshot taken after the scenario returns still shows the chevron (devpost 03-nudge-chevron).
  * A 3 s window is shorter than the scenario-return + capture round trip. Look and placement are
  * unchanged; only the duration is held. Pass 5: the LEAF overlay is hidden for the capture.
@@ -12,10 +12,10 @@ import { lookAtMember, muteLeafOverlay, setUp, startAndWaitForRehearsal, tap } f
 @component
 export class CaptureNudgeHold extends Scenario {
   async run(): Promise<void> {
-    const release = muteLeafOverlay(30);
+    const release = muteLeafOverlay(70);
     try {
       const rig = await setUp();
-      rig.session.t.nudgeHintSeconds = 20; // capture only; the lens default stays 3 s
+      rig.session.t.nudgeHintSeconds = 45; // capture only; the lens default stays 3 s
       // Three people, as in capture_game: the whole audience fits the preview frame, so the outline chevron is judged against real heads.
       await tap(rig, 'Audience_3');
       await startAndWaitForRehearsal(rig);

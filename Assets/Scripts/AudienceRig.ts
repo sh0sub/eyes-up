@@ -10,8 +10,10 @@
  */
 import { AudienceLook, PHONE_Y_CM } from './core/AudienceLook';
 import { FADE_ROWS, SHADOW_LAYERS, bodyFadePixels, headDepthScale, shadowBars } from './core/BodyFade';
+import { BODY_ORIGIN_CM, FigureColors, HEAD_HALF_H, HEAD_HALF_W, Pt, centroid, ellipsePts, figureColors, figureHue, offsetPts, roundedRectPts, scalePts, tagText, tagTone, torsoOutline } from './core/Figure';
 import { DEFAULT_TUNABLES } from './core/Tunables';
-import { addCircleRing, addDot, addSurface, addText, child } from './EyesUpUI';
+import { AUDIENCE_RENDER_ORDER, STAGE_STROKE_CM, LINE_AMBER, LINE_CORAL, LINE_CYAN, addCircleRing, addDot, addRoundedSurface, addSurface, addText, child } from './EyesUpUI';
+import { polyFill, polyRing } from './FigureMesh';
 
 /** Cycle 6 (D2): the soft shadow sits where the body has faded out, just above the bottom of the preview frame (about 57 cm above the feet). */
 const SHADOW_Y = 74;
@@ -80,7 +82,60 @@ interface Member {
   shadow: RenderMeshVisual[][];
   shadowFade: number;
   headRestScale: vec3;
+  figure: Figure;
+  tag: Tag;
+  haloGlow: RenderMeshVisual[];
+  /** How much the speaker is looking at this member, 0..1 (from the halo colour). */
+  lit: number;
+  tagAbove: boolean;
 }
+
+/** One figure layer: a mesh visual and the colour it takes from FigureColors. */
+interface Layer {
+  visual: RenderMeshVisual;
+  color: keyof FigureColors;
+  /** Multiplier on the colour's alpha (a layer can be fainter than its group colour). */
+  k: number;
+}
+interface Figure {
+  layers: Layer[];
+  hue: [number, number, number];
+  lastKey: string;
+}
+interface Tag {
+  root: SceneObject;
+  text: Text;
+  fill: RenderMeshVisual;
+  frame: RenderMeshVisual;
+  shown: string;
+  index: number;
+  owner: SceneObject;
+}
+
+/**
+ * Per-person tag ("#2 55%"): a capsule outline just under the head (a name badge on the shoulders), following the head as it sinks.
+ * There is no free row above the heads: the room meter and the cue card use it, and the frame is full.
+ */
+const TAG_BELOW_HEAD_CM = 27;
+/** A slumped head sits on the lap, where the phone glows: its tag moves above the head instead (with hysteresis), and the zzz rises above the tag. */
+const TAG_ABOVE_HEAD_CM = 24;
+const TAG_FLIP_DOWN_AT = 0.4;
+const TAG_FLIP_UP_AT = 0.55;
+const ZZZ_ABOVE_TAG_CM = 40;
+const TAG_Z = 14;
+const TAG_W = 25;
+const TAG_H = 7.4;
+const TAG_DIST = 250;
+const TAG_TEXT: Record<'good' | 'mid' | 'low', vec4> = {
+  good: new vec4(0.78, 0.97, 1, 1),
+  mid: new vec4(1, 0.93, 0.7, 1),
+  low: new vec4(1, 0.78, 0.74, 1),
+};
+const TAG_LINE: Record<'good' | 'mid' | 'low', vec4> = { good: LINE_CYAN, mid: LINE_AMBER, low: LINE_CORAL };
+/** Halo ring: unit ring (outer diameter 1) that the halo object scales to about 36 cm, plus a faint wider glow ring. */
+const HALO_RING_STROKE = 0.085;
+const HALO_GLOW_STROKE = 0.14;
+const HALO_GLOW_SIZE = 1.3;
 
 function byName(parent: SceneObject, name: string): SceneObject | null {
   for (let i = 0; i < parent.getChildrenCount(); i++) {
@@ -101,6 +156,79 @@ function visualOf(so: SceneObject | null, fadeTexture: Texture | null = null): R
   return v;
 }
 
+function layerVisual(parent: SceneObject, name: string, mesh: RenderMesh, mat: Material, z: number): RenderMeshVisual {
+  const so = child(parent, name, new vec3(0, 0, z));
+  const v = so.createComponent('Component.RenderMeshVisual') as RenderMeshVisual;
+  v.mesh = mesh;
+  v.mainMaterial = mat.clone();
+  return v;
+}
+
+const BODY_V = { yMin: -BODY_ORIGIN_CM, yMax: 70 };
+const ZERO: Pt = [0, 0];
+
+/**
+ * The layered glass figure (core/Figure.ts): torso with neck and shoulders and a head, each built from a soft glow, a base fill, two inner
+ * highlights, arm lines (torso), two eye dots (head) and a bright rim line. The original box and ellipsoid visuals are switched off; the
+ * layers hang under a holder that cancels the object's rest scale, so the existing lean, squash, sink and tilt maths still drive them.
+ */
+function buildFigure(index: number, body: SceneObject | null, head: SceneObject | null, bodyVisual: RenderMeshVisual | null, headVisual: RenderMeshVisual | null, bodyRest: vec3, headRest: vec3): Figure {
+  const layers: Layer[] = [];
+  const fig: Figure = { layers, hue: figureHue(index), lastKey: '' };
+  if (body && bodyVisual) {
+    const mat = bodyVisual.mainMaterial;
+    bodyVisual.enabled = false;
+    const holder = child(body, 'Fig', new vec3(0, 0, 0));
+    holder.getTransform().setLocalScale(new vec3(1 / bodyRest.x, 1 / bodyRest.y, 1 / bodyRest.z));
+    const torso = torsoOutline();
+    const c = centroid(torso);
+    const add = (name: string, mesh: RenderMesh, color: keyof FigureColors, k = 1) => layers.push({ visual: layerVisual(holder, name, mesh, mat, 0.04 * layers.length), color, k });
+    add('TorsoGlow', polyFill('torsoGlow', offsetPts(torso, 1.8), BODY_V), 'glow');
+    add('TorsoFill', polyFill('torso', torso, BODY_V), 'body');
+    add('TorsoLight1', polyFill('torsoHi1', scalePts(torso, 0.62, 0.8, c, -4, 8), BODY_V), 'highlight');
+    add('TorsoLight2', polyFill('torsoHi2', scalePts(torso, 0.34, 0.52, c, -7, 17), BODY_V), 'highlight');
+    add('ArmL', polyRing('armL', roundedRectPts(12.5, 84, 6.2, -21, 11), 0.7, BODY_V), 'arms');
+    add('ArmR', polyRing('armR', roundedRectPts(12.5, 84, 6.2, 21, 11), 0.7, BODY_V), 'arms');
+    add('TorsoRim', polyRing('torsoRim', torso, 1.05, BODY_V), 'rim');
+  }
+  if (head && headVisual) {
+    const mat = headVisual.mainMaterial;
+    headVisual.enabled = false;
+    const holder = child(head, 'Fig', new vec3(0, 0, 0));
+    holder.getTransform().setLocalScale(new vec3(1 / headRest.x, 1 / headRest.y, 1 / headRest.z));
+    const ell = ellipsePts(HEAD_HALF_W, HEAD_HALF_H, 48);
+    const add = (name: string, mesh: RenderMesh, color: keyof FigureColors, z: number) => layers.push({ visual: layerVisual(holder, name, mesh, mat, z), color, k: 1 });
+    add('HeadGlow', polyFill('headGlow', offsetPts(ell, 1.5), null), 'headGlow', 0.6);
+    add('HeadFill', polyFill('head', ell, null), 'head', 0.65);
+    add('HeadLight1', polyFill('headHi1', scalePts(ell, 0.62, 0.62, ZERO, -2.6, 3.2), null), 'headHighlight', 0.7);
+    add('HeadLight2', polyFill('headHi2', scalePts(ell, 0.3, 0.3, ZERO, -4, 5.6), null), 'headHighlight', 0.75);
+    add('EyeL', polyFill('eye', ellipsePts(1.1, 1.5, 14, -3.6, 1.6), null), 'eyes', 0.8);
+    add('EyeR', polyFill('eyeR', ellipsePts(1.1, 1.5, 14, 3.6, 1.6), null), 'eyes', 0.8);
+    add('HeadRim', polyRing('headRim', ell, 0.95, null), 'headRim', 0.85);
+  }
+  return fig;
+}
+
+function makeHaloRings(halo: SceneObject): RenderMeshVisual[] {
+  const v = halo.getComponent('Component.RenderMeshVisual') as RenderMeshVisual | null;
+  if (!v) return [];
+  v.mesh = polyRing('haloRing', ellipsePts(0.5, 0.5, 72), HALO_RING_STROKE, null);
+  const g = child(halo, 'HaloGlowRing', new vec3(0, 0, -0.1));
+  const gv = g.createComponent('Component.RenderMeshVisual') as RenderMeshVisual;
+  gv.mesh = polyRing('haloGlow', ellipsePts(0.5 * HALO_GLOW_SIZE, 0.5 * HALO_GLOW_SIZE, 72), HALO_GLOW_STROKE, null);
+  gv.mainMaterial = v.mainMaterial.clone();
+  return [gv];
+}
+
+function makeTag(root: SceneObject, index: number): Tag {
+  const tagRoot = child(root, 'Tag', new vec3(0, 126, TAG_Z));
+  const surf = child(tagRoot, 'Capsule');
+  const fill = addRoundedSurface(surf, TAG_W, TAG_H, 0, new vec4(LINE_CYAN.x, LINE_CYAN.y, LINE_CYAN.z, 0.1), LINE_CYAN, TAG_H / 2, STAGE_STROKE_CM);
+  const frame = surf.getChild(1).getComponent('Component.RenderMeshVisual') as RenderMeshVisual;
+  const text = addText(tagRoot, 'TagText', tagText(index, 1), 'Title', TAG_W, TAG_H, TAG_DIST, TAG_TEXT.good, new vec3(0, 0, 0.3));
+  return { root: tagRoot, text, fill, frame, shown: '', index, owner: root };
+}
+
 export class AudienceRig {
   private members: Member[] = [];
 
@@ -108,7 +236,7 @@ export class AudienceRig {
     const fadeTexture = makeBodyFadeTexture();
     // The silhouette material now samples a base texture (ENABLE_BASE_TEX), so the head gets an opaque white one.
     const plainTexture = makeBodyFadeTexture(true);
-    this.members = audience.map((root) => {
+    this.members = audience.map((root, index) => {
       const body = byName(root, 'Body');
       const head = byName(root, 'Head');
       const halo = byName(root, 'Halo');
@@ -118,11 +246,9 @@ export class AudienceRig {
       phone.getTransform().setLocalRotation(quat.angleAxis(-Math.PI / 4, new vec3(1, 0, 0)));
       const clear = new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], 0);
       const screen = child(phone, 'Screen');
-      const screenVisuals = [
-        addSurface(child(screen, 'Wide'), PHONE_W, PHONE_H - 2 * PHONE_CORNER, 0, clear, null),
-        addSurface(child(screen, 'Tall'), PHONE_W - 2 * PHONE_CORNER, PHONE_H, 0, clear, null),
-        addSurface(child(screen, 'Mid'), PHONE_W - 0.8, PHONE_H - 0.8, 0, clear, null),
-      ];
+      // Redesign: one rounded glass screen with a bright rim instead of three overlapping quads (their edges were jagged).
+      const screenFill = addRoundedSurface(screen, PHONE_W, PHONE_H, 0, clear, clear, PHONE_CORNER + 0.4, 0.8);
+      const screenVisuals = [screenFill, screen.getChild(1).getComponent('Component.RenderMeshVisual') as RenderMeshVisual];
       // Light cone: widening, ever fainter steps stacked upward from the screen toward the face.
       const cone = child(phoneRig, 'PhoneCone', new vec3(0, PHONE_Y + 8, 40));
       const coneVisuals: RenderMeshVisual[] = [];
@@ -143,19 +269,28 @@ export class AudienceRig {
       ring.enabled = false;
       // Soft floor shadow: nested ellipses of horizontal bars behind the body.
       const shadowRoot = child(root, 'Shadow', new vec3(0, SHADOW_Y, SHADOW_Z));
+      shadowRoot.enabled = false; // redesign: the torso fades out by itself; the blue floor haze read as a grey band
       const shadow = SHADOW_LAYERS.map((layer, li) =>
         shadowBars(layer).map((b, bi) =>
           addSurface(child(shadowRoot, `S${li}_${bi}`, new vec3(0, b.y, -0.02 * li)), Math.max(0.1, b.w), b.h, 0, new vec4(SHADOW_RGB[0], SHADOW_RGB[1], SHADOW_RGB[2], 0), null),
         ),
       );
+      const bodyVisual = visualOf(body, fadeTexture);
+      const headVisual = visualOf(head, plainTexture);
+      const bodyRestScale = body ? body.getTransform().getLocalScale() : new vec3(80, 140, 64);
+      const headRestScale = head ? head.getTransform().getLocalScale() : new vec3(22, 25, 22);
+      const haloRestScale = halo ? halo.getTransform().getLocalScale() : new vec3(36, 36, 36);
+      const figure = buildFigure(index, body, head, bodyVisual, headVisual, bodyRestScale, headRestScale);
+      const tag = makeTag(root, index);
+      const haloGlow = halo ? makeHaloRings(halo) : [];
       return {
         body,
         head,
         halo,
-        bodyVisual: visualOf(body, fadeTexture),
-        headVisual: visualOf(head, plainTexture),
-        bodyRestScale: body ? body.getTransform().getLocalScale() : new vec3(80, 140, 64),
-        haloRestScale: halo ? halo.getTransform().getLocalScale() : new vec3(36, 36, 36),
+        bodyVisual,
+        headVisual,
+        bodyRestScale,
+        haloRestScale,
         phone: phoneRig,
         screenVisuals,
         coneVisuals,
@@ -165,7 +300,12 @@ export class AudienceRig {
         ringVisuals,
         shadow,
         shadowFade: -1,
-        headRestScale: head ? head.getTransform().getLocalScale() : new vec3(22, 25, 22),
+        headRestScale,
+        figure,
+        tag,
+        haloGlow,
+        lit: 0,
+        tagAbove: false,
       };
     });
   }
@@ -174,10 +314,11 @@ export class AudienceRig {
   apply(i: number, look: AudienceLook, fade: number): void {
     const m = this.members[i];
     if (!m) return;
-    const c = look.bodyColor;
-    const h = look.headColor;
-    if (m.bodyVisual) m.bodyVisual.mainPass.baseColor = new vec4(c[0], c[1], c[2], c[3] * fade);
-    if (m.headVisual) m.headVisual.mainPass.baseColor = new vec4(h[0], h[1], h[2], h[3] * fade);
+    this.applyFigure(m, look, fade);
+    if (look.engagement < TAG_FLIP_DOWN_AT) m.tagAbove = true;
+    else if (look.engagement > TAG_FLIP_UP_AT) m.tagAbove = false;
+    const headY = m.head ? m.head.getTransform().getLocalPosition().y : HEAD_REST_Y;
+    m.tag.root.getTransform().setLocalPosition(new vec3(0, m.tagAbove ? headY + TAG_ABOVE_HEAD_CM : headY - TAG_BELOW_HEAD_CM, TAG_Z));
 
     const slump = Math.min(1, look.headPitchDeg / 38);
     const lean = (look.headPitchDeg * LEAN_SHARE * Math.PI) / 180;
@@ -223,16 +364,71 @@ export class AudienceRig {
     const glow = look.phoneGlow * fade;
     if (m.phone.enabled !== glow > 0.01) m.phone.enabled = glow > 0.01;
     if (glow > 0.01) {
-      m.screenVisuals.forEach((v) => (v.mainPass.baseColor = new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], 0.95 * glow)));
+      m.screenVisuals.forEach((v, k) => (v.mainPass.baseColor = k === 0 ? new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], 0.8 * glow) : new vec4(1, 0.93, 0.7, glow)));
       // The three screen quads overlap; keep the sum opaque but not blown out.
       m.coneVisuals.forEach((v, k) => (v.mainPass.baseColor = new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], (0.13 - 0.025 * k) * glow)));
     }
     const z = look.zzz * fade;
     if (m.zzz.enabled !== z > 0.01) m.zzz.enabled = z > 0.01;
     if (z > 0.01) {
-      m.zzz.getTransform().setLocalPosition(new vec3(headPos.x, headPos.y + ZZZ_ABOVE_HEAD_CM, headPos.z + 6));
+      m.zzz.getTransform().setLocalPosition(new vec3(headPos.x, headPos.y + (m.tagAbove ? ZZZ_ABOVE_TAG_CM : ZZZ_ABOVE_HEAD_CM), headPos.z + 6));
       m.zzzText.textFill.color = new vec4(ZZZ_RGB.x, ZZZ_RGB.y, ZZZ_RGB.z, z);
     }
+  }
+
+  /** Colours the figure layers and the "#n NN%" tag; skipped when nothing visible changed. */
+  private applyFigure(m: Member, look: AudienceLook, fade: number): void {
+    const f = m.figure;
+    const key = `${look.engagement.toFixed(2)}|${look.burst.toFixed(2)}|${m.lit.toFixed(2)}|${fade.toFixed(2)}`;
+    if (key !== f.lastKey) {
+      f.lastKey = key;
+      const col = figureColors(f.hue, look.engagement, look.burst, m.lit, fade);
+      f.layers.forEach((l) => {
+        const c = col[l.color];
+        l.visual.mainPass.baseColor = new vec4(c[0], c[1], c[2], c[3] * l.k);
+      });
+    }
+    const t = tagText(m.tag.index, look.engagement);
+    const tone = tagTone(look.engagement);
+    if (t !== m.tag.shown) {
+      m.tag.shown = t;
+      m.tag.text.text = t;
+    }
+    const line = TAG_LINE[tone];
+    const tc = TAG_TEXT[tone];
+    m.tag.text.textFill.color = new vec4(tc.x, tc.y, tc.z, fade);
+    m.tag.frame.mainPass.baseColor = new vec4(line.x, line.y, line.z, 0.95 * fade);
+    m.tag.fill.mainPass.baseColor = new vec4(line.x, line.y, line.z, 0.1 * fade);
+    if (m.tag.root.enabled !== fade > 0.02) m.tag.root.enabled = fade > 0.02;
+  }
+
+  /** Halo colour from the session: the glow ring follows it, and `lit` warms the figure's rim. */
+  setHalo(i: number, color: [number, number, number, number], fade: number): void {
+    const m = this.members[i];
+    if (!m) return;
+    m.lit = Math.min(1, Math.max(0, (color[3] - 0.3) / 0.7));
+    m.haloGlow.forEach((v) => (v.mainPass.baseColor = new vec4(color[0], color[1], color[2], color[3] * 0.28 * fade)));
+  }
+
+  /**
+   * Explicit draw order inside the audience (every mesh sorts by hierarchy and depth otherwise): shadow first, then each figure layer in
+   * stacking order, halo rings, the phone glow and the perk-up ring on top. All below the panels.
+   */
+  applyRenderOrders(): void {
+    const base = AUDIENCE_RENDER_ORDER;
+    this.members.forEach((m) => {
+      m.shadow.forEach((bars) => bars.forEach((v) => v.setRenderOrder(base)));
+      m.figure.layers.forEach((l, k) => l.visual.setRenderOrder(base + 1 + k));
+      const top = base + 1 + m.figure.layers.length;
+      if (m.halo) (m.halo.getComponent('Component.RenderMeshVisual') as RenderMeshVisual).setRenderOrder(top);
+      m.haloGlow.forEach((v) => v.setRenderOrder(top - 1));
+      m.screenVisuals.forEach((v) => v.setRenderOrder(top + 2));
+      m.coneVisuals.forEach((v) => v.setRenderOrder(top + 1));
+      m.ringVisuals.forEach((v) => v.setRenderOrder(top + 3));
+      m.tag.fill.setRenderOrder(top + 4);
+      m.tag.frame.setRenderOrder(top + 5);
+      m.tag.text.setRenderOrder(top + 6);
+    });
   }
 
   /** World position of member `i`'s visible "zzz" marker, or null when it is hidden (the nudge chevron keeps clear of it). */
@@ -240,6 +436,12 @@ export class AudienceRig {
     const m = this.members[i];
     if (!m || !m.zzz.enabled) return null;
     return m.zzz.getTransform().getWorldPosition();
+  }
+
+  /** World position of member `i`'s visible "#n NN%" tag, or null when hidden. */
+  tagWorld(i: number): vec3 | null {
+    const m = this.members[i];
+    return m && m.tag.root.enabled ? m.tag.root.getTransform().getWorldPosition() : null;
   }
 
   /** World position of member `i`'s head (its current, possibly slumped, position), or null when there is no head object. */

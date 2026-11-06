@@ -9,7 +9,7 @@
  */
 import { METER_GOOD_AT, MeterTone } from './core/GameScore';
 import { RoomMeterVisual, RoomMeterView } from './core/EyesUpSession';
-import { PANEL_STROKE, TEXT_PRIMARY, addRoundedSurface, addSurface, addText, child, faceTowards } from './EyesUpUI';
+import { PANEL_FILL, PANEL_STROKE, STAGE_GLOW_CM, STAGE_STROKE_CM, TEXT_PRIMARY, addPanelGlow, addRoundedSurface, addSurface, addText, child, faceTowards } from './EyesUpUI';
 
 const CAP_W = 53;
 const CAP_H = 5.3;
@@ -20,8 +20,8 @@ export const METER_WIDTH_CM = CAP_W;
 export const METER_CAPSULE_H_CM = CAP_H;
 /** Extent above the capsule centre: half the capsule, a gap, the label row. */
 export const METER_ABOVE_CM = CAP_H / 2 + LABEL_GAP + LABEL_H;
-const TRACK_COLOR = new vec4(0.02, 0.04, 0.13, 0.92);
-const FILL_INSET = 0.55;
+const TRACK_COLOR = PANEL_FILL;
+const FILL_INSET = 0.7;
 const TICK_COLOR = new vec4(1, 1, 1, 0.95);
 /** 3 px at the stage distance. */
 const TICK_W = 1.0;
@@ -46,12 +46,14 @@ export class RoomMeter implements RoomMeterView {
   constructor() {
     this.root = global.scene.createSceneObject('RoomMeter');
     const left = -CAP_W / 2;
-    addRoundedSurface(child(this.root, 'Capsule', new vec3(0, 0, 0)), CAP_W, CAP_H, 0, TRACK_COLOR, PANEL_STROKE, CAP_H / 2, 0.25);
+    addPanelGlow(child(this.root, 'CapsuleGlow', new vec3(0, 0, -0.05)), CAP_W, CAP_H, CAP_H / 2, 0, -1, STAGE_GLOW_CM * 0.6);
+    addRoundedSurface(child(this.root, 'Capsule', new vec3(0, 0, 0)), CAP_W, CAP_H, 0, TRACK_COLOR, PANEL_STROKE, CAP_H / 2, STAGE_STROKE_CM);
     // The fill grows from the capsule's left end: a pivot at the left edge is scaled on X.
     const fillW = CAP_W - 2 * FILL_INSET;
     const fillH = CAP_H - 2 * FILL_INSET;
     this.pivot = child(this.root, 'FillPivot', new vec3(left + FILL_INSET, 0, 0.1));
     this.fill = addRoundedSurface(child(this.pivot, 'Bar', new vec3(fillW / 2, 0, 0)), fillW, fillH, 0, TONE_COLOR.good, null, fillH / 2);
+    addRoundedSurface(child(this.pivot, 'Sheen', new vec3(fillW / 2, fillH * 0.2, 0.05)), fillW - 1.2, fillH * 0.32, 0, new vec4(1, 1, 1, 0.38), null, fillH * 0.16);
     const tickX = left + CAP_W * METER_GOOD_AT;
     addSurface(child(this.root, 'Tick70', new vec3(tickX, 0, 0.2)), TICK_W, CAP_H + 1.6, 0, TICK_COLOR, null);
     const rowY = CAP_H / 2 + LABEL_GAP + LABEL_H / 2;

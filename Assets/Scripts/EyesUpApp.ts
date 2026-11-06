@@ -34,7 +34,7 @@ import { PillRect } from './core/PillHit';
 import { ChevronBox, PlaneRect, placeChevron } from './core/ChevronPlacement';
 import { podiumState } from './core/PodiumModel';
 import { Vec3Like } from './core/math';
-import { ACCENT_CYAN, AUDIENCE_RENDER_ORDER, PANEL_FILL, addCircleRing, addPanelGlow, PANEL_STROKE, TEXT_LABEL, TEXT_PRIMARY, TEXT_SECONDARY, addDot, addIcon, addRoundedSurface, addSurface, child, faceTowards } from './EyesUpUI';
+import { ACCENT_CYAN, AUDIENCE_RENDER_ORDER, PANEL_FILL, STAGE_GLOW_CM, STAGE_STROKE_CM, addCircleRing, addPanelGlow, PANEL_STROKE, TEXT_LABEL, TEXT_PRIMARY, TEXT_SECONDARY, addDot, addIcon, addRoundedSurface, addSurface, child, faceTowards } from './EyesUpUI';
 import { METER_ABOVE_CM, METER_CAPSULE_H_CM, METER_WIDTH_CM } from './RoomMeter';
 
 /**
@@ -72,8 +72,9 @@ const CHEVRON_TEXT = new vec4(1.0, 0.82, 0.35, 1);
 /** ≈ 1.5 cm caption at 100 cm (S3: "left" 1.5 cm). */
 const CHEVRON_CAPTION_SIZE = 140;
 /** Additive display: a near-black backing adds no light, so the disc is a deep luminous blue that the amber chevron stands out from. */
-const CHEVRON_BACK_FILL = new vec4(0.06, 0.1, 0.4, 0.92);
-const CHEVRON_BACK_RING = new vec4(1.0, 0.78, 0.35, 0.7);
+const CHEVRON_BACK_FILL = new vec4(1.0, 0.75, 0.3, 0.1);
+const CHEVRON_BACK_RING = new vec4(1.0, 0.82, 0.4, 1);
+const CHEVRON_BACK_GLOW = new vec4(1.0, 0.75, 0.3, 0.3);
 
 /** Stage line colors (design): cool white while running, amber at 0 s. Never black. */
 const LINE_COLOR: [number, number, number] = [0.75, 0.85, 1.0];
@@ -145,6 +146,9 @@ const METER_HALF_H_CM = METER_ABOVE_CM;
 /** Footprint of a "zzz" marker in the member's space (cm), kept clear by the nudge chevron. */
 const ZZZ_HALF_W_CM = 11;
 const ZZZ_HALF_H_CM = 6;
+/** Footprint of a member's "#n NN%" tag (cm in the member's space). */
+const TAG_HALF_W_CM = 13;
+const TAG_HALF_H_CM = 4.5;
 /** Lit halo ring radius around a head, cm (rest scale 36 cm, diameter). */
 const LIT_HALO_RADIUS_CM = 22;
 /** Top of the lit halo above the floor: resting head height plus the halo radius. */
@@ -233,7 +237,7 @@ export class EyesUpApp extends BaseScriptComponent {
       }
       this.hintTexts[i] = t;
       const back = child(so, 'Backing', new vec3(0, CHEVRON_ICON_Y, -0.1));
-      this.hintBacking[i] = [addDot(back, 'Disc', CHEVRON_BACK_R, new vec3(0, 0, 0), CHEVRON_BACK_FILL), addCircleRing(back, 'Rim', CHEVRON_BACK_R, 0.35, 0.02, CHEVRON_BACK_RING)];
+      this.hintBacking[i] = [addDot(back, 'Disc', CHEVRON_BACK_R, new vec3(0, 0, 0), CHEVRON_BACK_FILL), addCircleRing(back, 'Rim', CHEVRON_BACK_R, STAGE_STROKE_CM, 0.02, CHEVRON_BACK_RING), addCircleRing(back, 'Glow', CHEVRON_BACK_R + 1.6, 1.6, -0.02, CHEVRON_BACK_GLOW)];
       const icon = addIcon(so, i === 0 ? 'double_arrow_left' : 'double_arrow_right', CHEVRON_CM, new vec3(0, CHEVRON_ICON_Y, 0));
       this.hintIcons[i] = icon;
     });
@@ -246,6 +250,7 @@ export class EyesUpApp extends BaseScriptComponent {
     this.rig = new AudienceRig(this.audience);
     // Cycle 3 (F1): every audience layer draws before (behind) every panel backdrop.
     this.audience.forEach((a) => this.orderMeshes(a, AUDIENCE_RENDER_ORDER));
+    this.rig.applyRenderOrders();
     this.meter = new RoomMeter();
 
     this.cameraGaze = new CameraGazeProvider(this.camera.getTransform());
@@ -420,7 +425,10 @@ export class EyesUpApp extends BaseScriptComponent {
       // Icon material is premultiplied: scale every channel to fade.
       const img = this.hintIcons[i];
       if (img) img.mainMaterial.mainPass.baseColor = new vec4(a, a, a, a);
-      this.hintBacking[i].forEach((v, k) => (v.mainPass.baseColor = k === 0 ? new vec4(CHEVRON_BACK_FILL.x, CHEVRON_BACK_FILL.y, CHEVRON_BACK_FILL.z, CHEVRON_BACK_FILL.w * a) : new vec4(CHEVRON_BACK_RING.x, CHEVRON_BACK_RING.y, CHEVRON_BACK_RING.z, CHEVRON_BACK_RING.w * a)));
+      this.hintBacking[i].forEach((v, k) => {
+        const c = k === 0 ? CHEVRON_BACK_FILL : k === 1 ? CHEVRON_BACK_RING : CHEVRON_BACK_GLOW;
+        v.mainPass.baseColor = new vec4(c.x, c.y, c.z, c.w * a);
+      });
       const s = 0.9 + 0.15 * p;
       so.getTransform().setLocalScale(new vec3(s, s, s));
     });
@@ -481,6 +489,22 @@ export class EyesUpApp extends BaseScriptComponent {
     return rects;
   }
 
+  /** View-plane rectangles of each member's visible "#n NN%" tag (just under the head, or above a slumped one). */
+  private tagRects(): PlaneRect[] {
+    const inv = this.camera.getTransform().getInvertedWorldTransform();
+    const rects: PlaneRect[] = [];
+    this.audience.forEach((so, i) => {
+      const t = so.enabled && this.rig ? this.rig.tagWorld(i) : null;
+      if (!t) return;
+      const p = inv.multiplyPoint(t);
+      if (p.z > -5) return;
+      const k = CHEVRON_PLANE_CM / -p.z;
+      const sc = so.getTransform().getWorldScale().x;
+      rects.push({ minX: p.x * k - TAG_HALF_W_CM * k * sc, maxX: p.x * k + TAG_HALF_W_CM * k * sc, minY: p.y * k - TAG_HALF_H_CM * k * sc, maxY: p.y * k + TAG_HALF_H_CM * k * sc });
+    });
+    return rects;
+  }
+
   /** Keep the head-locked chevron clear of the podium and the cue card (core/ChevronPlacement.ts). */
   private placeHint(so: SceneObject, i: number): void {
     const panels: PlaneRect[] = [];
@@ -516,7 +540,9 @@ export class EyesUpApp extends BaseScriptComponent {
     const withMeter = (rects: PlaneRect[]) => (meterRect ? [...rects, meterRect] : rects);
     // Heads and halos are hard no-go (Cycle 6, D1): prefer wall clear of whole silhouettes and the meter, then clear of heads and the meter, then of heads only.
     // If even that has no room the chevron is hidden (the chime still plays) rather than drawn over a head.
-    const spot = place(withMeter(silhouettes)) || place(withMeter(heads)) || place(heads);
+    // Tags are kept clear when there is room; otherwise the chevron may cover one (a nudge must stay visible).
+    const tags = this.tagRects();
+    const spot = place(withMeter([...silhouettes, ...tags])) || place(withMeter([...heads, ...tags])) || place([...heads, ...tags]) || place(withMeter(silhouettes)) || place(withMeter(heads)) || place(heads);
     this.hintHidden[i] = spot === null;
     if (spot === null) {
       so.getTransform().setLocalScale(new vec3(0, 0, 0));
@@ -570,8 +596,8 @@ export class EyesUpApp extends BaseScriptComponent {
   private buildCueCard(): void {
     if (!this.cueCard || !this.cueCardTitle || !this.cueCardBody) return;
     this.cardBg = child(this.cueCard, 'CardBg', new vec3(0, 0, -0.6));
-    addPanelGlow(child(this.cardBg, 'SurfaceGlow', new vec3(0, CARD_CENTER_Y, -0.05)), CARD_W, CARD_H, CARD_RADIUS, 0, -1);
-    addRoundedSurface(child(this.cardBg, 'Surface', new vec3(0, CARD_CENTER_Y, 0)), CARD_W, CARD_H, 0, PANEL_FILL, PANEL_STROKE, CARD_RADIUS);
+    addPanelGlow(child(this.cardBg, 'SurfaceGlow', new vec3(0, CARD_CENTER_Y, -0.05)), CARD_W, CARD_H, CARD_RADIUS, 0, -1, STAGE_GLOW_CM);
+    addRoundedSurface(child(this.cardBg, 'Surface', new vec3(0, CARD_CENTER_Y, 0)), CARD_W, CARD_H, 0, PANEL_FILL, PANEL_STROKE, CARD_RADIUS, STAGE_STROKE_CM);
     addRoundedSurface(child(this.cardBg, 'Accent', new vec3(CARD_ACCENT_X, CARD_TITLE_Y, 0.1)), 0.9, 6.6, 0, ACCENT_CYAN, null, 0.45);
     this.countdownPivot = child(this.cardBg, 'Countdown', new vec3(-CARD_COUNTDOWN_W / 2, CARD_COUNTDOWN_Y, 0.1));
     addSurface(child(this.countdownPivot, 'Line', new vec3(CARD_COUNTDOWN_W / 2, 0, 0)), CARD_COUNTDOWN_W, 0.9, 0, ACCENT_CYAN, null);
@@ -643,7 +669,8 @@ export class EyesUpApp extends BaseScriptComponent {
     if (pill !== null) {
       for (let i = this.pillBg.getChildrenCount() - 1; i >= 0; i--) this.pillBg.getChild(i).destroy();
       this.pillWidth = pill.length * PILL_GLYPH_CM + 8 + PILL_DOT_ZONE;
-      addRoundedSurface(child(this.pillBg, 'Capsule'), this.pillWidth, PILL_H, 0, PANEL_FILL, PANEL_STROKE, PILL_H / 2);
+      addPanelGlow(child(this.pillBg, 'PillGlow', new vec3(0, 0, -0.05)), this.pillWidth, PILL_H, PILL_H / 2, 0, -1, STAGE_GLOW_CM);
+      addRoundedSurface(child(this.pillBg, 'Capsule'), this.pillWidth, PILL_H, 0, PANEL_FILL, PANEL_STROKE, PILL_H / 2, STAGE_STROKE_CM);
       addDot(this.pillBg, 'PillDot', PILL_DOT_R, new vec3(-this.pillWidth / 2 + PILL_H / 2, 0, 0.1), ACCENT_CYAN);
       this.orderMeshes(this.pillBg, 4);
       this.orderMeshes(this.pillBg.getChild(0), 3);
@@ -757,6 +784,7 @@ export class EyesUpApp extends BaseScriptComponent {
       const s = v.scale * applause * (baseScale[i] ?? 1);
       this.audience[i].getTransform().setLocalScale(new vec3(s, s, s));
       if (this.halos[i]) this.halos[i].mainPass.baseColor = new vec4(v.color[0], v.color[1], v.color[2], v.color[3] * fade);
+      this.rig?.setHalo(i, v.color, fade);
     };
 
     const audience: AudienceView = {
