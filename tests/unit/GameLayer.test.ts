@@ -9,6 +9,18 @@ import {
   meterTone,
 } from '../../Assets/Scripts/core/GameScore';
 import { DEFAULT_TUNABLES } from '../../Assets/Scripts/core/Tunables';
+import { beatLabel, bestBanner, starsFor } from '../../Assets/Scripts/core/GameScore';
+import {
+  COMBO_CAP,
+  LiveScore,
+  comboLabel,
+  comboMultiplier,
+  floatPop,
+  lightPoints,
+  punchScale,
+  scoreLabel,
+  tickValue,
+} from '../../Assets/Scripts/core/LiveScore';
 import { summaryState } from '../../Assets/Scripts/core/SummaryModel';
 import { runFor } from '../helpers/fixtures';
 
@@ -189,10 +201,149 @@ describe('score and grade', () => {
     const game = gameResult(99, 0.9, { score: 50, grade: 'B' });
     const s = summaryState(snap, 1, { targetSeconds: 180, deckName: 'd', game });
     expect(s.gradeLabel).toBe(game.grade);
-    expect(s.scoreLabel).toBe(`Attention ${game.score}`);
+    expect(s.scoreLabel).toBe(`Score ${game.points}`);
     expect(s.engagementLabel).toBe('Room engaged 90%');
     expect(s.engagementShort).toBe('Room 90%');
     expect(s.compareLabel).toContain('New best');
     expect(summaryState(snap, 1).gradeLabel).toBe('');
+  });
+});
+
+describe('LiveScore (live points and combo from real dwell)', () => {
+  const look = (m: LiveScore, i: number, sec: number, n = 6) => {
+    const gains: ReturnType<LiveScore['update']> = [];
+    runFor(sec, (dt) => gains.push(...m.update(dt, only(i, n))));
+    return gains;
+  };
+
+  it('a glance shorter than the 1 s dwell scores nothing; the dwell lights the listener for +10', () => {
+    const m = new LiveScore(1);
+    m.reset(6);
+    expect(look(m, 0, 0.9)).toEqual([]);
+    expect(m.score).toBe(0);
+    look(m, -1, 0.1);
+    const g = look(m, 0, 1.0);
+    expect(g).toEqual([{ index: 0, points: 10, kind: 'light', combo: 1 }]);
+    expect(m.score).toBe(10);
+    expect(m.isLit(0)).toBe(true);
+  });
+
+  it('holding pays +3 per extra second, capped at +9 per look (staring is not the skill)', () => {
+    const m = new LiveScore(1);
+    m.reset(6);
+    look(m, 0, 1.0);
+    look(m, 0, 2.0);
+    expect(m.score).toBe(16);
+    look(m, 0, 10);
+    expect(m.score).toBe(19);
+  });
+
+  it('re-lighting the same listener within 4 s scores 0 and counts a repeat; after 4 s it scores again', () => {
+    const m = new LiveScore(1);
+    m.reset(6);
+    look(m, 0, 1.0);
+    look(m, -1, 1.0);
+    look(m, 0, 1.0);
+    expect(m.score).toBe(10);
+    expect(m.repeats).toBe(1);
+    look(m, -1, 4.5);
+    look(m, 0, 1.0);
+    expect(m.score).toBe(20);
+  });
+
+  it('spreading across distinct listeners chains a combo x2..x5 with a 1 + 0.25/step multiplier', () => {
+    const m = new LiveScore(1);
+    m.reset(6);
+    const pts: number[] = [];
+    for (const i of [0, 1, 2, 3, 4, 5]) {
+      for (const g of look(m, i, 1.0)) if (g.kind === 'light') pts.push(g.points);
+      look(m, -1, 0.2);
+    }
+    expect(pts).toEqual([10, 13, 15, 18, 20, 20]);
+    expect(m.combo).toBe(COMBO_CAP);
+    expect(comboLabel(m.combo)).toBe('COMBO x5');
+    expect(comboMultiplier(2)).toBe(1.25);
+    expect(lightPoints(9)).toBe(20);
+  });
+
+  it('spreading beats staring: one minute across the room scores far more than one minute on one person', () => {
+    const spread = new LiveScore(1);
+    spread.reset(6);
+    for (let k = 0; k < 40; k++) {
+      look(spread, k % 6, 1.2);
+      look(spread, -1, 0.3);
+    }
+    const stare = new LiveScore(1);
+    stare.reset(6);
+    look(stare, 0, 60);
+    expect(stare.score).toBe(19);
+    expect(spread.score).toBeGreaterThan(10 * stare.score);
+  });
+
+  it('a 3 s gap with nobody lit breaks the combo and records when', () => {
+    const m = new LiveScore(1);
+    m.reset(6);
+    look(m, 0, 1.0);
+    look(m, 1, 1.0);
+    expect(m.combo).toBe(2);
+    look(m, -1, 3.2);
+    expect(m.combo).toBe(0);
+    expect(m.comboBrokenAt).toBeGreaterThan(5);
+    const g = look(m, 2, 1.0);
+    expect(g[0].combo).toBe(1);
+    expect(g[0].points).toBe(10);
+  });
+
+  it('a repeat breaks the combo', () => {
+    const m = new LiveScore(1);
+    m.reset(6);
+    look(m, 0, 1.0);
+    look(m, 1, 1.0);
+    look(m, 0, 1.0);
+    expect(m.combo).toBe(0);
+    expect(m.score).toBe(23);
+  });
+
+  it('no look, no points', () => {
+    const m = new LiveScore(1);
+    m.reset(3);
+    look(m, -1, 120, 3);
+    expect(m.score).toBe(0);
+  });
+
+  it('HUD helpers: padded score, tick, punch and the +N float', () => {
+    expect(scoreLabel(120)).toBe('SCORE 0120');
+    expect(scoreLabel(12345)).toBe('SCORE 12345');
+    expect(comboLabel(1)).toBe('');
+    expect(tickValue(100, 120, 0.1)).toBe(110);
+    expect(tickValue(100, 120, 0.3)).toBe(120);
+    expect(punchScale(0)).toBeCloseTo(1.15, 6);
+    expect(punchScale(0.25)).toBe(1);
+    expect(floatPop(0)).toEqual({ y: 0, alpha: 1 });
+    expect(floatPop(0.2)!.y).toBeGreaterThan(4);
+    expect(floatPop(0.4)).toBeNull();
+  });
+});
+
+describe('Stars and NEW BEST (Summary)', () => {
+  it('stars: 1 for finishing, +1 room average >= 0.70, +1 balance >= 80', () => {
+    expect(starsFor(0.5, 50)).toBe(1);
+    expect(starsFor(0.7, 50)).toBe(2);
+    expect(starsFor(0.5, 80)).toBe(2);
+    expect(starsFor(0.95, 92)).toBe(3);
+  });
+
+  it('NEW BEST compares live points, not the attention score; first run shows no banner', () => {
+    const first = gameResult(90, 1, null, 400);
+    expect(first.points).toBe(400);
+    expect(bestBanner(first)).toBe('');
+    expect(beatLabel(first)).toBe('beat 400');
+    const better = gameResult(60, 0.6, { score: 95, grade: 'S', points: 400 }, 520);
+    expect(better.newBest).toBe(true);
+    expect(bestBanner(better)).toBe('NEW BEST');
+    const worse = gameResult(99, 1, { score: 60, grade: 'B', points: 520 }, 300);
+    expect(worse.newBest).toBe(false);
+    expect(bestBanner(worse)).toBe('Best 520');
+    expect(beatLabel(worse)).toBe('beat 520');
   });
 });

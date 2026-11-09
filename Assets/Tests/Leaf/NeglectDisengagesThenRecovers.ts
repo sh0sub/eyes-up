@@ -22,12 +22,17 @@ export class NeglectDisengagesThenRecovers extends Scenario {
     expect(headYOf(rig, 4), 'Head y of #4 sank').toBeLessThan(restY - 5);
     expect(rig.session.roomAttention, 'room attention').toBeLessThan(0.9);
     const slumpedMeter = textOf('Percent');
-    expect(/^Room \d+%$/.test(slumpedMeter) && slumpedMeter !== 'Room 100%', `meter "${slumpedMeter}" dropped`).toBe(true);
+    expect(/^\d+%$/.test(slumpedMeter) && slumpedMeter !== '100%', `meter "${slumpedMeter}" dropped`).toBe(true);
     const before = rig.session.roomAttention;
+    // Win cycle 1: staring at #1 for 17 s pays the light (+10) and the capped hold (+9) only.
+    const scoreBefore = rig.session.score;
+    expect(scoreBefore >= 10 && scoreBefore <= 19, `score ${scoreBefore} after staring at one listener is the light plus the capped hold`).toBe(true);
     lookAtMember(rig, 4);
     await sleep(1800);
     expect(rig.session.engagementValues[4], 'engagement[4] after a look').toBeGreaterThan(0.99);
     expect(headYOf(rig, 4), 'Head y of #4 recovered').toBeGreaterThan(restY - 1);
     expect(rig.session.roomAttention, 'room attention rose').toBeGreaterThan(before);
+    expect(rig.session.score, 'lighting a new listener scores').toBeGreaterThan(scoreBefore);
+    expect(textOf('ScoreText').startsWith('SCORE '), `HUD "${textOf('ScoreText')}"`).toBe(true);
   }
 }

@@ -83,8 +83,8 @@ export function insideMargin(e: { left: number; right: number; top: number; bott
  */
 export const SUMMARY_DISTANCE_CM = 150;
 export const SUMMARY_CENTER_Y_CM = -6.5;
-/** Round 3: 52 x 84 cm at scale 1.0 (was 50 x 78 at 1.08: the same on-screen height), so the stats, chip, timeline rows and the Again subline fit at body size. */
-export const SUMMARY_PANEL_W_CM = 52;
+/** Round 4: 58 cm wide (more room for the header chip and the three buttons; the width is not what limits framing). Round 3: 52 x 84 cm at scale 1.0 (was 50 x 78 at 1.08: the same on-screen height), so the stats, chip, timeline rows and the Again subline fit at body size. */
+export const SUMMARY_PANEL_W_CM = 58;
 export const SUMMARY_PANEL_H_CM = 84;
 export const SUMMARY_PANEL_SCALE = 1.0;
 
@@ -105,4 +105,34 @@ export function summaryExtent(origin: Vec3Like, forward: Vec3Like): { left: numb
   const xs = pts.map((p) => (p as { x: number }).x);
   const ys = pts.map((p) => (p as { y: number }).y);
   return { left: Math.min(...xs), right: Math.max(...xs), top: Math.max(...ys), bottom: Math.min(...ys) };
+}
+
+/**
+ * Win cycle 1 (user report: edge members looked cut off). The lens frame is narrower than the room the Interactive Preview paints: about 32
+ * degrees wide (measured) and 32 to 37 tall. `projectToDevice` maps a world point to -1..1 of that frame, for the same camera pose.
+ */
+/** The lens frustum is about 545 of the 884 px Preview viewport wide (measured, build-notes round 2): about 16 degrees half width. */
+export const DEVICE_HALF_FOV_H_DEG = 16.1;
+/** The lens renders 36.6 degrees tall (runtime camera fov, SPECS 27); 16 is the conservative 32 degree device figure. */
+export const DEVICE_HALF_FOV_V_DEG = 16;
+export function projectToDevice(origin: Vec3Like, forward: Vec3Like, point: Vec3Like): { x: number; y: number } | null {
+  const p = projectToViewport(origin, forward, point);
+  if (!p) return null;
+  return {
+    x: (p.x * Math.tan(rad(VIEW_HALF_FOV_H_DEG))) / Math.tan(rad(DEVICE_HALF_FOV_H_DEG)),
+    y: (p.y * Math.tan(rad(VIEW_HALF_FOV_V_DEG))) / Math.tan(rad(DEVICE_HALF_FOV_V_DEG)),
+  };
+}
+
+/** Height above the feet (cm) where the device frame's bottom edge meets member `seat` (canonical pose). */
+export function deviceFrameBottomAt(origin: Vec3Like, forward: Vec3Like, seat: Vec3Like): number {
+  let lo = -100;
+  let hi = 200;
+  for (let k = 0; k < 40; k++) {
+    const mid = (lo + hi) / 2;
+    const p = projectToDevice(origin, forward, { x: seat.x, y: seat.y + mid, z: seat.z });
+    if (p && p.y < -1) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
 }

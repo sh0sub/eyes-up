@@ -5,7 +5,7 @@
  * Bars fill over 0.6 s.
  */
 import { StatsSnapshot } from '../SessionStats';
-import { GameResult, Grade, compareLabel } from './GameScore';
+import { GameResult, Grade, beatLabel, bestBanner, compareLabel } from './GameScore';
 import { ZONE_NAMES, ZoneName } from './Tunables';
 import { clamp01, formatMSS } from './math';
 
@@ -50,8 +50,15 @@ export interface SummaryState {
   /** Game layer: grade letter ("A") or '' without a result. */
   gradeLabel: string;
   grade: Grade | null;
-  /** "Attention 78" or ''. */
+  /** "Score 1240" (live points) or ''. */
   scoreLabel: string;
+  /** 0 without a result, else 1..3. */
+  stars: number;
+  /** 'NEW BEST' / 'Best 1240' / '' (first run or no result). */
+  bestBanner: string;
+  newBest: boolean;
+  /** Again subline: 'beat 1240' or ''. */
+  beatLabel: string;
   /** "Room engaged 91%" or ''. */
   engagementLabel: string;
   /** "Room 91%" or '' (short form for the game tile). */
@@ -103,7 +110,11 @@ export function summaryState(s: StatsSnapshot, shownSeconds: number, ctx?: Summa
     tip: summaryTip(s.zonePercents),
     gradeLabel: ctx?.game ? ctx.game.grade : '',
     grade: ctx?.game ? ctx.game.grade : null,
-    scoreLabel: ctx?.game ? `Attention ${ctx.game.score}` : '',
+    scoreLabel: ctx?.game ? `Score ${ctx.game.points}` : '',
+    stars: ctx?.game ? ctx.game.stars : 0,
+    bestBanner: ctx?.game ? bestBanner(ctx.game) : '',
+    newBest: ctx?.game ? ctx.game.newBest : false,
+    beatLabel: ctx?.game ? beatLabel(ctx.game) : '',
     engagementLabel: ctx?.game ? `Room engaged ${ctx.game.engagementPercent}%` : '',
     engagementShort: ctx?.game ? `Room ${ctx.game.engagementPercent}%` : '',
     compareLabel: ctx?.game ? compareLabel(ctx.game) : '',

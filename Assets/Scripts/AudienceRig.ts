@@ -10,9 +10,10 @@
  */
 import { AudienceLook, HEAD_ABOVE_NECK_SLUMP_CM, HEAD_ABOVE_NECK_UP_CM, PHONE_Y_CM } from './core/AudienceLook';
 import { FADE_ROWS, SHADOW_LAYERS, bodyFadePixels, headDepthScale, shadowBars } from './core/BodyFade';
-import { BODY_ORIGIN_CM, FigureColors, TORSO_ROWS, TORSO_WIDTH_SCALE, HEAD_HALF_H, HEAD_HALF_W, Pt, centroid, ellipsePts, figureColors, figureHue, figureVariant, FigureVariant, offsetPts, roundedRectPts, scalePts, tagText, tagTone, torsoOutline } from './core/Figure';
+import { BODY_ORIGIN_CM, FigureColors, TORSO_ROWS, TORSO_WIDTH_SCALE, HEAD_HALF_H, HEAD_HALF_W, Pt, centroid, ellipsePts, figureColors, figureHue, figureVariant, FigureVariant, gaugeFill, gaugeShown, offsetPts, roundedRectPts, scalePts, torsoOutline } from './core/Figure';
 import { DEFAULT_TUNABLES } from './core/Tunables';
-import { AUDIENCE_RENDER_ORDER, STAGE_STROKE_CM, LINE_AMBER, LINE_CORAL, LINE_CYAN, addCircleRing, addDot, addRoundedSurface, addSurface, addText, child } from './EyesUpUI';
+import { floatPop } from './core/LiveScore';
+import { AUDIENCE_RENDER_ORDER, STAGE_STROKE_CM, LINE_AMBER, LINE_CYAN, NO_FILL, addCircleRing, addDot, addRoundedSurface, addStar, addSurface, addText, child } from './EyesUpUI';
 import { polyFill, polyRing, polyStrip } from './FigureMesh';
 
 /** Cycle 6 (D2): the soft shadow sits where the body has faded out, just above the bottom of the preview frame (about 57 cm above the feet). */
@@ -50,9 +51,9 @@ const PHONE_W = 9;
 const PHONE_H = 14;
 const PHONE_CORNER = 1.6;
 const CONE_STEPS = 4;
-const PHONE_RGB: [number, number, number] = [1.0, 0.8, 0.3];
+const PHONE_RGB: [number, number, number] = [1.0, 0.86, 0.42];
 /** Cycle 4 (D1): the 'zzz' stands straight above its own head (x offset 0; it used to sit 14 cm to the right, between two heads). */
-const ZZZ_ABOVE_HEAD_CM = 30;
+const ZZZ_ABOVE_HEAD_CM = 26;
 /** 'zzz' marker: lavender, above the sunk head and clear of the head (and of the nudge chevron on its side). Title2 at 420 cm is about 7 cm tall in the silhouette's space. */
 const ZZZ_RGB = new vec4(0.85, 0.85, 1.0, 1);
 const ZZZ_DIST = 420;
@@ -89,6 +90,12 @@ interface Member {
   /** +1 (counter-clockwise, leaning left) / -1: which way this seat rolls when it slumps; the left seat leans outward so neighbours do not overlap. */
   rollSign: number;
   tag: Tag;
+  /** Perk-up sparks (4-point stars) bursting out from the head; age in seconds (>= SPARK_SECONDS = idle). */
+  sparks: SceneObject[];
+  sparkVisuals: RenderMeshVisual[];
+  sparkAge: number;
+  prevBurst: number;
+  headPos: vec3;
   haloGlow: RenderMeshVisual[];
   /** How much the speaker is looking at this member, 0..1 (from the halo colour). */
   lit: number;
@@ -108,12 +115,20 @@ interface Figure {
 }
 interface Tag {
   root: SceneObject;
-  text: Text;
+  /** Gauge fill: a quad inside a pivot at the gauge's inner left edge, scaled on X by the shown engagement. */
+  pivot: SceneObject;
   fill: RenderMeshVisual;
   frame: RenderMeshVisual;
-  shown: string;
+  /** "+10" score pop above the gauge. */
+  pop: SceneObject;
+  popText: Text;
+  popAge: number;
   index: number;
   owner: SceneObject;
+  /** Engagement the gauge shows now (drains at once, refills over about 200 ms) and the target from the session. */
+  shown: number;
+  target: number;
+  fade: number;
 }
 
 /**
@@ -126,18 +141,26 @@ interface Tag {
  */
 const TAG_BASELINE_Y = 182.2;
 const TAG_Z = 14;
-const TAG_W = 23;
-const TAG_H = 6.4;
-const TAG_TEXT_SIZE = 190;
+/** Win cycle 1: the tag is a slim attention gauge (18 x 3.4 cm at 2.5 m) on the same baseline; it never reaches a neighbour (members 40 cm apart). */
+const TAG_W = 18;
+const TAG_H = 3.4;
+const GAUGE_INSET = 0.7;
+/** "+10" pop: white core with a cyan outline, starting just above the gauge and rising 2 cm (it stays under the meter row: about 7 cm between the gauge and the bar). */
+const POP_SIZE = 215;
+const POP_Y = TAG_H / 2 + 2.3;
+const POP_RISE_CM = 2;
+const POP_SECONDS = 0.4;
+/** Perk-up sparks: six 4-point stars from 15 to 24 cm around the head, never straight up (they stay under the gauge row), over 400 ms. */
+const SPARK_ANGLES_DEG = [15, 55, 125, 165, 215, 325];
+const SPARK_R0 = 15;
+const SPARK_R1 = 25;
+const SPARK_SECONDS = 0.4;
+const SPARK_RGB: [number, number, number] = [0.85, 1.0, 1.0];
 /** Halo ring 36 -> 32 cm across: the lit ring's top is 177 cm, which leaves room for the tag row under the meter. */
 const HALO_SCALE = 32 / 36;
 const TAG_DIST = 250;
-const TAG_TEXT: Record<'good' | 'mid' | 'low', vec4> = {
-  good: new vec4(0.78, 0.97, 1, 1),
-  mid: new vec4(1, 0.93, 0.7, 1),
-  low: new vec4(1, 0.78, 0.74, 1),
-};
-const TAG_LINE: Record<'good' | 'mid' | 'low', vec4> = { good: LINE_CYAN, mid: LINE_AMBER, low: LINE_CORAL };
+/** Gauge tones: cyan / amber / red #FF4D5E (the room meter's thresholds). */
+const TAG_LINE: Record<'good' | 'mid' | 'low', vec4> = { good: LINE_CYAN, mid: LINE_AMBER, low: new vec4(1.0, 0.3, 0.37, 1) };
 /** Halo ring: unit ring (outer diameter 1) that the halo object scales to about 36 cm, plus a faint wider glow ring. */
 const HALO_RING_STROKE = 0.085;
 const HALO_GLOW_STROKE = 0.14;
@@ -245,11 +268,20 @@ function makeHaloRings(halo: SceneObject): RenderMeshVisual[] {
 function makeTag(root: SceneObject, index: number): Tag {
   const tagRoot = child(root, 'Tag', new vec3(0, 126, TAG_Z));
   const surf = child(tagRoot, 'Capsule');
-  const fill = addRoundedSurface(surf, TAG_W, TAG_H, 0, new vec4(LINE_CYAN.x, LINE_CYAN.y, LINE_CYAN.z, 0.1), LINE_CYAN, TAG_H / 2, STAGE_STROKE_CM);
+  addRoundedSurface(surf, TAG_W, TAG_H, 0, NO_FILL, LINE_CYAN, TAG_H / 2, STAGE_STROKE_CM * 0.6);
   const frame = surf.getChild(1).getComponent('Component.RenderMeshVisual') as RenderMeshVisual;
-  const text = addText(tagRoot, 'TagText', tagText(index, 1), 'Title', TAG_W, TAG_H, TAG_DIST, TAG_TEXT.good, new vec3(0, 0, 0.3));
-  text.size = TAG_TEXT_SIZE;
-  return { root: tagRoot, text, fill, frame, shown: '', index, owner: root };
+  const fw = TAG_W - 2 * GAUGE_INSET;
+  const fh = TAG_H - 2 * GAUGE_INSET;
+  const pivot = child(tagRoot, 'GaugePivot', new vec3(-fw / 2, 0, 0.1));
+  const fill = addRoundedSurface(child(pivot, 'GaugeFill', new vec3(fw / 2, 0, 0)), fw, fh, 0, new vec4(LINE_CYAN.x, LINE_CYAN.y, LINE_CYAN.z, 0.85), null, 0.4);
+  const pop = child(tagRoot, 'ScorePop', new vec3(0, POP_Y, 0.3));
+  const popText = addText(pop, 'PopText', '+10', 'Title', 16, 6, TAG_DIST, new vec4(1, 1, 1, 1), new vec3(0, 0, 0));
+  popText.size = POP_SIZE;
+  popText.outlineSettings.enabled = true;
+  popText.outlineSettings.fill.color = new vec4(0.3, 0.9, 1.0, 1);
+  popText.outlineSettings.size = 0.3;
+  pop.enabled = false;
+  return { root: tagRoot, pivot, fill, frame, pop, popText, popAge: 99, index, owner: root, shown: 1, target: 1, fade: 1 };
 }
 
 export class AudienceRig {
@@ -270,7 +302,7 @@ export class AudienceRig {
       const clear = new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], 0);
       const screen = child(phone, 'Screen');
       // Redesign: one rounded glass screen with a bright rim instead of three overlapping quads (their edges were jagged).
-      const screenFill = addRoundedSurface(screen, PHONE_W, PHONE_H, 0, clear, clear, PHONE_CORNER + 0.4, 0.8);
+      const screenFill = addRoundedSurface(screen, PHONE_W, PHONE_H, 0, clear, clear, PHONE_CORNER + 0.4, 1.2);
       const screenVisuals = [screenFill, screen.getChild(1).getComponent('Component.RenderMeshVisual') as RenderMeshVisual];
       // Light cone: widening, ever fainter steps stacked upward from the screen toward the face.
       const cone = child(phoneRig, 'PhoneCone', new vec3(0, PHONE_Y + 8, 40));
@@ -283,6 +315,7 @@ export class AudienceRig {
         coneVisuals.push(addDot(step, 'Glow', w / 2, new vec3(0, 0, 0), clear));
       }
       cone.getTransform().setLocalRotation(quat.angleAxis(-Math.PI / 10, new vec3(1, 0, 0)));
+      cone.enabled = false; // round 4: the stacked brown ellipses read as murky blobs; the phone is a luminous outline only
       phoneRig.enabled = false;
       const zzz = child(root, 'Zzz', new vec3(0, 170, 20));
       const zzzText = addText(zzz, 'ZzzText', 'zzz', 'Title2', 14, 8, ZZZ_DIST, ZZZ_RGB, new vec3(0, 0, 0));
@@ -307,6 +340,15 @@ export class AudienceRig {
       const rollSign = index % 3 === 0 ? 1 : index % 3 === 1 ? -0.45 : -1;
       const figure = buildFigure(index, body, head, bodyVisual, headVisual, bodyRestScale, headRestScale);
       const tag = makeTag(root, index);
+      const sparkRoot = child(root, 'PerkSparks', new vec3(0, HEAD_REST_Y, 16));
+      const sparks: SceneObject[] = [];
+      const sparkVisuals: RenderMeshVisual[] = [];
+      SPARK_ANGLES_DEG.forEach((_, k) => {
+        const so = child(sparkRoot, `Spark${k}`);
+        sparkVisuals.push(addStar(so, 'Star', 4, k % 2 === 0 ? 2.6 : 1.9, 0.3, new vec3(0, 0, 0), new vec4(SPARK_RGB[0], SPARK_RGB[1], SPARK_RGB[2], 0)));
+        so.enabled = false;
+        sparks.push(so);
+      });
       const haloGlow = halo ? makeHaloRings(halo) : [];
       return {
         body,
@@ -330,6 +372,11 @@ export class AudienceRig {
         variant,
         rollSign,
         tag,
+        sparks,
+        sparkVisuals,
+        sparkAge: 99,
+        prevBurst: 0,
+        headPos: new vec3(0, HEAD_REST_Y, 0),
         haloGlow,
         lit: 0,
       };
@@ -373,6 +420,9 @@ export class AudienceRig {
       const headRoll = (0.5 * look.headTiltDeg * m.rollSign * Math.PI) / 180 + (m.variant.roll * (1 - slump) * Math.PI) / 180 + roll;
       ht.setLocalRotation(quat.angleAxis(headRoll, new vec3(0, 0, 1)));
     }
+    m.headPos = headPos;
+    if (look.burst > m.prevBurst + 0.5) m.sparkAge = 0; // a perk-up just fired
+    m.prevBurst = look.burst;
     if (m.halo) {
       // The halo ring stays around the head as it sinks, and pops outward on a perk-up burst.
       const s = look.haloBurstScale;
@@ -397,7 +447,7 @@ export class AudienceRig {
     const glow = look.phoneGlow * fade;
     if (m.phone.enabled !== glow > 0.01) m.phone.enabled = glow > 0.01;
     if (glow > 0.01) {
-      m.screenVisuals.forEach((v, k) => (v.mainPass.baseColor = k === 0 ? new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], 0.22 * glow) : new vec4(1, 0.93, 0.7, glow)));
+      m.screenVisuals.forEach((v, k) => (v.mainPass.baseColor = k === 0 ? new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], 0.3 * glow) : new vec4(1, 0.93, 0.62, glow)));
       // The three screen quads overlap; keep the sum opaque but not blown out.
       m.coneVisuals.forEach((v, k) => (v.mainPass.baseColor = new vec4(PHONE_RGB[0], PHONE_RGB[1], PHONE_RGB[2], (0.13 - 0.025 * k) * glow)));
     }
@@ -421,18 +471,61 @@ export class AudienceRig {
         l.visual.mainPass.baseColor = new vec4(c[0], c[1], c[2], c[3] * l.k);
       });
     }
-    const t = tagText(m.tag.index, look.engagement);
-    const tone = tagTone(look.engagement);
-    if (t !== m.tag.shown) {
-      m.tag.shown = t;
-      m.tag.text.text = t;
-    }
-    const line = TAG_LINE[tone];
-    const tc = TAG_TEXT[tone];
-    m.tag.text.textFill.color = new vec4(tc.x, tc.y, tc.z, fade);
-    m.tag.frame.mainPass.baseColor = new vec4(line.x, line.y, line.z, 0.95 * fade);
-    m.tag.fill.mainPass.baseColor = new vec4(line.x, line.y, line.z, 0.1 * fade);
+    m.tag.target = look.engagement;
+    m.tag.fade = fade;
     if (m.tag.root.enabled !== fade > 0.02) m.tag.root.enabled = fade > 0.02;
+  }
+
+  /** Win cycle 1: per-frame gauge, score pop and perk-up spark animation (EyesUpApp.onUpdate). `clock` is a seconds clock for the red pulse. */
+  tick(dt: number, clock: number): void {
+    this.members.forEach((m) => {
+      const g = m.tag;
+      if (g.root.enabled) {
+        g.shown = gaugeShown(g.shown, g.target, dt);
+        const v = gaugeFill(g.shown, clock);
+        const line = TAG_LINE[gaugeFill(g.target, clock).tone];
+        g.pivot.getTransform().setLocalScale(new vec3(Math.max(0.001, v.width), 1, 1));
+        g.fill.mainPass.baseColor = new vec4(line.x, line.y, line.z, v.alpha * g.fade);
+        g.frame.mainPass.baseColor = new vec4(line.x, line.y, line.z, 0.9 * g.fade);
+      }
+      if (g.popAge < POP_SECONDS) {
+        g.popAge += dt;
+        const p = floatPop(g.popAge, POP_RISE_CM, POP_SECONDS);
+        if (!p) g.pop.enabled = false;
+        else {
+          g.pop.getTransform().setLocalPosition(new vec3(0, POP_Y + p.y, 0.3));
+          const s = g.popAge < 0.08 ? 0.8 + 0.2 * (g.popAge / 0.08) : 1;
+          g.pop.getTransform().setLocalScale(new vec3(s, s, 1));
+          g.popText.textFill.color = new vec4(1, 1, 1, p.alpha);
+          g.popText.outlineSettings.fill.color = new vec4(0.3, 0.9, 1.0, p.alpha);
+        }
+      }
+      if (m.sparkAge < SPARK_SECONDS) {
+        m.sparkAge += dt;
+        const k = Math.min(1, m.sparkAge / SPARK_SECONDS);
+        const ease = 1 - (1 - k) * (1 - k);
+        const on = k < 1;
+        m.sparks.forEach((so, i) => {
+          if (so.enabled !== on) so.enabled = on;
+          if (!on) return;
+          const a = (SPARK_ANGLES_DEG[i] * Math.PI) / 180;
+          const r = SPARK_R0 + (SPARK_R1 - SPARK_R0) * ease;
+          so.getTransform().setLocalPosition(new vec3(Math.cos(a) * r, m.headPos.y - HEAD_REST_Y + Math.sin(a) * r, m.headPos.z));
+          const sc = 1 + 0.3 * Math.sin(Math.PI * k);
+          so.getTransform().setLocalScale(new vec3(sc, sc, 1));
+          m.sparkVisuals[i].mainPass.baseColor = new vec4(SPARK_RGB[0], SPARK_RGB[1], SPARK_RGB[2], 1 - k * k);
+        });
+      }
+    });
+  }
+
+  /** Float "+N" above member `i`'s gauge (one at a time per head: a new gain restarts it). */
+  popScore(i: number, points: number): void {
+    const m = this.members[i];
+    if (!m || !m.tag.root.enabled) return;
+    m.tag.popText.text = `+${points}`;
+    m.tag.popAge = 0;
+    m.tag.pop.enabled = true;
   }
 
   /** Halo colour from the session: the glow ring follows it, and `lit` warms the figure's rim. */
@@ -460,7 +553,8 @@ export class AudienceRig {
       m.ringVisuals.forEach((v) => v.setRenderOrder(top + 3));
       m.tag.fill.setRenderOrder(top + 4);
       m.tag.frame.setRenderOrder(top + 5);
-      m.tag.text.setRenderOrder(top + 6);
+      m.tag.popText.setRenderOrder(top + 6);
+      m.sparkVisuals.forEach((v) => v.setRenderOrder(top + 3));
     });
   }
 
@@ -489,6 +583,10 @@ export class AudienceRig {
       m.phone.enabled = false;
       m.zzz.enabled = false;
       m.ring.enabled = false;
+      m.tag.pop.enabled = false;
+      m.tag.popAge = 99;
+      m.sparks.forEach((so) => (so.enabled = false));
+      m.sparkAge = 99;
     });
   }
 }

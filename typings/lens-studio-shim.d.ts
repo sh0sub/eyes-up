@@ -220,8 +220,14 @@ declare class AudioComponent extends Component {
 declare class TextFill {
   color: vec4;
 }
+declare class OutlineSettings {
+  enabled: boolean;
+  fill: TextFill;
+  size: number;
+}
 declare class Text extends Component {
   font: Font;
+  outlineSettings: OutlineSettings;
   text: string;
   size: number;
   depthTest: boolean;
@@ -268,6 +274,8 @@ declare module 'UIKit.lspkg/Scripts/Components/Layout2D/Flex/FlexTypes' {
   export enum FlexJustify {
     Start = 'start',
     Center = 'center',
+    SpaceBetween = 'spaceBetween',
+    SpaceEvenly = 'spaceEvenly',
   }
   export enum FlexAlign {
     Start = 'start',

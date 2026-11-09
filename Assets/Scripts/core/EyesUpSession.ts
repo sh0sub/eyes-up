@@ -18,7 +18,8 @@ import { StageLine, StageLineAudio, StageLineEvent, StageLineView } from '../Sta
 import { AppAction, AppStateMachine, Phase } from './AppStateMachine';
 import { AudienceLook, audienceLook } from './AudienceLook';
 import { EngagementModel } from './Engagement';
-import { GameResult, MeterTone, applauseAmplitude, applauseVolume, gameResult, meterTone } from './GameScore';
+import { BestRun, GameResult, MeterTone, applauseAmplitude, applauseVolume, gameResult, meterTone } from './GameScore';
+import { LiveScore, ScoreGain } from './LiveScore';
 import { PillRect, uprightPillRect } from './PillHit';
 import { Tunables, ZONES, Zone, makeTunables, zoneOf } from './Tunables';
 import { Vec3Like, add, scale, sub } from './math';
@@ -85,7 +86,8 @@ export type SessionEvent =
   | NudgeEvent
   | StageLineEvent
   | { type: 'finishPrompt' }
-  | { type: 'perkUp'; index: number };
+  | { type: 'perkUp'; index: number }
+  | ({ type: 'score' } & ScoreGain);
 
 export type SubState = 'Nudge' | 'CardExpanded' | 'TimeUp';
 
@@ -109,7 +111,8 @@ export class EyesUpSession {
   private _summary: StatsSnapshot | null = null;
   private _game: GameResult | null = null;
   /** Session memory only: the best finished run since this Lens started. */
-  private best: { score: number; grade: GameResult['grade'] } | null = null;
+  private best: BestRun | null = null;
+  private readonly live: LiveScore;
 
   constructor(
     private readonly gaze: GazeProvider,
@@ -120,6 +123,7 @@ export class EyesUpSession {
     this.tracker = new GazeTracker(this.t);
     this.attention = new AttentionMeter(this.t);
     this.engagement = new EngagementModel(this.t);
+    this.live = new LiveScore(this.t.fillSeconds);
     this.nudge = new NudgeController(this.t, views.nudgeAudio, views.edgeHint);
     this.card = new CueCardController(this.t, views.cueCard);
     this.line = new StageLine(views.stageLine, views.stageLineAudio);
@@ -160,6 +164,35 @@ export class EyesUpSession {
   /** Mean engagement of the room now, 0..1 (the room attention meter). */
   get roomAttention(): number {
     return this.engagement.room;
+  }
+
+  /** Live points of this run (core/LiveScore.ts). */
+  get score(): number {
+    return this.live.score;
+  }
+
+  /** Current combo chain (2..5 shows "COMBO xN"). */
+  get combo(): number {
+    return this.live.combo;
+  }
+
+  get lastGain(): ScoreGain | null {
+    return this.live.lastGain;
+  }
+
+  /** Rehearsal seconds at which the combo last broke (-Infinity = never); compare with `scoreClock`. */
+  get comboBrokenAt(): number {
+    return this.live.comboBrokenAt;
+  }
+
+  /** The live-score clock (rehearsal seconds). */
+  get scoreClock(): number {
+    return this.live.elapsed;
+  }
+
+  /** Points of the best finished run in this lens session (0 before the first Finish). */
+  get bestPoints(): number {
+    return this.best ? (this.best.points ?? this.best.score) : 0;
   }
 
   /** Score / grade of the finished run (null until Finish). */
@@ -287,8 +320,10 @@ export class EyesUpSession {
   finish(): boolean {
     if (!this.sm.can('finish')) return false;
     this._summary = this.stats.snapshot();
-    this._game = gameResult(this._summary.balanceScore, this.engagement.roomAverage, this.best);
-    if (!this.best || this._game.score > this.best.score) this.best = { score: this._game.score, grade: this._game.grade };
+    this._game = gameResult(this._summary.balanceScore, this.engagement.roomAverage, this.best, this.live.score);
+    if (!this.best || this._game.points > (this.best.points ?? this.best.score)) {
+      this.best = { score: this._game.score, grade: this._game.grade, points: this._game.points };
+    }
     const cancelled = this.nudge.cancel();
     if (cancelled) this.emit(cancelled);
     this.card.hide();
@@ -341,6 +376,7 @@ export class EyesUpSession {
     this._summary = null;
     this._game = null;
     this.engagement.reset(n);
+    this.live.reset(n);
     this.phaseTime = 0;
     this.views.audience?.place(this._layout, n);
     this.views.audience?.setVisible(true);
@@ -370,6 +406,7 @@ export class EyesUpSession {
 
     this.attention.update(dt, frame.looking);
     for (const index of this.engagement.update(dt, frame.looking)) this.emit({ type: 'perkUp', index });
+    for (const g of this.live.update(dt, frame.looking)) this.emit({ type: 'score', ...g });
     this.applyGame();
     this.stats.update(dt, frame.gazeZone);
 

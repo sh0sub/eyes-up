@@ -9,10 +9,15 @@ import { clamp01 } from './math';
 
 /** Height of the silhouette box above the feet (cm): matches AudienceRig's BODY_REST_H. */
 export const BODY_HEIGHT_CM = 140;
-/** Alpha is 0 at and below this height above the feet (cm): just above the bottom of the preview frame at the squashed (slumped) pose. */
-export const FADE_END_CM = 66;
-/** Alpha is 1 at and above this height (cm). */
-export const FADE_START_CM = 98;
+/**
+ * Alpha is 0 at and below this height above the feet (cm). Win cycle 1 (user report "edge members look cut off"): 66 -> 84 cm. Since round 2 the
+ * floor is 163 cm below the eyes, so the bright rim strokes still ran into the bottom corners of the frame and the side figures read as cut off.
+ * The Spectacles display (about 37 x 32 degrees) ends about 80 cm above the feet at the canonical pose (preview frame: about 71 cm); every
+ * upright stroke now fades out above that (core/Framing.ts, tested).
+ */
+export const FADE_END_CM = 84;
+/** Alpha is 1 at and above this height (cm): 98 -> 118, so the ramp stays as soft as before. */
+export const FADE_START_CM = 118;
 /** Rows of the fade texture. */
 export const FADE_ROWS = 64;
 
@@ -23,10 +28,10 @@ export function bodyFadeAlpha(heightCm: number): number {
 }
 
 /**
- * Round 3: vertical tint gradient. Above the fade-out the body keeps fading gently with height: full strength at the shoulders (the top of the
+ * Round 3: vertical tint gradient (round 4: 0.5 -> 0.3 so the lit-from-above volume reads at a glance). Above the fade-out the body keeps fading gently with height: full strength at the shoulders (the top of the
  * mesh), `GRADIENT_LOW` of it at FADE_START_CM, so the torso reads as a rounded, lit-from-above volume instead of one flat tint.
  */
-export const GRADIENT_LOW = 0.5;
+export const GRADIENT_LOW = 0.3;
 export function bodyGradient(heightCm: number): number {
   const t = clamp01((heightCm - FADE_START_CM) / (BODY_HEIGHT_CM - FADE_START_CM));
   return GRADIENT_LOW + (1 - GRADIENT_LOW) * t;

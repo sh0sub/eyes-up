@@ -35,7 +35,7 @@ import { ChevronBox, PlaneRect, placeChevron } from './core/ChevronPlacement';
 import { podiumState } from './core/PodiumModel';
 import { Vec3Like } from './core/math';
 import { ACCENT_CYAN, AUDIENCE_RENDER_ORDER, PANEL_FILL, STAGE_GLOW_CM, STAGE_STROKE_CM, addCircleRing, addPanelGlow, PANEL_STROKE, TEXT_LABEL, TEXT_PRIMARY, TEXT_SECONDARY, addDot, addIcon, addRoundedSurface, addSurface, child, faceTowards } from './EyesUpUI';
-import { METER_ABOVE_CM, METER_BELOW_CM, METER_WIDTH_CM } from './RoomMeter';
+import { METER_ABOVE_CM, METER_BELOW_CM, METER_CENTER_X_CM, METER_WIDTH_CM } from './RoomMeter';
 
 /**
  * Pass 5 nudge chevron (artifact S3): a 6 × 6 cm amber double chevron ("‹‹" / "››", Material
@@ -88,8 +88,8 @@ const LINE_AMBER: [number, number, number] = [1.0, 0.72, 0.2];
 
 /** Panel placement (brief "Where things live"). */
 const SETUP_DISTANCE_CM = 110;
-/** Round 6: negative = above eye level; the panel clears the room's wall art in Preview and on device. */
-const SETUP_BELOW_EYES_CM = -10;
+/** Round 4: +4 = the panel's centre 4 cm below eye level, so the taller Setup panel is centred in the view (it used to sit 10 cm above, with the lower third empty). Round 6: negative = above eye level; the panel clears the room's wall art in Preview and on device. */
+const SETUP_BELOW_EYES_CM = 4;
 /** Cycle 5 (R1): the Summary used to sit 29 cm above the eyes and clipped its top in the preview frame; its distance and centre height now live in core/Framing.ts (unit tested to stay inside the viewport). */
 /** design: panels follow the head only while the preview/device pose settles, then stay put. */
 const PANEL_SETTLE_SECONDS = 1.0;
@@ -151,7 +151,7 @@ const METER_ABOVE_HEAD_CM = 19;
  * the top of the meter's label row (the card centre sits CARD_CENTER_Y above its origin, half its height further down).
  */
 /** Round 3: the meter row (label left of the bar, "target" under the tick) stands higher so "target" clears the tag row; the card keeps a gap of 3.4 cm above the bar. */
-const METER_CARD_GAP_CM = 3.4;
+const METER_CARD_GAP_CM = 4.6;
 const METER_CARD_OFFSET_CM = METER_ABOVE_CM + METER_CARD_GAP_CM + (CARD_H / 2 - CARD_CENTER_Y);
 /** Room meter extents about its centre (cm, local), from RoomMeter.ts: capsule width, capsule plus label row above it. */
 const METER_HALF_W_CM = METER_WIDTH_CM / 2;
@@ -212,6 +212,7 @@ export class EyesUpApp extends BaseScriptComponent {
   private views!: SessionViews;
   private rig: AudienceRig | null = null;
   private meter: RoomMeter | null = null;
+  private clock = 0;
   private cardBg: SceneObject | null = null;
   private stageGlow: Array<{ visual: RenderMeshVisual; alpha: number }> = [];
   private pillBg: SceneObject | null = null;
@@ -294,6 +295,7 @@ export class EyesUpApp extends BaseScriptComponent {
 
     this.session.onEvent((e) => {
       if (e.type === 'phase') this.onPhase();
+      if (e.type === 'score') this.rig?.popScore(e.index, e.points);
       if (e.type === 'finishPrompt') {
         this.cueCard.enabled = true;
         this.cueCardTitle.text = 'Finish?';
@@ -423,7 +425,12 @@ export class EyesUpApp extends BaseScriptComponent {
     if (this.countdownPivot && this.cueCard.enabled) {
       this.countdownPivot.getTransform().setLocalScale(new vec3(Math.max(0.001, this.session.cardCountdown), 1, 1));
     }
-    if (this.meter && this.meter.root.enabled) faceTowards(this.meter.root, this.headPosition(), true);
+    if (this.meter && this.meter.root.enabled) {
+      faceTowards(this.meter.root, this.headPosition(), true);
+      this.meter.tick(dt, { score: this.session.score, combo: this.session.combo });
+    }
+    this.clock += dt;
+    this.rig?.tick(dt, this.clock);
     this.pulseChevron(dt);
   }
 
@@ -566,7 +573,7 @@ export class EyesUpApp extends BaseScriptComponent {
       if (r) panels.push(r);
     }
     // Every head and halo ring (at its current, possibly slumped, position) and the room meter are obstacles too.
-    const meterRect = this.meter && this.meter.root.enabled ? this.projectRect(this.meter.root, 0, METER_CENTER_Y_CM, METER_HALF_W_CM, METER_HALF_H_CM) : null;
+    const meterRect = this.meter && this.meter.root.enabled ? this.projectRect(this.meter.root, METER_CENTER_X_CM, METER_CENTER_Y_CM, METER_HALF_W_CM, METER_HALF_H_CM) : null;
     const heads = this.headRects('heads');
     const silhouettes = this.headRects('silhouette');
     const cam = this.camera.getComponent('Component.Camera') as Camera;
@@ -792,6 +799,7 @@ export class EyesUpApp extends BaseScriptComponent {
       this.audience.forEach((a) => (a.enabled = false));
     }
     const layout = this.session.layout;
+    if (phase === 'Placing') this.meter?.resetHud();
     if (layout && phase === 'Placing') {
       this.podium.placeAt(layout.podiumPosition.x, layout.podiumPosition.y, layout.podiumPosition.z, this.headPosition());
     }

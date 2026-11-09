@@ -64,9 +64,9 @@ export const LINE_MINT = new vec4(0.5, 1.0, 0.8, 1);
 export const LINE_AMBER = new vec4(1.0, 0.8, 0.36, 1);
 export const LINE_CORAL = new vec4(1.0, 0.5, 0.45, 1);
 const faint = (c: vec4, a: number) => new vec4(c.x, c.y, c.z, a);
-export const BOX_NEUTRAL: [vec4, vec4] = [new vec4(0.4, 0.7, 1.0, 0.07), new vec4(0.58, 0.92, 1.0, 0.9)];
+export const BOX_NEUTRAL: [vec4, vec4] = [new vec4(0.2, 0.75, 1.0, 0.14), new vec4(0.58, 0.92, 1.0, 0.9)];
 /** Stat tiles and tip: same faint tint, accent stroke. */
-export const BOX_SOLID: [vec4, vec4] = [new vec4(0.4, 0.7, 1.0, 0.08), new vec4(0.58, 0.92, 1.0, 0.95)];
+export const BOX_SOLID: [vec4, vec4] = [new vec4(0.2, 0.75, 1.0, 0.14), new vec4(0.58, 0.92, 1.0, 0.95)];
 export const BOX_AMBER_SOLID: [vec4, vec4] = [faint(LINE_AMBER, 0.1), LINE_AMBER];
 /** Tip text on BOX_AMBER_SOLID: pale warm white. */
 export const TEXT_TIP = new vec4(1.0, 0.95, 0.8, 1);
@@ -118,7 +118,9 @@ const ICONS: Record<IconName, Texture> = {
  * stroke at 35 %, continuous rounded corners. Setup, cue card, pill, podium, Summary and the room
  * meter pill all use it. The previous blue-grey fill washed out to lavender on the additive display.
  */
-export const PANEL_FILL = new vec4(0.4, 0.7, 1.0, 0.05);
+export const PANEL_FILL = new vec4(0.2, 0.75, 1.0, 0.1);
+/** Round 4: a panel with no fill at all (the podium): one stroke and a glow, nothing else. */
+export const NO_FILL = new vec4(0.2, 0.75, 1.0, 0);
 export const PANEL_STROKE = new vec4(0.62, 0.93, 1.0, 1);
 export const PANEL_RADIUS_CM = 1.6;
 /** One stroke width for every panel, box and button at the 110 cm reference (stage elements scale it by their distance). */
@@ -137,19 +139,20 @@ export const STAGE_GLOW_CM = 2.6;
  * Soft outer glow of the shared panel material: five stepped cyan bands over 1.4 cm just outside the stroke (34 / 24 / 15 / 8 / 3.5 %), so a
  * panel reads as light. Drawn after the audience, before the panel fill.
  */
-export const PANEL_GLOW_CM = 1.4;
+export const PANEL_GLOW_CM = 1.2;
 /** Round 3: outermost band first, so the glow is faintest at its outer edge and brightest next to the stroke (it used to be the other way round and read as a second outline). */
-const PANEL_GLOW_BANDS = [0.02, 0.035, 0.055, 0.08, 0.11, 0.15, 0.2];
+/** Round 4: ten bands on a smooth quadratic ramp that peaks at 0.1 next to the stroke (the old 0.2 inner band read as a second outline). */
+const PANEL_GLOW_BANDS = Array.from({ length: 10 }, (_, k) => 0.1 * Math.pow((k + 1) / 10, 2.2));
 export const PANEL_GLOW_ORDER = PANEL_BACKDROP_ORDER - 1;
 const SURFACE_FILL = PANEL_FILL;
 const SURFACE_BORDER = PANEL_STROKE;
 /** Button faces: the same faint tint, a mid-cyan stroke; hover and press raise the tint. */
-const BUTTON_FACE = new vec4(0.4, 0.7, 1.0, 0.04);
+const BUTTON_FACE = new vec4(0.2, 0.75, 1.0, 0.12);
 const BUTTON_FACE_HOVER = new vec4(0.45, 0.78, 1.0, 0.16);
 const BUTTON_FACE_PRESS = new vec4(0.5, 0.85, 1.0, 0.3);
 const BUTTON_BORDER = new vec4(0.5, 0.82, 1.0, 0.95);
 /** Selected segment = cyan tint, bright cyan-white stroke, cyan glow. */
-const SELECTED_FACE = new vec4(0.3, 0.85, 1.0, 0.1);
+const SELECTED_FACE = new vec4(0.3, 0.85, 1.0, 0.24);
 const SELECTED_HOVER = new vec4(0.3, 0.85, 1.0, 0.2);
 const SELECTED_PRESS = new vec4(0.4, 0.9, 1.0, 0.34);
 const SELECTED_BORDER = new vec4(0.78, 1, 1, 1);
@@ -273,21 +276,21 @@ function roundedRingMesh(w: number, h: number, r: number, stroke: number): Rende
  * the panel in 5.24.1 and read as grey plates on an additive display, so `muteUiKitVisuals` switches off every other mesh under a panel.
  */
 const OWN_VISUALS = new Set<RenderMeshVisual>();
-const muteRoots: SceneObject[] = [];
-let muteHooked = false;
 function sweepMute(so: SceneObject): void {
   const list = so.getComponents('Component.RenderMeshVisual') as RenderMeshVisual[];
   for (const v of list) if (v.enabled && !OWN_VISUALS.has(v)) v.enabled = false;
   for (let i = 0; i < so.getChildrenCount(); i++) sweepMute(so.getChild(i));
 }
 export function muteUiKitVisuals(root: SceneObject): void {
-  muteRoots.push(root);
-  if (muteHooked) return;
-  muteHooked = true;
+  // Round 4: one sweeper per call, bound to Update AND LateUpdate. UIKit re-enables its visuals from OnEnable (VisualElement.enable) and a
+  // panel is shown or hidden at any time, so a sweep in Update alone could leave a dark squircle drawing for a frame; the LateUpdate sweep runs
+  // after every Update and OnEnable of the frame, just before rendering. A new component per call keeps it behind later-created UIKit scripts.
   const sc = global.scene.createSceneObject('UiKitMute').createComponent('Component.ScriptComponent');
-  sc.createEvent('UpdateEvent').bind(() => {
-    for (const r of muteRoots) if (r.enabled) sweepMute(r);
-  });
+  const sweep = () => {
+    if (root.enabled) sweepMute(root);
+  };
+  sc.createEvent('UpdateEvent').bind(sweep);
+  sc.createEvent('LateUpdateEvent').bind(sweep);
 }
 
 function meshVisual(parent: SceneObject, name: string, mesh: RenderMesh, z: number, color: vec4): RenderMeshVisual {
@@ -331,6 +334,43 @@ export function addCircleRing(parent: SceneObject, name: string, radius: number,
   return meshVisual(child(parent, name), 'Ring', roundedRingMesh(radius * 2, radius * 2, radius, thickness), z, color);
 }
 
+/**
+ * Game layer: a `points`-pointed star (5 = rating star, 4 = sparkle) of outer radius `radius` cm and inner radius `radius * inner`, centred on
+ * `local`. `ring` > 0 draws only an outline band of that share of the radius (an unearned star); otherwise the star is filled (additive).
+ */
+export function addStar(parent: SceneObject, name: string, points: number, radius: number, inner: number, local: vec3, color: vec4, ring = 0): RenderMeshVisual {
+  const key = `star|${points}|${radius.toFixed(2)}|${inner.toFixed(2)}|${ring.toFixed(2)}`;
+  let mesh = meshCache.get(key);
+  if (!mesh) {
+    const pts = (k: number): number[][] => {
+      const out: number[][] = [];
+      for (let i = 0; i < points * 2; i++) {
+        const a = Math.PI / 2 + (i * Math.PI) / points;
+        const r = (i % 2 === 0 ? radius : radius * inner) * k;
+        out.push([Math.cos(a) * r, Math.sin(a) * r]);
+      }
+      return out;
+    };
+    const outer = pts(1);
+    const n = outer.length;
+    const idx: number[] = [];
+    if (ring > 0) {
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n;
+        idx.push(i, j, n + j, i, n + j, n + i);
+      }
+      mesh = buildMesh([...outer, ...pts(1 - ring)], idx);
+    } else {
+      for (let i = 0; i < n; i++) idx.push(0, 1 + i, 1 + ((i + 1) % n));
+      mesh = buildMesh([[0, 0], ...outer], idx);
+    }
+    meshCache.set(key, mesh);
+  }
+  const v = meshVisual(parent, name, mesh, 0, color);
+  v.getSceneObject().getTransform().setLocalPosition(local);
+  return v;
+}
+
 /** A filled circle of radius `radius` cm. */
 export function addDot(parent: SceneObject, name: string, radius: number, local: vec3, color: vec4): RenderMeshVisual {
   const v = meshVisual(parent, name, roundedFillMesh(radius * 2, radius * 2, radius), 0, color);
@@ -366,14 +406,14 @@ const FACES: Record<'normal' | 'primary' | 'amber' | 'mint' | 'outline', FaceSet
 };
 /** Accent kinds keep a soft glow of their own colour even when not selected. */
 const KIND_GLOW: Partial<Record<keyof typeof FACES, vec4>> = {
-  primary: new vec4(0.37, 0.83, 1.0, 0.3),
-  mint: new vec4(0.4, 1.0, 0.75, 0.32),
-  amber: new vec4(1.0, 0.75, 0.3, 0.3),
+  primary: new vec4(0.37, 0.83, 1.0, 0.13),
+  mint: new vec4(0.4, 1.0, 0.75, 0.15),
+  amber: new vec4(1.0, 0.75, 0.3, 0.13),
 };
 
 const BUTTON_RADIUS_CM = 1.1;
 /** Selected segments get a soft cyan glow ring around the face (D1: "optional cyan glow on the active element"). */
-const GLOW_COLOR = new vec4(0.37, 0.83, 1.0, 0.24);
+const GLOW_COLOR = new vec4(0.37, 0.83, 1.0, 0.14);
 const GLOW_SPREAD_CM = 0.5;
 
 /** Themes a button's face; returns `setSelected` (cyan face + frame + glow, artifact S1 segments). */
@@ -449,14 +489,14 @@ export interface Panel {
  * Canvas + dark BackPlate (fixed `widthCm × heightCm`) + a centered FlexLayout column.
  * The panel lives under a `Panel` child so the host script keeps running while it is hidden.
  */
-export function makePanel(host: SceneObject, widthCm: number, heightCm: number, padCm: number, gapCm: number): Panel {
+export function makePanel(host: SceneObject, widthCm: number, heightCm: number, padCm: number, gapCm: number, fill: vec4 = SURFACE_FILL): Panel {
   const root = child(host, 'Panel');
   root.createComponent('Component.Canvas');
   const backPlate = root.createComponent(BackPlate.getTypeName()) as BackPlate;
   backPlate.style = 'dark';
   backPlate.size = new vec2(widthCm, heightCm);
   addPanelGlow(root, widthCm, heightCm, PANEL_RADIUS_CM, 0);
-  const backdrop = addRoundedSurface(root, widthCm, heightCm, 0, SURFACE_FILL, SURFACE_BORDER, PANEL_RADIUS_CM); // drawn before Content
+  const backdrop = addRoundedSurface(root, widthCm, heightCm, 0, fill, SURFACE_BORDER, PANEL_RADIUS_CM); // drawn before Content
   backdrop.setRenderOrder(PANEL_BACKDROP_ORDER);
   (root.getChild(root.getChildrenCount() - 1).getComponent('Component.RenderMeshVisual') as RenderMeshVisual | null)?.setRenderOrder(PANEL_BACKDROP_ORDER + 1); // its stroke ring
 
@@ -631,7 +671,7 @@ export function addButton(
   distanceCm: number,
   onClick: () => void,
   opts: ButtonOptions = {},
-): { button: Button; label: Text; setSelected: (selected: boolean) => void } {
+): { button: Button; label: Text; subline: Text | null; setSelected: (selected: boolean) => void } {
   const so = child(parent, name);
   const button = so.createComponent(Button.getTypeName()) as Button;
   button.size = new vec3(widthCm, heightCm, 1);
@@ -655,8 +695,9 @@ export function addButton(
   // With a subline the label moves up and the subline (about 60 % of the label size) sits under it.
   const labelSo = child(so, 'Label', new vec3(labelX, opts.subline ? heightCm * 0.17 : 0, BUTTON_LABEL_Z));
   const text = makeText(labelSo, label, role, labelW, opts.subline ? heightCm * 0.6 : heightCm, distanceCm, opts.primary ? TEXT_PRIMARY : opts.mint ? TEXT_MINT : opts.amber ? TEXT_AMBER_LABEL : TEXT_PRIMARY);
+  let sub: Text | null = null;
   if (opts.subline) {
-    const sub = makeText(child(so, 'Subline', new vec3(labelX, -heightCm * 0.27, BUTTON_LABEL_Z)), opts.subline, role, labelW, heightCm * 0.3, distanceCm, TEXT_LABEL);
+    sub = makeText(child(so, 'Subline', new vec3(labelX, -heightCm * 0.27, BUTTON_LABEL_Z)), opts.subline, role, labelW, heightCm * 0.3, distanceCm, TEXT_LABEL);
     sub.size = roleSize(opts.sublineRole ?? 'Caption', distanceCm);
   }
   const item = so.createComponent(FlexItem.getTypeName()) as FlexItem;
@@ -664,7 +705,7 @@ export function addButton(
   item.overrideHeight = heightCm;
   item.flexShrink = 0;
   button.onTriggerUp.add(() => onClick());
-  return { button, label: text, setSelected };
+  return { button, label: text, subline: sub, setSelected };
 }
 
 /** Rotate `so` so its front (+Z, the UI face) points at `target` (optionally yaw-only). */

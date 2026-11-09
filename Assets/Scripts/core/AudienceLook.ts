@@ -30,9 +30,13 @@ export const HEAD_TILT_DEG = 30;
 /** Round 3: a slumped member drops as a whole (shoulders and head together) and rolls the torso sideways, instead of the head sinking inside a fixed shell. */
 export const BODY_DROP_CM = 18;
 export const BODY_ROLL_DEG = 7;
-/** At full slump the head centre sits this far above the (dropped) neck top: chin down, sunk between the shoulders. Upright it sits 12 cm above. */
+/**
+ * At full slump the head centre sits this far above the (dropped) neck top. Round 4: 7 -> 14.5 cm, so the head ellipse (half height 13 cm) rests on the neck
+ * instead of overlapping the neck strokes and shoulder line (an additive display cannot hide an outline behind a head). The slump is read from the whole
+ * figure dropping, rolling and the head tilting, not from the head sinking into its own torso. Upright it sits 12 cm above.
+ */
 export const HEAD_ABOVE_NECK_UP_CM = 12;
-export const HEAD_ABOVE_NECK_SLUMP_CM = 7;
+export const HEAD_ABOVE_NECK_SLUMP_CM = 14.5;
 
 export interface AudienceLook {
   /** Redesign: the raw engagement 0..1 and perk-up burst 0..1 behind this look (the figure's colours and the "#n NN%" tag read them). */

@@ -15,9 +15,8 @@ describe('body fade (Cycle 6, D2)', () => {
     }
   });
 
-  it('is already transparent just above the preview frame bottom for the squashed (slumped) body', () => {
-    // Frame bottom is about 57 cm above the feet; squashed to 90 %, height h maps to 0.9 h of the mesh.
-    expect(bodyFadeAlpha(57 / 0.9)).toBeLessThan(0.02);
+  it('is transparent at the Spectacles frame bottom (about 80 cm above the feet) for an upright member', () => {
+    expect(bodyFadeAlpha(82)).toBe(0);
   });
 
   it('texture: row 0 (feet) is clear, the top row opaque; the plain variant is opaque everywhere', () => {

@@ -1025,3 +1025,16 @@ Visual design only. Seven fixes from the round-2 critique, each looked at in Int
 - **Checks.** `npm run check`: 198 tests (3 new), typecheck and lint clean. LEAF: see `devpost/leaf-results.md`.
 - **Known.** Preview only, not tested on a device. The Preview shows the lens frame narrower than the room image, so the outer figures sit near the frame edge.
 
+
+## Win cycle 1 (2026-11-09): game layer on the hologram UI
+
+User direction 11-09: keep the ghostly luminous-line hologram look and add game feel on top of it. Rows WC1-0 to WC1-7 in `docs/spec-matrix.md`.
+
+- **Round-4 leftovers.** An interrupted round left 14 files half-applied. The debug `dump()` tree printer and its frame-150 `print` in `Podium.ts` were removed. They failed typecheck, and debug output is not allowed. The other round-4 hunks pass `npm run check` and were kept.
+- **Live score (`core/LiveScore.ts`, pure).** All points come from the real dwell. Lighting a listener (the halo's 1 s fill) gives +10. Holding gives +3 per second, capped at +9 per look. Re-lighting the same person within 4 s gives 0 and breaks the combo. Distinct people chained within 3 s build a combo from x2 to x5, and the combo multiplies the +10 by 1 + 0.25 per step. A test shows that one minute of spreading scores more than 10 times one minute of staring. The final points are the Summary score and feed NEW BEST.
+- **HUD.** One row under the card: `SCORE 0120`, `ROOM`, a 10-segment HP bar with a GOAL notch, `86%`, `COMBO x3`. The row is centred because the Lens frustum is narrower than the Preview image: the first layout clipped COMBO, and the captures showed it.
+- **Audience.** Each per-person tag is now an attention gauge that drains and turns red while that person is ignored. A `+10` floats above the gauge on each gain. A perk-up bursts six luminous sparks.
+- **Summary.** The grade is an outline stamp: it lands at 2.2x to 1.0x with a tilt and a ring, and three stars pop in under it. The header shows NEW BEST (amber shimmer) or `Best N`. Again is the big mint button with `beat N` under it.
+- **Captures looked at.** Window recordings of `capture_game` (before and after: HUD, combo, pops, gauges, sparks, goal crossing) and `capture_summary` (stamp and buttons; the star row did not render in the latest Summary capture, see Known). The NEW BEST banner is covered by unit tests. A `capture_loop` run to check it on screen was interrupted twice by another session driving Lens Studio.
+- **Checks.** `npm run check` passes. LEAF `finish_gives_grade` now asserts that the score rises for each new listener and stays flat on a repeat. `neglect_disengages_then_recovers` asserts that staring pays only the light plus the capped hold.
+- **Known (open).** The 3-star row is coded and `starsFor` is tested, but the last Summary capture (2026-11-10 00:19) shows no stars under the grade. Not diagnosed: the Lens Studio MCP stopped responding at 03:03. The timeline legend fix (`29s away` no longer overlapping nudge dots) is also not yet seen in the Preview. LEAF on this tree: 6 of 10 passed, the other 4 hit MCP timeouts and need a re-run.

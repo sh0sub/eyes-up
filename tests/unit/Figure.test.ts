@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { audienceLook } from '../../Assets/Scripts/core/AudienceLook';
-import { FIGURE_HUES, centroid, ellipsePts, figureColors, figureHue, offsetPts, roundedRectPts, scalePts, tagText, tagTone, torsoOutline } from '../../Assets/Scripts/core/Figure';
+import { FIGURE_HUES, centroid, ellipsePts, figureColors, figureHue, gaugeFill, gaugeShown, offsetPts, roundedRectPts, scalePts, tagTone, torsoOutline } from '../../Assets/Scripts/core/Figure';
 
 const sat = (c: readonly number[]): number => {
   const mx = Math.max(c[0], c[1], c[2]);
@@ -93,10 +93,25 @@ describe('figure colours', () => {
 });
 
 describe('per-person tag', () => {
-  it('reads "#n NN%" with 1-based seats and the room meter tones', () => {
-    expect(tagText(0, 1)).toBe('#1 100%');
-    expect(tagText(2, 0.554)).toBe('#3 55%');
-    expect(tagText(1, 0)).toBe('#2 0%');
+  it('is an attention gauge: width = engagement, room meter tones, a red gauge pulses 0.4..0.8 at 0.8 Hz', () => {
+    expect(gaugeFill(1, 0)).toEqual({ width: 1, tone: 'good', alpha: 0.85 });
+    expect(gaugeFill(0.55, 0).tone).toBe('mid');
+    const red = [0, 0.3, 0.6, 0.9].map((t) => gaugeFill(0.2, t).alpha);
+    expect(Math.min(...red)).toBeGreaterThanOrEqual(0.4);
+    expect(Math.max(...red)).toBeLessThanOrEqual(0.8);
+    expect(Math.max(...red) - Math.min(...red)).toBeGreaterThan(0.2);
+    expect(gaugeFill(1.4, 0).width).toBe(1);
+  });
+  it('the shown gauge drains at once and refills within about 200 ms', () => {
+    expect(gaugeShown(0.8, 0.5, 1 / 60)).toBe(0.5);
+    let w = 0.2;
+    for (let f = 0; f < 12; f++) w = gaugeShown(w, 1, 1 / 60);
+    expect(w).toBeGreaterThan(0.95);
+    w = 0.2;
+    w = gaugeShown(w, 1, 1 / 60);
+    expect(w).toBeLessThan(0.5);
+  });
+  it('keeps the room meter tones', () => {
     expect(tagTone(0.8)).toBe('good');
     expect(tagTone(0.5)).toBe('mid');
     expect(tagTone(0.1)).toBe('low');
@@ -107,13 +122,13 @@ describe('per-person tag', () => {
     expect(l.burst).toBeCloseTo(0.5, 9);
   });
 
-  it('fills are tints (at most 25 % alpha at the shoulders, fading with height; additive, so they add light) in every state; volume comes from the strokes', () => {
+  it('fills are saturated tints (at most 35 % alpha at the shoulders, fading with height; additive, so they add light) in every state; volume comes from the strokes and the gradient', () => {
     for (const v of [0, 0.5, 1]) {
       for (const lit of [0, 1]) {
         const c = figureColors(figureHue(0), v, 0, lit, 1);
-        for (const k of ['body', 'glow', 'highlight', 'head', 'headHighlight', 'headGlow'] as const) expect(c[k][3], `${k} v=${v} lit=${lit}`).toBeLessThanOrEqual(0.25);
-        expect(c.body[3]).toBeLessThanOrEqual(0.25);
-        expect(c.head[3]).toBeLessThanOrEqual(0.25);
+        for (const k of ['body', 'glow', 'highlight', 'head', 'headHighlight', 'headGlow'] as const) expect(c[k][3], `${k} v=${v} lit=${lit}`).toBeLessThanOrEqual(0.35);
+        expect(c.body[3]).toBeLessThanOrEqual(0.35);
+        expect(c.head[3]).toBeLessThanOrEqual(0.35);
         expect(c.rim[3]).toBeGreaterThanOrEqual(0.45);
         expect(c.rimLight[3]).toBeGreaterThanOrEqual(c.rim[3] - 0.01);
       }
@@ -136,10 +151,10 @@ describe('round 3: per-person variation, volume and slump', () => {
     }
   });
 
-  it('the body tint fades with height: strongest at the shoulders, half of it at the fade start', async () => {
+  it('the body tint fades with height: strongest at the shoulders, under a third of it at the fade start', async () => {
     const { bodyGradient, FADE_START_CM, BODY_HEIGHT_CM } = await import('../../Assets/Scripts/core/BodyFade');
     expect(bodyGradient(BODY_HEIGHT_CM)).toBe(1);
-    expect(bodyGradient(FADE_START_CM)).toBeCloseTo(0.5, 6);
+    expect(bodyGradient(FADE_START_CM)).toBeCloseTo(0.3, 6);
   });
 
   it('a slumped look drops and rolls the whole figure; an upright or perked-up one does not', async () => {

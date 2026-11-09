@@ -254,6 +254,28 @@ describe('game layer in the session', () => {
     expect(second.newBest).toBe(false);
   });
 
+  it('live score: rises only when gaze lights a new listener, flat on a repeat within 4 s, and feeds the Summary points', () => {
+    const { s, scene, tick, lookAtMember, gaze } = toRehearsal();
+    expect(s.score).toBe(0);
+    lookAtMember(0);
+    tick(1.05);
+    expect(s.score).toBe(10);
+    lookAtMember(1);
+    tick(1.05);
+    expect(s.score).toBe(23);
+    expect(s.combo).toBe(2);
+    lookAtMember(0); // back to member 0 about 1 s after leaving: a repeat
+    tick(1.05);
+    expect(s.score).toBe(23);
+    expect(s.combo).toBe(0);
+    gaze.lookAt(v3(0, 400, -250)); // the ceiling: nobody
+    tick(5);
+    expect(s.score).toBe(23);
+    expect(scene.events.filter((e) => e.type === 'score').map((e) => (e as { points: number }).points)).toEqual([10, 13]);
+    s.finish();
+    expect(s.game!.points).toBe(23);
+  });
+
   it('a lowest-score finish gives a smaller applause pulse than a high-score one', () => {
     expect(Math.abs(applauseScale(0.125, 1.5, 0.09) - 1)).toBeGreaterThan(Math.abs(applauseScale(0.125, 1.5, 0.02) - 1));
     expect(applauseScale(0.125, 1.5)).toBeCloseTo(applauseScale(0.125, 1.5, 0.05), 12);

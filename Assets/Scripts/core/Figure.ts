@@ -6,7 +6,7 @@
  * light, never from dark shading. The per-person "#n NN%" tag colour follows the room meter's tones.
  */
 import { clamp01, lerp } from './math';
-import { meterTone } from './GameScore';
+import { lowPulse, meterTone } from './GameScore';
 import type { MeterTone } from './GameScore';
 
 export type Pt = [number, number];
@@ -89,10 +89,12 @@ export function torsoOutline(): Pt[] {
 /** Number of profile rows: the left side of `torsoOutline()` is its last `TORSO_ROWS` points, running from the floor up to the neck. */
 export const TORSO_ROWS = TORSO_PROFILE.length;
 /**
+ * Win cycle 1 (user report: edge members looked cut off): 78 -> 74 % and members 40 cm apart (was 42), so the outer shoulders of a lit member
+ * end at 0.87 of the lens frame half width instead of 0.95 (core/Framing.ts `projectToDevice`, tested). Earlier note:
  * Shoulders narrowed to 78 % (half width 29.4 -> 23 cm, 46 cm across) so three members 42 cm apart keep a margin inside the lens view on both
  * sides (the outer edges sit at 42 + 23 = 65 cm of the roughly +-72 cm viewport) and their outlines only just touch.
  */
-export const TORSO_WIDTH_SCALE = 0.78;
+export const TORSO_WIDTH_SCALE = 0.74;
 
 /** Smooth points of an ellipse (half extents `hw`, `hh`) centred at (cx, cy). */
 export function ellipsePts(hw: number, hh: number, n = 40, cx = 0, cy = 0): Pt[] {
@@ -199,22 +201,24 @@ export function figureColors(hue: Rgb, vitality: number, burst: number, lit: num
   const f = clamp01(fade);
   const base = mix3(mix3(DRAINED, hue, v), PERK, 0.55 * b);
   const rimRgb = mix3(mix3(base, WHITE, 0.32), [0.7, 1, 1], 0.6 * l);
-  const skin = mix3(base, WHITE, 0.45);
+  // Round 4: tints keep the hue (a little white only) so a fill reads as saturated light, not as a grey-brown plate.
+  const tint = mix3(base, WHITE, 0.12);
+  const skin = mix3(base, WHITE, 0.22);
   const a = (x: number): number => x * f;
   // Additive display (blend Add, alpha not written): fills are tints that add light, so a figure reads as a glowing volume; top strength about 24 % at the shoulders, fading with height. Volume is carried by bright outline strokes (rim, inner arm and collar
   // contours), a brighter rim on the left (light) side, and the body fading out toward the bottom (texture alpha).
-  const bodyA = lerp(0.1, 0.24, v);
+  const bodyA = lerp(0.2, 0.34, v);
   return {
-    body: [base[0], base[1], base[2], a(bodyA)],
+    body: [tint[0], tint[1], tint[2], a(bodyA)],
     rimLight: [lerp(rimRgb[0], 1, 0.3), lerp(rimRgb[1], 1, 0.3), lerp(rimRgb[2], 1, 0.3), a(lerp(0.7, 1, v))],
-    shoulder: [lerp(skin[0], 1, 0.4), lerp(skin[1], 1, 0.4), lerp(skin[2], 1, 0.4), a(lerp(0.12, 0.26, v))],
+    shoulder: [lerp(skin[0], 1, 0.3), lerp(skin[1], 1, 0.3), lerp(skin[2], 1, 0.3), a(lerp(0.12, 0.26, v))],
     collar: [rimRgb[0], rimRgb[1], rimRgb[2], a(0.75 * v * v)],
     glow: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.04, 0.1, v) + 0.1 * l)],
-    highlight: [skin[0], skin[1], skin[2], a(lerp(0.04, 0.1, v))],
+    highlight: [skin[0], skin[1], skin[2], a(lerp(0.04, 0.09, v))],
     arms: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.25, 0.75, v))],
     rim: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.45, 1, v))],
-    head: [skin[0], skin[1], skin[2], a(lerp(0.1, 0.22, v))],
-    headHighlight: [1, 1, 1, a(lerp(0.08, 0.16, v))],
+    head: [skin[0], skin[1], skin[2], a(lerp(0.14, 0.32, v))],
+    headHighlight: [skin[0], skin[1], skin[2], a(lerp(0.08, 0.15, v))],
     headGlow: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.05, 0.12, v) + 0.1 * l)],
     headRim: [rimRgb[0], rimRgb[1], rimRgb[2], a(lerp(0.8, 1, v))],
     eyes: [1, 1, 1, a(lerp(0.55, 0.95, v))],
@@ -222,8 +226,21 @@ export function figureColors(hue: Rgb, vitality: number, burst: number, lit: num
 }
 
 /** The per-person tag: "#2 55%" (seat number is 1-based). */
-export function tagText(index: number, engagement: number): string {
-  return `#${index + 1} ${Math.round(100 * clamp01(engagement))}%`;
+/**
+ * Win cycle 1: the per-person tag is an attention gauge (no "#1 19%" text; the numbers stay on the Summary). The fill width is the member's
+ * engagement 0..1, so the drain is visible every second while they are ignored; the tone follows the room meter (cyan >= 0.7, amber >= 0.4, red
+ * below), and a red gauge pulses its alpha 0.4..0.8 at 0.8 Hz. `t` is a clock in seconds.
+ */
+export function gaugeFill(engagement: number, t: number): { width: number; tone: MeterTone; alpha: number } {
+  const e = clamp01(engagement);
+  const tone = meterTone(e);
+  return { width: e, tone, alpha: tone === 'low' ? lowPulse(t) : 0.85 };
+}
+
+/** Gauge refill: the shown width follows a drain at once and eases up to a rise (perk-up) within about 200 ms. */
+export function gaugeShown(shown: number, target: number, dt: number, riseSeconds = 0.2): number {
+  if (target <= shown) return target;
+  return Math.min(target, shown + Math.max(target - shown, 0.05) * Math.min(1, dt / (riseSeconds / 3)));
 }
 
 export function tagTone(engagement: number): MeterTone {
