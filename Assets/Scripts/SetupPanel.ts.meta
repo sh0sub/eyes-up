@@ -28,7 +28,6 @@
   ExportUid: 00000000-0000-0000-0000-000000000000
   PackagePolicy: CanBeUnpacked
   ScriptInputsHidden:
-    subtitle: false
     title: false
   ScriptTypesHidden:
     {}
@@ -40,10 +39,8 @@
     []
   DefaultScriptInputs:
     - title: Eyes Up
-      subtitle: Rehearse with an audience in your room
   ScriptTypes:
     -
       {}
   InputLines:
     - '// @input string title = "Eyes Up" {"hint":"Panel title"}'
-    - '// @input string subtitle = "Rehearse with your eyes on the room." {"hint":"Subtitle under the title (artifact S1 wording)"}'

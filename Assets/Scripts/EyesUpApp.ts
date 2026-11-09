@@ -315,7 +315,7 @@ export class EyesUpApp extends BaseScriptComponent {
       this.setupPanel.bind((config) => {
         this.session.configure(config);
         this.session.start();
-      });
+      }, this.session.stageBests);
       this.podium.bind({
         prev: () => this.session.prev(),
         next: () => this.session.next(),
@@ -936,6 +936,7 @@ export class EyesUpApp extends BaseScriptComponent {
       stageLineAudio: { playTimeUpTone: () => this.play(this.toneAudio) },
       sfx: { playTick: () => this.play(this.tickAudio), playApplause: (v) => this.play(this.applauseAudio, v) },
       roomMeter: this.meter ?? undefined,
+      bestsStore: global.persistentStorageSystem.store,
     };
   }
 }

@@ -117,6 +117,10 @@ const BUTTON_H = 8.4;
 const ZONE_ROW_H = 4.3;
 /** Round 3: stats lines, chip and look-away labels are body size or larger (nothing tiny). */
 const STAT_SIZE = 124;
+/** The score headline: the second-largest type on the panel after the grade. */
+const SCORE_HEAD_SIZE = 236;
+/** The headline's width fits this many characters at SCORE_HEAD_SIZE; longer scores scale down so it stays inside the box. */
+const SCORE_HEAD_CHARS = 10;
 const CHIP_SIZE = 108;
 
 @component
@@ -127,6 +131,7 @@ export class SummaryPanel extends BaseScriptComponent {
   private titleText!: Text;
   private gradeText!: Text;
   private gameText!: Text;
+  private gameSub!: Text;
   /** [left, center, right] zone names and percent labels. */
   private zoneNames: Text[] = [];
   private zoneTexts: Text[] = [];
@@ -188,8 +193,13 @@ export class SummaryPanel extends BaseScriptComponent {
       root.getTransform().setLocalScale(new vec3(0.001, 0.001, 1));
       this.stars.push({ root, full, empty });
     }
-    this.gameText = addBox(game, 'GameText', '', 'Headline1', W - 6 - 16 - 1.2, 11.6, DIST, TEXT_PRIMARY, BOX_SOLID);
-    this.gameText.size = STAT_SIZE; // Round 3: three short lines (Attention, Room, Balance) at body size; the "New best" line is its own chip below
+    // Cycle 2: the points are the headline of the stats box; room and balance sit under them at body size.
+    this.gameText = addBox(game, 'GameText', '', 'Title1', W - 6 - 16 - 1.2, 11.6, DIST, TEXT_MINT, BOX_SOLID);
+    this.gameText.size = SCORE_HEAD_SIZE;
+    const gameLabel = this.gameText.getSceneObject();
+    gameLabel.getTransform().setLocalPosition(new vec3(0, 2.0, gameLabel.getTransform().getLocalPosition().z));
+    this.gameSub = addText(gameLabel.getParent(), 'GameSub', '', 'Headline1', W - 6 - 16 - 3, 3.6, DIST, TEXT_PRIMARY, new vec3(0, -3.5, 0.3));
+    this.gameSub.size = STAT_SIZE;
     // Round 3: the compare line ("New best! (was 39)", "Best so far 78 · A") is a chip of its own (round 4: at the right of the header row).
     this.chipText = addBox(header, 'CompareChip', '', 'Headline1', 24, 4.6, DIST, TEXT_PRIMARY, [NO_FILL, BOX_NEUTRAL[1]]);
     this.chipText.size = CHIP_SIZE;
@@ -225,7 +235,7 @@ export class SummaryPanel extends BaseScriptComponent {
     // Cycle 5 (R1): Again is the only filled cyan button and says what it is for; Done and Move stage are outlines.
     // Redesign: all three are outlines with one label size (Heading); only the accent differs (Again is the bright cyan, with a glow).
     // Win cycle 1: Again is the one big mint button (about 2x the others) with "beat 1240" under it; Done and Move stage are small outlines.
-    this.againSub = addButton(buttons, 'AgainButton', 'Again', 24, BUTTON_H, DIST, () => this.onAgain?.(), { icon: 'replay', mint: true, subline: 'beat your score', sublineRole: 'Body', ...big }).subline;
+    this.againSub = addButton(buttons, 'AgainButton', 'Again', 24, BUTTON_H, DIST, () => this.onAgain?.(), { icon: 'replay', mint: true, subline: 'beat your score', sublineRole: 'Heading', labelSize: 190, ...big }).subline;
     addButton(buttons, 'DoneButton', 'Done', 12, BUTTON_H, DIST, () => this.onDone?.(), { icon: 'check', outline: true, ...big });
     // Pass 6 (artifact F2): Re-place (same size and type role as Again / Done), reachable here once the rehearsal is over (the podium
     // hides it during Rehearsal). Seats the stage again where you now face and restarts the talk.
@@ -341,7 +351,9 @@ export class SummaryPanel extends BaseScriptComponent {
     this.gradeTone = s.grade ? GRADE_COLOR[s.grade] : TEXT_SECONDARY;
     this.gradeText.textFill.color = this.gradeTone;
     this.starCount = s.stars;
-    this.gameText.text = s.scoreLabel ? [s.scoreLabel, s.engagementShort, `Balance ${s.balanceLabel}`].join('\n') : '';
+    this.gameText.text = s.scoreLabel;
+    this.gameText.size = Math.round(SCORE_HEAD_SIZE * Math.min(1, SCORE_HEAD_CHARS / Math.max(1, s.scoreLabel.length)));
+    this.gameSub.text = s.statsSubLabel;
     // Win cycle 1: the banner slot says NEW BEST (amber, shimmering) or "Best 1240"; a first run shows nothing there.
     this.newBest = s.newBest;
     this.chipText.text = s.bestBanner;

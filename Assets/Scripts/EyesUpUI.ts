@@ -613,6 +613,8 @@ export function flexRow(parent: SceneObject, name: string, widthCm: number, heig
 }
 
 export interface ButtonOptions {
+  /** Explicit label size; the icon offset is measured from it (a label larger than its role otherwise runs into the icon). */
+  labelSize?: number;
   /** Leading Material icon (IconSelector import). */
   icon?: IconName;
   /** Primary action styling (cyan-teal face). */
@@ -684,7 +686,7 @@ export function addButton(
     const gap = 0.8;
     // Estimated label width (Inter at size 39 ≈ 0.42 cm per glyph at 110 cm) so the
     // icon + label group is centered on the face.
-    const glyph = (roleSize(role, distanceCm) / 39) * 0.42;
+    const glyph = ((opts.labelSize ?? roleSize(role, distanceCm)) / 39) * 0.42;
     // With a subline the group is as wide as the longer of the two lines (the subline is Caption, about 0.66 of the label size).
     const textW = Math.min(widthCm - iconSize - 1.2, Math.max(label.length * glyph, opts.subline ? opts.subline.length * glyph * (roleSize(opts.sublineRole ?? 'Caption') / roleSize(role)) : 0));
     const groupW = iconSize + gap + textW;
@@ -695,6 +697,7 @@ export function addButton(
   // With a subline the label moves up and the subline (about 60 % of the label size) sits under it.
   const labelSo = child(so, 'Label', new vec3(labelX, opts.subline ? heightCm * 0.17 : 0, BUTTON_LABEL_Z));
   const text = makeText(labelSo, label, role, labelW, opts.subline ? heightCm * 0.6 : heightCm, distanceCm, opts.primary ? TEXT_PRIMARY : opts.mint ? TEXT_MINT : opts.amber ? TEXT_AMBER_LABEL : TEXT_PRIMARY);
+  if (opts.labelSize) text.size = opts.labelSize;
   let sub: Text | null = null;
   if (opts.subline) {
     sub = makeText(child(so, 'Subline', new vec3(labelX, -heightCm * 0.27, BUTTON_LABEL_Z)), opts.subline, role, labelW, heightCm * 0.3, distanceCm, TEXT_LABEL);

@@ -5,14 +5,15 @@
 import { DECKS, IMPORTED_DECK_ID, getDeck, getImportedDeck } from '../DeckData';
 import { DEFAULT_CONFIG, SessionConfig } from './EyesUpSession';
 import { clamp01 } from './math';
+import { AUDIENCE_OPTIONS } from './StageProgress';
+
+export { AUDIENCE_OPTIONS };
 
 export const LENGTH_OPTIONS = [3, 5, 10] as const;
-export const AUDIENCE_OPTIONS = [3, 6, 9] as const;
 /** plan: on Start the panel shrinks for 0.3 s, then disappears. */
 export const SETUP_EXIT_SECONDS = 0.3;
-/** Pill label and caption next to Start (artifact S1 wording). */
-export const SETUP_PILL = 'SETUP';
-export const SETUP_CAPTION = "Stage appears 2.5 m ahead of where you're facing.";
+/** Footer under PLAY (level-select Setup). */
+export const SETUP_CAPTION = 'Stage appears 2.5 m ahead';
 
 /** Snap a 0..1 slider value to the nearest option. */
 export function snapToOption<T extends number>(options: readonly T[], slider01: number): T {

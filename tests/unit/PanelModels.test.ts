@@ -2,7 +2,6 @@ import {
   AUDIENCE_OPTIONS,
   LENGTH_OPTIONS,
   SETUP_CAPTION,
-  SETUP_PILL,
   SetupModel,
   optionToSlider,
   setupExitScale,
@@ -28,8 +27,7 @@ describe('SetupModel (#28 SetupPanel logic, S1 #22)', () => {
     m.toggleDeck();
     expect(m.labels.deck).toBe('Self-intro');
     expect(m.labels.deckCards).toBe('3 cards');
-    expect(SETUP_PILL).toBe('SETUP');
-    expect(SETUP_CAPTION).toBe("Stage appears 2.5 m ahead of where you're facing.");
+    expect(SETUP_CAPTION).toBe('Stage appears 2.5 m ahead');
   });
 
   it('sliders snap to 3/5/10 and 3/6/9', () => {

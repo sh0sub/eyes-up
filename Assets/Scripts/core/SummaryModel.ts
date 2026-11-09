@@ -50,8 +50,10 @@ export interface SummaryState {
   /** Game layer: grade letter ("A") or '' without a result. */
   gradeLabel: string;
   grade: Grade | null;
-  /** "Score 1240" (live points) or ''. */
+  /** "SCORE 1240" (live points, the headline) or ''. */
   scoreLabel: string;
+  /** "Room 91%   Balance 84" under the headline, or ''. */
+  statsSubLabel: string;
   /** 0 without a result, else 1..3. */
   stars: number;
   /** 'NEW BEST' / 'Best 1240' / '' (first run or no result). */
@@ -110,7 +112,8 @@ export function summaryState(s: StatsSnapshot, shownSeconds: number, ctx?: Summa
     tip: summaryTip(s.zonePercents),
     gradeLabel: ctx?.game ? ctx.game.grade : '',
     grade: ctx?.game ? ctx.game.grade : null,
-    scoreLabel: ctx?.game ? `Score ${ctx.game.points}` : '',
+    scoreLabel: ctx?.game ? `SCORE ${ctx.game.points}` : '',
+    statsSubLabel: ctx?.game ? `Room ${ctx.game.engagementPercent}%   Balance ${s.balanceScore}` : '',
     stars: ctx?.game ? ctx.game.stars : 0,
     bestBanner: ctx?.game ? bestBanner(ctx.game) : '',
     newBest: ctx?.game ? ctx.game.newBest : false,

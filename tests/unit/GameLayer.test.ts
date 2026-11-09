@@ -201,7 +201,8 @@ describe('score and grade', () => {
     const game = gameResult(99, 0.9, { score: 50, grade: 'B' });
     const s = summaryState(snap, 1, { targetSeconds: 180, deckName: 'd', game });
     expect(s.gradeLabel).toBe(game.grade);
-    expect(s.scoreLabel).toBe(`Score ${game.points}`);
+    expect(s.scoreLabel).toBe(`SCORE ${game.points}`);
+    expect(s.statsSubLabel).toBe(`Room ${game.engagementPercent}%   Balance ${s.balanceScore}`);
     expect(s.engagementLabel).toBe('Room engaged 90%');
     expect(s.engagementShort).toBe('Room 90%');
     expect(s.compareLabel).toContain('New best');

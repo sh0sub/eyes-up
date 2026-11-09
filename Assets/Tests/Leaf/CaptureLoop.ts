@@ -38,9 +38,10 @@ async function finishAndReport(rig: Rig, label: string): Promise<void> {
 @component
 export class CaptureLoop extends Scenario {
   async run(): Promise<void> {
-    const release = muteLeafOverlay(60);
+    const release = muteLeafOverlay(150);
     try {
       const rig = await setUp(6);
+      rig.session.stageBests.clear(); // Run 1 is a real first run, Run 2 the NEW BEST
       await startAndWaitForRehearsal(rig);
       // Run 1: the right side gets the talk, the left is ignored.
       await play(rig, [[2, 3000], [4, 6500], [5, 6500], [3, 3000], [4, 3500], [5, 3000], [2, 2500]]);

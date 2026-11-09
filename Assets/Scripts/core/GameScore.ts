@@ -5,7 +5,7 @@
  * score (0..100) = balance × (0.35 + 0.65 × average room engagement). Balance is the existing
  * gaze-balance number (0 when you never looked up), so a session that ignores the audience cannot
  * score well even though members start engaged; a perfectly even session that keeps everyone with
- * you scores 100. Grade: S ≥ 85, A ≥ 70, B ≥ 50, else C. Session memory only: nothing is stored.
+ * you scores 100. Grade: S ≥ 85, A ≥ 70, B ≥ 50, else C. Bests are kept per stage in core/StageProgress.ts.
  */
 import { clamp01 } from './math';
 

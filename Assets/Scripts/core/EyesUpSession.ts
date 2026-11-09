@@ -18,7 +18,8 @@ import { StageLine, StageLineAudio, StageLineEvent, StageLineView } from '../Sta
 import { AppAction, AppStateMachine, Phase } from './AppStateMachine';
 import { AudienceLook, audienceLook } from './AudienceLook';
 import { EngagementModel } from './Engagement';
-import { BestRun, GameResult, MeterTone, applauseAmplitude, applauseVolume, gameResult, meterTone } from './GameScore';
+import { GameResult, MeterTone, applauseAmplitude, applauseVolume, gameResult, meterTone } from './GameScore';
+import { KeyValueStore, StageBests } from './StageProgress';
 import { LiveScore, ScoreGain } from './LiveScore';
 import { PillRect, uprightPillRect } from './PillHit';
 import { Tunables, ZONES, Zone, makeTunables, zoneOf } from './Tunables';
@@ -78,6 +79,8 @@ export interface SessionViews {
   stageLineAudio?: StageLineAudio;
   sfx?: SfxView;
   roomMeter?: RoomMeterView;
+  /** Where per-stage bests are kept (Lens persistent storage); in memory when absent. */
+  bestsStore?: KeyValueStore;
 }
 
 export type SessionEvent =
@@ -110,8 +113,8 @@ export class EyesUpSession {
   private finishPrompted = false;
   private _summary: StatsSnapshot | null = null;
   private _game: GameResult | null = null;
-  /** Session memory only: the best finished run since this Lens started. */
-  private best: BestRun | null = null;
+  /** Best finished run per stage (audience size). */
+  readonly stageBests: StageBests;
   private readonly live: LiveScore;
 
   constructor(
@@ -120,6 +123,7 @@ export class EyesUpSession {
     private readonly views: SessionViews = {},
   ) {
     this.t = makeTunables(tunables);
+    this.stageBests = new StageBests(views.bestsStore ?? null);
     this.tracker = new GazeTracker(this.t);
     this.attention = new AttentionMeter(this.t);
     this.engagement = new EngagementModel(this.t);
@@ -190,9 +194,9 @@ export class EyesUpSession {
     return this.live.elapsed;
   }
 
-  /** Points of the best finished run in this lens session (0 before the first Finish). */
+  /** Points of the best finished run on the current stage (0 before the first Finish there). */
   get bestPoints(): number {
-    return this.best ? (this.best.points ?? this.best.score) : 0;
+    return this.stageBests.get(this._config.audienceCount)?.points ?? 0;
   }
 
   /** Score / grade of the finished run (null until Finish). */
@@ -320,10 +324,9 @@ export class EyesUpSession {
   finish(): boolean {
     if (!this.sm.can('finish')) return false;
     this._summary = this.stats.snapshot();
-    this._game = gameResult(this._summary.balanceScore, this.engagement.roomAverage, this.best, this.live.score);
-    if (!this.best || this._game.points > (this.best.points ?? this.best.score)) {
-      this.best = { score: this._game.score, grade: this._game.grade, points: this._game.points };
-    }
+    const stage = this._config.audienceCount;
+    this._game = gameResult(this._summary.balanceScore, this.engagement.roomAverage, this.stageBests.get(stage), this.live.score);
+    this.stageBests.record(stage, this._game);
     const cancelled = this.nudge.cancel();
     if (cancelled) this.emit(cancelled);
     this.card.hide();

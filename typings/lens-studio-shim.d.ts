@@ -132,6 +132,7 @@ declare namespace TextInputSystem {
 }
 declare const global: {
   scene: ScriptScene;
+  persistentStorageSystem: { store: { getString(key: string): string; putString(key: string, value: string): void } };
   textInputSystem: { requestKeyboard(options: TextInputSystem.KeyboardOptions): void; dismissKeyboard(): void };
 };
 
