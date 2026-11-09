@@ -235,7 +235,8 @@ export class SummaryPanel extends BaseScriptComponent {
     // Cycle 5 (R1): Again is the only filled cyan button and says what it is for; Done and Move stage are outlines.
     // Redesign: all three are outlines with one label size (Heading); only the accent differs (Again is the bright cyan, with a glow).
     // Win cycle 1: Again is the one big mint button (about 2x the others) with "beat 1240" under it; Done and Move stage are small outlines.
-    this.againSub = addButton(buttons, 'AgainButton', 'Again', 24, BUTTON_H, DIST, () => this.onAgain?.(), { icon: 'replay', mint: true, subline: 'beat your score', sublineRole: 'Heading', labelSize: 190, ...big }).subline;
+    this.againSub = addButton(buttons, 'AgainButton', 'Again', 24, BUTTON_H, DIST, () => this.onAgain?.(), { icon: 'replay', mint: true, subline: 'beat your score', sublineRole: 'Heading', labelSize: 150, ...big }).subline;
+    if (this.againSub) this.againSub.size = 100;
     addButton(buttons, 'DoneButton', 'Done', 12, BUTTON_H, DIST, () => this.onDone?.(), { icon: 'check', outline: true, ...big });
     // Pass 6 (artifact F2): Re-place (same size and type role as Again / Done), reachable here once the rehearsal is over (the podium
     // hides it during Rehearsal). Seats the stage again where you now face and restarts the talk.

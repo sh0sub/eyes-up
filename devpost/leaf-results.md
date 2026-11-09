@@ -52,3 +52,5 @@ applause strength).
 Full log and per-pass details: `build-notes.md`.
 
 Redesign round 3 re-run (2026-11-06, additive figures, whole-figure slump, meter / Summary / Setup rework): all 10 scenarios PASSED one at a time from a refreshed preview at the canonical pose (`scripts/video/leaf-all.sh`), `npm run check` 198 tests. Preview only, not tested on a device.
+
+Win cycle 2 re-run (2026-11-10, level select, stored bests, Summary score headline, `finish_gives_grade` extended for stars and NEW BEST across two runs): all 10 scenarios PASSED one at a time in the Interactive Preview.

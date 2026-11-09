@@ -1038,3 +1038,14 @@ User direction 11-09: keep the ghostly luminous-line hologram look and add game 
 - **Captures looked at.** Window recordings of `capture_game` (before and after: HUD, combo, pops, gauges, sparks, goal crossing) and `capture_summary` (stamp and buttons; the star row did not render in the latest Summary capture, see Known). The NEW BEST banner is covered by unit tests. A `capture_loop` run to check it on screen was interrupted twice by another session driving Lens Studio.
 - **Checks.** `npm run check` passes. LEAF `finish_gives_grade` now asserts that the score rises for each new listener and stays flat on a repeat. `neglect_disengages_then_recovers` asserts that staring pays only the light plus the capped hold.
 - **Known (open).** The 3-star row is coded and `starsFor` is tested, but the last Summary capture (2026-11-10 00:19) shows no stars under the grade. Not diagnosed: the Lens Studio MCP stopped responding at 03:03. The timeline legend fix (`29s away` no longer overlapping nudge dots) is also not yet seen in the Preview. LEAF on this tree: 6 of 10 passed, the other 4 hit MCP timeouts and need a re-run.
+
+
+## Win cycle 2 (2026-11-10): level select, stored bests, Summary payoff
+
+Rows WC2-1 to WC2-5 in `docs/spec-matrix.md`. Preview only, gaze driven by LEAF, not tested on a Spectacles device.
+
+- **Setup is a level select.** Stage cards (Stage 1 / 2 / 3 = 3 / 6 / 9 listeners) with three stars and the best score, a cyan `STAGE 1 - 3 listeners` header, a wide mint `PLAY`, and the placement note as a footer.
+- **Stored bests.** `core/StageProgress.ts` keeps the best points and most stars per stage through Lens persistent storage (survives a Preview refresh). A fresh install shows empty stars and "Not played". `NEW BEST` now compares against the stored best of the same stage.
+- **Summary.** `SCORE n` headline, room and balance below it, `First run` pill removed, 3-star row verified in Preview, bigger Again with `beat n`.
+- **Capture only.** Sparks last 4/7 of the perk-up burst, so `capture_game`'s stretched burst stretches them too (0.4 s normally, 1.7 s for the still).
+- **Checks.** `npm run check` 222 tests, LEAF 10/10 (including `finish_gives_grade` extended for stars and NEW BEST over two real runs). Captures looked at: `capture_loop`, `capture_game`, `capture_podium` window recordings.

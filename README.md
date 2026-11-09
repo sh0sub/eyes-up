@@ -10,7 +10,7 @@
 
 1. **Problem:** people rehearse staring at slides, a phone or a script, so the room never gets practice.
 2. **Spatial moment:** a virtual audience sits 2.5 m ahead and reacts to where you look: the member you face lights up and perks up, the ones you ignore slump and light a phone, and after 8 s a chime and chevron point to the side you forgot.
-3. **Proof:** built with CLAD and the Lens Studio MCP. LEAF 10/10 and 198 tests pass in the Interactive Preview; gaze = head direction, driven by the LEAF harness. **Preview only, not tested on a device.**
+3. **Proof:** built with CLAD and the Lens Studio MCP. LEAF 10/10 and 222 tests pass in the Interactive Preview; gaze = head direction, driven by the LEAF harness. **Preview only, not tested on a device.**
 
 **Learning goal:** spread your eye contact across the whole room. **Feedback:** the audience reacts live, then you get one tip and a grade. **Practice:** press Again and beat your grade. *Limit: learning outcomes are not measured; preview only, gaze is head direction driven by the LEAF harness, untested on a device.*
 
@@ -18,8 +18,8 @@
 
 ![Ignore them and they slump; look at one and it perks up: two moments, room meter 43 % to 81 %](devpost/screenshots/10b-slump-to-perk-up.png)
 ![Summary: grade, attention score, zone split, timeline, one tip and Again](devpost/screenshots/06-summary.png)
-![Run 1 (C 39) next to Run 2 (A 84) after following the tip; scripted gaze, illustrative](devpost/screenshots/12-run-compare.png)
-![Process at a glance: three fixes found in the Preview, 10 of 10 LEAF scenarios, 198 tests](devpost/screenshots/09-process-at-a-glance.png)
+![Run 1 (C, 155 points) next to Run 2 (A, 223 points, NEW BEST) after following the tip; scripted gaze, illustrative](devpost/screenshots/12-run-compare.png)
+![Process at a glance: three fixes found in the Preview, 10 of 10 LEAF scenarios, 222 tests](devpost/screenshots/09-process-at-a-glance.png)
 ![How CLAD and the Lens Studio MCP were used: architecture, four steps, real log lines](devpost/screenshots/13-clad-mcp.png)
 ![Nudge: amber double chevron for the side you ignored](devpost/screenshots/03-nudge-chevron.png)
 
@@ -31,8 +31,8 @@ More screenshots: [01 setup](devpost/screenshots/01-setup-panel.png), [02 halo](
 
 | | Grade | Balance | Left / Center / Right | Longest look-away | Tip shown |
 |---|---|---|---|---|---|
-| Run 1: ignores the left | C (39) | 46 | 0 / 30 / 70 % | 28 s, left | look left more |
-| Run 2: follows the tip | A (84) | 89 | 41 / 26 / 33 % | 12 s, right | look at the center more |
+| Run 1: ignores the left | C (155 pts) | 46 | 0 / 30 / 70 % | 29 s, left | look left more |
+| Run 2: follows the tip | A (223 pts) | 89 | 41 / 26 / 33 % | 12 s, right | look at the center more |
 
 **What I learned building AR** (details in `devpost/learnings.md` and `devpost/screenshots/09-process-at-a-glance.png`): additive displays wash out pale colours; gaze is a head ray, so hit areas must be exact and the scene must fit a narrow view; test the logic in Node and drive the Lens with CLAD and MCP.
 
@@ -42,7 +42,7 @@ Built for Learn AR with SPECS (deadline 2026-11-09 PST). Preview-only is accepta
 
 - Audience placement with camera transform, gaze via head rotation
 - Halo on the watched audience member, chime plus arrow for the neglected side
-- Game layer: audience engagement (slump, phone glow, perk-up burst), room attention meter, attention score with an S/A/B/C grade and a best-previous compare (session memory only)
+- Game layer: audience engagement (slump, phone glow, perk-up burst), room attention meter, attention score with an S/A/B/C grade live score and combo from real eye contact, 3-star rating, level-select stages, and best score and stars per stage kept in Lens persistent storage (nothing else is stored)
 - Cue card on pinch only
 
 ## Status

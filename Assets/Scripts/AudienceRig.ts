@@ -155,6 +155,8 @@ const SPARK_ANGLES_DEG = [15, 55, 125, 165, 215, 325];
 const SPARK_R0 = 15;
 const SPARK_R1 = 25;
 const SPARK_SECONDS = 0.4;
+/** Sparks last this share of the perk-up burst (0.4 s of the 0.7 s burst), so a burst stretched for a capture stretches them too. */
+const SPARK_BURST_SHARE = SPARK_SECONDS / 0.7;
 const SPARK_RGB: [number, number, number] = [0.85, 1.0, 1.0];
 /** Halo ring 36 -> 32 cm across: the lit ring's top is 177 cm, which leaves room for the tag row under the meter. */
 const HALO_SCALE = 32 / 36;
@@ -477,7 +479,8 @@ export class AudienceRig {
   }
 
   /** Win cycle 1: per-frame gauge, score pop and perk-up spark animation (EyesUpApp.onUpdate). `clock` is a seconds clock for the red pulse. */
-  tick(dt: number, clock: number): void {
+  tick(dt: number, clock: number, burstSeconds: number): void {
+    const sparkSeconds = burstSeconds * SPARK_BURST_SHARE;
     this.members.forEach((m) => {
       const g = m.tag;
       if (g.root.enabled) {
@@ -500,9 +503,9 @@ export class AudienceRig {
           g.popText.outlineSettings.fill.color = new vec4(0.3, 0.9, 1.0, p.alpha);
         }
       }
-      if (m.sparkAge < SPARK_SECONDS) {
+      if (m.sparkAge < sparkSeconds) {
         m.sparkAge += dt;
-        const k = Math.min(1, m.sparkAge / SPARK_SECONDS);
+        const k = Math.min(1, m.sparkAge / sparkSeconds);
         const ease = 1 - (1 - k) * (1 - k);
         const on = k < 1;
         m.sparks.forEach((so, i) => {

@@ -430,7 +430,7 @@ export class EyesUpApp extends BaseScriptComponent {
       this.meter.tick(dt, { score: this.session.score, combo: this.session.combo });
     }
     this.clock += dt;
-    this.rig?.tick(dt, this.clock);
+    this.rig?.tick(dt, this.clock, this.session.t.burstSeconds);
     this.pulseChevron(dt);
   }
 
