@@ -5,11 +5,11 @@
  *   node scripts/video/build-video.mjs --footage <dir of window-capture JPGs>
  *   node scripts/video/build-video.mjs                    # stills only (no footage)
  *
- * Options: --out .local/video/eyes-up-demo.mp4  --work .local/video/work  --voice Samantha  --rate 172
+ * Options: --out .local/video/eyes-up-demo.mp4  --work .local/video/work  --voice Samantha  --rate 172  --tts openai  --tts-voice coral
  *          --gallery .local/screenshots  --max-speed 1.6 (cap on per-segment speed)
  *
  * How it works (same approach as mirror-tutor/scripts/demo/record-video.mjs):
- *  1. Narration: macOS `say`, one file per line, so every caption has exact timing. A segment lasts as
+ *  1. Narration: macOS `say` or OpenAI TTS (--tts openai), one file per line, so every caption has exact timing. A segment lasts as
  *     long as its narration (+ lead/tail silence).
  *  2. Graphics: headless Chrome (raw CDP, no deps) renders one 1920x1080 PNG per caption. Footage
  *     segments get a transparent hole where the preview goes. This ffmpeg has no drawtext/libass.
@@ -38,6 +38,10 @@ const OUT = path.resolve(args.out ?? path.join(ROOT, '.local/video/eyes-up-demo.
 const GALLERY = path.resolve(args.gallery ?? path.join(ROOT, '.local/screenshots'));
 const VOICE = args.voice ?? 'Samantha';
 const RATE = Number(args.rate ?? 172);
+const TTS = args.tts ?? 'say'; // 'say' (macOS) or 'openai'
+const TTS_MODEL = args['tts-model'] ?? 'gpt-4o-mini-tts';
+const TTS_VOICE = args['tts-voice'] ?? 'coral';
+const TTS_STYLE = 'Warm, clear, confident product-demo narrator. Natural pace, light energy, no exaggeration.';
 const MAX_SPEED = Number(args['max-speed'] ?? 1.6);
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const FFMPEG = existsSync('/opt/homebrew/bin/ffmpeg') ? '/opt/homebrew/bin/ffmpeg' : 'ffmpeg';
@@ -62,6 +66,19 @@ const pngSize = (f) => {
 };
 
 /* ── 1. narration ─────────────────────────────────────────────────────────── */
+// OpenAI text to speech, cached per line so a rebuild does not pay twice. The key goes to curl on stdin, never in argv.
+function openaiSpeech(text) {
+  const cache = path.join(ROOT, '.local/video/tts-cache');
+  mkdirSync(cache, { recursive: true });
+  const body = { model: TTS_MODEL, voice: TTS_VOICE, input: text, response_format: 'wav', instructions: TTS_STYLE };
+  const file = path.join(cache, `${createHash('sha1').update(JSON.stringify(body)).digest('hex')}.wav`);
+  if (existsSync(file) && statSync(file).size > 1000) return file;
+  if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is not set');
+  const config = `header = "Authorization: Bearer ${process.env.OPENAI_API_KEY}"\n`;
+  execFileSync('curl', ['-sS', '--fail-with-body', '-m', '120', '-K', '-', '-H', 'Content-Type: application/json', '-d', JSON.stringify(body), '-o', file, 'https://api.openai.com/v1/audio/speech'], { input: config });
+  return file;
+}
+
 function buildAudio() {
   const dir = path.join(WORK, 'audio');
   mkdirSync(dir, { recursive: true });
@@ -75,10 +92,11 @@ function buildAudio() {
     silence(leadS, lead);
     parts.push(lead);
     seg.lines.forEach((line, i) => {
-      const aiff = path.join(dir, `${seg.id}-${i}.aiff`);
+      const speech = path.join(dir, `${seg.id}-${i}.aiff`);
       const wav = path.join(dir, `${seg.id}-${i}.wav`);
-      run('/usr/bin/say', ['-v', VOICE, '-r', String(RATE), '-o', aiff, line]);
-      run(FFMPEG, ['-y', '-v', 'error', '-i', aiff, '-ar', '48000', '-ac', '1', '-c:a', 'pcm_s16le', wav]);
+      const input = TTS === 'openai' ? openaiSpeech(line) : speech;
+      if (TTS !== 'openai') run('/usr/bin/say', ['-v', VOICE, '-r', String(RATE), '-o', speech, line]);
+      run(FFMPEG, ['-y', '-v', 'error', '-i', input, '-ar', '48000', '-ac', '1', '-c:a', 'pcm_s16le', wav]);
       const d = probe(wav);
       cues.push({ start: t, end: t + d, text: line });
       parts.push(wav);
